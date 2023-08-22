@@ -3,22 +3,24 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
+import { UsersModule } from './users/users.module';
 import databaseConfig from './config/database.config';
+import appConfig from './config/app.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig],
+      load: [databaseConfig, appConfig],
       envFilePath: ['.env'],
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
       dataSourceFactory: async (options: DataSourceOptions) => {
-        console.log(options)
         return new DataSource(options).initialize();
       },
     }),
+    UsersModule,
   ],
   controllers: [],
   providers: [],
