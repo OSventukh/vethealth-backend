@@ -8,9 +8,10 @@ import {
   AfterLoad,
   BeforeInsert,
   BeforeUpdate,
+  OneToMany,
 } from 'typeorm';
 import { Exclude, Expose } from 'class-transformer';
-
+import { Post } from 'src/posts/entities/post.entity';
 import { hashPassword } from 'src/utils/password-hash';
 
 @Entity({ name: 'users' })
@@ -55,6 +56,9 @@ export class User {
 
   @DeleteDateColumn()
   deletedAt: Date;
+
+  @OneToMany(() => Post, (post) => post.author)
+  posts: Post[];
 
   @BeforeInsert()
   @BeforeUpdate()

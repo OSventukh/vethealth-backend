@@ -1,4 +1,4 @@
-export interface Pagination<T> {
+export interface PaginationType<T> {
   items: T[];
   count: number;
   currentPage: number;

@@ -5,7 +5,7 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PaginationOptions } from 'src/utils/types/pagination-options';
 import { EntityCondition } from 'src/utils/types/entity-condition.type';
-import { Pagination } from 'src/utils/types/pagination.type';
+import { PaginationType } from 'src/utils/types/pagination.type';
 
 @Injectable()
 export class UsersService {
@@ -25,7 +25,7 @@ export class UsersService {
 
   async findManyWithPagination(
     paginationOptions: PaginationOptions,
-  ): Promise<Pagination<User>> {
+  ): Promise<PaginationType<User>> {
     const [items, count] = await this.usersRepository.findAndCount({
       skip: (paginationOptions.page - 1) * paginationOptions.size,
       take: paginationOptions.size,

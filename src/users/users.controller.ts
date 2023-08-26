@@ -15,13 +15,19 @@ import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Pagination } from 'src/utils/types/pagination.type';
+import { PaginationType } from 'src/utils/types/pagination.type';
 import { GetPagination } from 'src/utils/validators/pagination.validate';
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
+    return this.usersService.create(createUserDto);
+  }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
@@ -31,17 +37,13 @@ export class UsersController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  getAllUsers(@Query() pagination: GetPagination): Promise<Pagination<User>> {
+  getAllUsers(
+    @Query() pagination: GetPagination,
+  ): Promise<PaginationType<User>> {
     return this.usersService.findManyWithPagination({
       page: pagination.page,
       size: pagination.size,
     });
-  }
-
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
-    return this.usersService.create(createUserDto);
   }
 
   @Patch(':id')

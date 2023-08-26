@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
 import { UsersModule } from './users/users.module';
+import { PostsModule } from './posts/posts.module';
 import databaseConfig from './config/database.config';
 import appConfig from './config/app.config';
 
@@ -21,6 +22,7 @@ import appConfig from './config/app.config';
       },
     }),
     UsersModule,
+    PostsModule,
   ],
   controllers: [],
   providers: [],
