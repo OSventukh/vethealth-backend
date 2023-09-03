@@ -1,6 +1,6 @@
 import { PartialType, ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional, IsEnum } from 'class-validator';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { CreateUserDto } from '@/users/dto/create-user.dto';
 import { PostStatusEnum } from '../post-status.enum';
 
 export class UpdatePostDto extends PartialType(CreateUserDto) {

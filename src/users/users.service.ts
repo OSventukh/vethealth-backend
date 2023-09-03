@@ -3,9 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { PaginationOptions } from 'src/utils/types/pagination-options';
-import { EntityCondition } from 'src/utils/types/entity-condition.type';
-import { PaginationType } from 'src/utils/types/pagination.type';
+import { PaginationOptions } from '@/utils/types/pagination-options';
+import { EntityCondition } from '@/utils/types/entity-condition.type';
+import { PaginationType } from '@/utils/types/pagination.type';
 
 @Injectable()
 export class UsersService {

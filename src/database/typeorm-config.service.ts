@@ -20,9 +20,12 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         infer: true,
       }),
       dropSchema: false,
-      keepConnectionAlive: true,
+      keepConnectionAlive:
+        this.configService.get('app.nodeEnv', { infer: true }) !== 'test',
       logging:
-        this.configService.get('app.nodeEnv', { infer: true }) !== 'production',
+        this.configService.get('app.nodeEnv', { infer: true }) !==
+          'production' &&
+        this.configService.get('app.nodeEnv', { infer: true }) !== 'test',
       entities: [__dirname + '/../**/*.entity{.ts,.js}'],
       migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
       cli: {
@@ -31,8 +34,6 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         subscribersDir: 'subscriber',
       },
       extra: {
-        // based on https://node-postgres.com/apis/pool
-        // max connection pool size
         maxIdle: this.configService.get('database.maxConnections', {
           infer: true,
         }),

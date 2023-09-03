@@ -15,8 +15,8 @@ import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PaginationType } from 'src/utils/types/pagination.type';
-import { GetPagination } from 'src/utils/validators/pagination.validate';
+import { PaginationType } from '@/utils/types/pagination.type';
+import { GetPagination } from '@/utils/validators/pagination.validate';
 
 @ApiTags('Users')
 @Controller('users')

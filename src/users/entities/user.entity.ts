@@ -11,8 +11,8 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Exclude, Expose } from 'class-transformer';
-import { Post } from 'src/posts/entities/post.entity';
-import { hashPassword } from 'src/utils/password-hash';
+import { Post } from '@/posts/entities/post.entity';
+import { hashPassword } from '@/utils/password-hash';
 
 @Entity({ name: 'users' })
 export class User {

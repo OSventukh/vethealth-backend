@@ -8,7 +8,7 @@ import {
   DeleteDateColumn,
 } from 'typeorm';
 import { PostStatusEnum } from '../post-status.enum';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '@/users/entities/user.entity';
 
 @Entity({ name: 'posts' })
 export class Post {

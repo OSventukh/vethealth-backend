@@ -15,8 +15,8 @@ import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post as PostEntity } from './entities/post.entity';
-import { GetPagination } from 'src/utils/validators/pagination.validate';
-import { PaginationType } from 'src/utils/types/pagination.type';
+import { GetPagination } from '@/utils/validators/pagination.validate';
+import { PaginationType } from '@/utils/types/pagination.type';
 
 @ApiTags('Posts')
 @Controller('posts')
