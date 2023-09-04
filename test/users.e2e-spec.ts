@@ -44,8 +44,39 @@ describe('UsersController (e2e)', () => {
       });
   });
 
-  it('/users (GET) should return a list of users', () => {
-    return request(app.getHttpServer()).get('/users').expect(200);
+  it('/users (GET) should return a list of users', async () => {
+    await usersService.create(user);
+    await usersService.create({ ...user, email: 'test2@test.com' });
+    return request(app.getHttpServer())
+      .get('/users')
+      .expect(200)
+      .then((response) => {
+        const { items, count } = response.body;
+        expect(items.length).toBe(2);
+        expect(count).toBe(2);
+      });
+  });
+
+  it('/users/id (GET) should return a user with provided id, if it exist', async () => {
+    await usersService.create(user);
+    const user2 = await usersService.create({
+      ...user,
+      firstname: 'New Test User',
+      email: 'test2@test.com',
+    });
+    return request(app.getHttpServer())
+      .get(`/users/${user2.id}`)
+      .expect(200)
+      .then((response) => {
+        const { firstname, email } = response.body;
+        expect(firstname).toBe(user2.firstname);
+        expect(email).toBe(user2.email);
+      });
+  });
+
+  it('/users/id (GET) should return 404 status code, if user with provided id not found', () => {
+    const userId = 'non-existen-user-id';
+    return request(app.getHttpServer()).get(`/users/${userId}`).expect(404);
   });
 
   it('/users (PATCH) should update the user', async () => {

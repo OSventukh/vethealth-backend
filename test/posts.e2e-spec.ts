@@ -2,19 +2,16 @@ import { createTestModule } from './utils/test-module';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { PostsModule } from '@/posts/posts.module';
-import { UsersModule } from '@/users/users.module';
 import { DataSource } from 'typeorm';
 import { CreatePostDto } from '@/posts/dto/create-post.dto';
 import { UpdatePostDto } from '@/posts/dto/update-post.dto';
 import { PostsService } from '@/posts/posts.service';
-import { UsersService } from '@/users/users.service';
 import { PostStatusEnum } from '@/posts/post-status.enum';
 
 describe('PostsController (e2e)', () => {
   let app: INestApplication;
   let connection: DataSource;
   let postsService: PostsService;
-  let usersService: UsersService;
 
   const post: CreatePostDto = {
     title: 'Test title',
@@ -26,12 +23,11 @@ describe('PostsController (e2e)', () => {
 
   beforeEach(async () => {
     const test = await createTestModule({
-      imports: [PostsModule, UsersModule],
+      imports: [PostsModule],
     });
     app = test.app;
     connection = test.connection;
     postsService = app.get<PostsService>(PostsService);
-    usersService = app.get<UsersService>(UsersService);
     await app.init();
   });
 
