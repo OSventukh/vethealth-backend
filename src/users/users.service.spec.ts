@@ -8,9 +8,9 @@ import { Repository } from 'typeorm';
 import { DeepPartial } from 'typeorm';
 
 describe('UsersService', () => {
-  const USER_REPOSITORY_TOKEN = getRepositoryToken(User);
   let usersService: UsersService;
   let usersRepository: Repository<User>;
+  const USER_REPOSITORY_TOKEN = getRepositoryToken(User);
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -31,7 +31,7 @@ describe('UsersService', () => {
     expect(usersService).toBeDefined();
   });
 
-  it('should calls usersRepository.create() method with createUserDto object', () => {
+  it('should call usersRepository.create() method with createUserDto object', () => {
     const createUserDto: CreateUserDto = {
       firstname: 'Test',
     } as CreateUserDto;
@@ -39,12 +39,12 @@ describe('UsersService', () => {
     expect(usersRepository.create).toBeCalledWith(createUserDto);
   });
 
-  it('should calls usersRepository.findOne() method with object that have where field and passed value', () => {
+  it('should call usersRepository.findOne() method with object that have where field and passed value', () => {
     usersService.findOne(User['id']);
     expect(usersRepository.findOne).toBeCalledWith({ where: User['id'] });
   });
 
-  it('should calls usersRepository.findAndCount() method with with options', () => {
+  it('should call usersRepository.findAndCount() method with options', () => {
     const page = 1;
     const size = 5;
     usersService.findManyWithPagination({ page, size });
@@ -54,7 +54,7 @@ describe('UsersService', () => {
     });
   });
 
-  it('should calls usersRepository.save() and usersRepository.create() methods', () => {
+  it('should call usersRepository.save() and usersRepository.create() methods', () => {
     const user: User = {
       id: '1',
       firstname: 'Test',
@@ -65,7 +65,7 @@ describe('UsersService', () => {
     expect(usersRepository.save).toBeCalledWith(usersRepository.create(user));
   });
 
-  it('should calls usersRepository.softDelete() with provided id', () => {
+  it('should call usersRepository.softDelete() with provided id', () => {
     const userId = 'id';
     usersService.softDelete(userId);
     expect(usersRepository.softDelete).toBeCalledWith(userId);

@@ -15,7 +15,7 @@ export class Post {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   title: string;
 
   @Column({ type: 'text' })
@@ -24,7 +24,7 @@ export class Post {
   @Column({ type: 'text' })
   content: string;
 
-  @Column()
+  @Column({ unique: true })
   slug: string;
 
   @CreateDateColumn()
@@ -39,8 +39,8 @@ export class Post {
   @Column({ type: 'enum', enum: PostStatusEnum, default: PostStatusEnum.Draft })
   status: string;
 
-  @Column()
-  featuredImage: string;
+  @Column({ nullable: true })
+  featuredImage?: string;
 
   @ManyToOne(() => User, (user) => user.posts)
   author: User;

@@ -51,7 +51,7 @@ export class PostsController {
     return this.postsService.update(id, updatePostDto);
   }
 
-  @Delete('id')
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   deletePost(@Param('id') id: string): Promise<void> {
     return this.postsService.softDelete(id);

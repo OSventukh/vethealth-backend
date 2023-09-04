@@ -7,7 +7,7 @@ import { UpdateUserDto } from '@/users/dto/update-user.dto';
 import { DataSource } from 'typeorm';
 import { UsersService } from '@/users/users.service';
 
-describe('AppController (e2e)', () => {
+describe('UsersController (e2e)', () => {
   let app: INestApplication;
   let connection: DataSource;
   let usersService: UsersService;
@@ -44,7 +44,7 @@ describe('AppController (e2e)', () => {
       });
   });
 
-  it('/users (GET) should returns a list of users', () => {
+  it('/users (GET) should return a list of users', () => {
     return request(app.getHttpServer()).get('/users').expect(200);
   });
 
@@ -66,13 +66,9 @@ describe('AppController (e2e)', () => {
 
   it('/users (Delete) should delete the user', async () => {
     const createdUser = await usersService.create(user);
-    const payload: UpdateUserDto = {
-      firstname: 'Updated firstname',
-    };
 
     return request(app.getHttpServer())
       .delete(`/users/${createdUser.id}`)
-      .send(payload)
       .expect(204)
       .then((response) => {
         expect(response.body).toEqual({});

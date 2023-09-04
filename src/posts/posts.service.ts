@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
 import { Post } from './entities/post.entity';
@@ -12,13 +12,18 @@ export class PostsService {
   constructor(
     @InjectRepository(Post) private postsRepository: Repository<Post>,
   ) {}
+
   create(createPostDto: CreatePostDto): Promise<Post> {
     const post = this.postsRepository.create(createPostDto);
     return this.postsRepository.save(post);
   }
 
-  findOne(fields: EntityCondition<Post>): Promise<Post | null> {
-    return this.postsRepository.findOne({ where: fields });
+  async findOne(fields: EntityCondition<Post>): Promise<Post | null> {
+    const post = await this.postsRepository.findOne({ where: fields });
+    if (!post) {
+      throw new NotFoundException();
+    }
+    return post;
   }
   async findManyWithPagination(
     paginationOptions: PaginationOptions,
