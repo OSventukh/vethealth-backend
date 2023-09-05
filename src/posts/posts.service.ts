@@ -6,6 +6,7 @@ import { PaginationType } from 'src/utils/types/pagination.type';
 import { PaginationOptions } from 'src/utils/types/pagination-options';
 import { CreatePostDto } from './dto/create-post.dto';
 import { EntityCondition } from 'src/utils/types/entity-condition.type';
+import { FindOptionsOrder } from 'typeorm';
 
 @Injectable()
 export class PostsService {
@@ -27,10 +28,16 @@ export class PostsService {
   }
   async findManyWithPagination(
     paginationOptions: PaginationOptions,
+    fields: EntityCondition<Post>,
+    order: FindOptionsOrder<Post>,
   ): Promise<PaginationType<Post>> {
     const [items, count] = await this.postsRepository.findAndCount({
+      where: { ...fields },
       skip: (paginationOptions.page - 1) * paginationOptions.size,
       take: paginationOptions.size,
+      order: {
+        ...order,
+      },
     });
 
     return {

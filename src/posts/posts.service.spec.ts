@@ -8,6 +8,8 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostStatusEnum } from './post-status.enum';
 import { CreateUserDto } from '@/users/dto/create-user.dto';
+import { PostOrderQueryDto } from './dto/order-post.dto';
+import { PostWhereQueryDto } from './dto/find-post.dto';
 
 describe('PostsService', () => {
   let postsService: PostsService;
@@ -52,10 +54,18 @@ describe('PostsService', () => {
   it('should call postsRepository.findAndCount() method with options', () => {
     const page = 1;
     const size = 5;
-    postsService.findManyWithPagination({ page, size });
+    postsService.findManyWithPagination(
+      { page, size },
+      new PostWhereQueryDto(),
+      new PostOrderQueryDto().orderObject(),
+    );
     expect(postsRepository.findAndCount).toBeCalledWith({
       skip: (page - 1) * size,
       take: size,
+      where: {},
+      order: {
+        createdAt: 'ASC',
+      },
     });
   });
 

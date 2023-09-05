@@ -16,7 +16,7 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginationType } from '@/utils/types/pagination.type';
-import { GetPagination } from '@/utils/validators/pagination.validate';
+import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -38,7 +38,7 @@ export class UsersController {
   @Get()
   @HttpCode(HttpStatus.OK)
   getAllUsers(
-    @Query() pagination: GetPagination,
+    @Query() pagination: PaginationQueryDto,
   ): Promise<PaginationType<User>> {
     return this.usersService.findManyWithPagination({
       page: pagination.page,

@@ -14,8 +14,10 @@ import { ApiTags } from '@nestjs/swagger';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { PostWhereQueryDto } from './dto/find-post.dto';
 import { Post as PostEntity } from './entities/post.entity';
-import { GetPagination } from '@/utils/validators/pagination.validate';
+import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
+import { PostOrderQueryDto } from '@/posts/dto/order-post.dto';
 import { PaginationType } from '@/utils/types/pagination.type';
 
 @ApiTags('Posts')
@@ -37,9 +39,18 @@ export class PostsController {
   @Get()
   @HttpCode(HttpStatus.OK)
   getAllPosts(
-    @Query() pagination: GetPagination,
-  ): Promise<PaginationType<PostEntity>> {
-    return this.postsService.findManyWithPagination(pagination);
+    @Query() pagination: PaginationQueryDto,
+    @Query() orderDto: PostOrderQueryDto,
+    @Query() whereDto?: PostWhereQueryDto,
+  ): Promise<PaginationType<PostEntity>> | Promise<PostEntity> {
+    if (whereDto.slug) {
+      return this.postsService.findOne({ slug: whereDto.slug });
+    }
+    return this.postsService.findManyWithPagination(
+      pagination,
+      whereDto,
+      orderDto.orderObject(),
+    );
   }
 
   @Patch(':id')

@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { useContainer } from 'class-validator';
 import {
   INestApplication,
   ValidationPipe,
@@ -46,6 +47,10 @@ export async function createTestModule({
     providers: providers,
   }).compile();
   const app = moduleFixture.createNestApplication();
+  imports.forEach((module) => {
+    useContainer(app.select(module), { fallbackOnErrors: true });
+  });
+
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
   const connection = app.get(getDataSourceToken());
 

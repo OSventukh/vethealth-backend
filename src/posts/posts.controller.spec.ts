@@ -5,8 +5,9 @@ import { createMock } from '@golevelup/ts-jest';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostStatusEnum } from './post-status.enum';
-import { GetPagination } from '@/utils/validators/pagination.validate';
-
+import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
+import { PostWhereQueryDto } from './dto/find-post.dto';
+import { PostOrderQueryDto } from './dto/order-post.dto';
 describe('PostsController', () => {
   let postsController: PostsController;
   let postsService: PostsService;
@@ -48,12 +49,21 @@ describe('PostsController', () => {
   });
 
   it('should call a postsService.findManyWithPafination() method with provided page and size', () => {
-    const paginationQuery: GetPagination = {
+    const paginationQuery: PaginationQueryDto = {
       page: 1,
       size: 5,
     };
-    postsController.getAllPosts(paginationQuery);
-    expect(postsService.findManyWithPagination).toBeCalledWith(paginationQuery);
+
+    postsController.getAllPosts(
+      paginationQuery,
+      new PostOrderQueryDto(),
+      new PostWhereQueryDto(),
+    );
+    expect(postsService.findManyWithPagination).toBeCalledWith(
+      paginationQuery,
+      new PostWhereQueryDto(),
+      new PostOrderQueryDto().orderObject(),
+    );
   });
 
   it('should call a postsService.update() method with provided id and payload object', () => {
