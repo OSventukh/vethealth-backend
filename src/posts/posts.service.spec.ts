@@ -1,20 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PostsService } from './posts.service';
-import { Post } from './entities/post.entity';
+import { PostEntity } from './entities/post.entity';
 import { DeepPartial, Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { createMock } from '@golevelup/ts-jest';
 import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
 import { PostStatusEnum } from './post-status.enum';
-import { CreateUserDto } from '@/users/dto/create-user.dto';
 import { PostOrderQueryDto } from './dto/order-post.dto';
 import { PostWhereQueryDto } from './dto/find-post.dto';
 
 describe('PostsService', () => {
   let postsService: PostsService;
-  let postsRepository: Repository<Post>;
-  const POST_REPOSITORY_TOKEN = getRepositoryToken(Post);
+  let postsRepository: Repository<PostEntity>;
+  const POST_REPOSITORY_TOKEN = getRepositoryToken(PostEntity);
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -22,13 +20,13 @@ describe('PostsService', () => {
         PostsService,
         {
           provide: POST_REPOSITORY_TOKEN,
-          useValue: createMock<Repository<Post>>(),
+          useValue: createMock<Repository<PostEntity>>(),
         },
       ],
     }).compile();
 
     postsService = module.get<PostsService>(PostsService);
-    postsRepository = module.get<Repository<Post>>(POST_REPOSITORY_TOKEN);
+    postsRepository = module.get<Repository<PostEntity>>(POST_REPOSITORY_TOKEN);
   });
 
   it('should be defined', () => {
@@ -47,8 +45,8 @@ describe('PostsService', () => {
   });
 
   it('should call postsRepository.findOne() method with object that have where field and passed value', () => {
-    postsService.findOne(Post['id']);
-    expect(postsRepository.findOne).toBeCalledWith({ where: Post['id'] });
+    postsService.findOne(PostEntity['id']);
+    expect(postsRepository.findOne).toBeCalledWith({ where: PostEntity['id'] });
   });
 
   it('should call postsRepository.findAndCount() method with options', () => {
@@ -70,11 +68,11 @@ describe('PostsService', () => {
   });
 
   it('should call postRepository.save() and postsRepository.create() methods', () => {
-    const post: Post = {
+    const post: PostEntity = {
       id: '1',
       title: 'Test title',
-    } as Post;
-    postsService.update(post.id, post.title as DeepPartial<Post>);
+    } as PostEntity;
+    postsService.update(post.id, post.title as DeepPartial<PostEntity>);
     expect(postsRepository.save).toBeCalledWith(postsRepository.create(post));
   });
 

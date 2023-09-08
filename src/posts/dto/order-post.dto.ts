@@ -2,7 +2,7 @@ import { Transform } from 'class-transformer';
 import { IsIn, IsString, Validate } from 'class-validator';
 import { IsValidColumn } from '@/utils/validators/is-valid-column.validator';
 import { FindOptionsOrder } from 'typeorm';
-import { Post } from '../entities/post.entity';
+import { PostEntity } from '../entities/post.entity';
 
 export class PostOrderQueryDto {
   @Validate(IsValidColumn, ['Post'], {
@@ -14,7 +14,7 @@ export class PostOrderQueryDto {
   @Transform(({ value }) => value?.toUpperCase())
   readonly sort? = 'ASC';
 
-  orderObject(): FindOptionsOrder<Post> {
+  orderObject(): FindOptionsOrder<PostEntity> {
     return { [this.order]: this.sort };
   }
 }

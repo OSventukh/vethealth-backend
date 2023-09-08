@@ -1,6 +1,6 @@
-import { IsString, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { PostStatusEnum } from '../post-status.enum';
+import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
 
 export class CreatePostDto {
   @ApiProperty()
@@ -21,8 +21,7 @@ export class CreatePostDto {
   slug?: string;
 
   @ApiProperty()
-  @IsEnum(PostStatusEnum)
-  status: PostStatusEnum;
+  status: PostStatusEntity;
 
   @ApiProperty()
   @IsString()

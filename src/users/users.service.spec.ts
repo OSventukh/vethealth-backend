@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
+import { UserEntity } from './entities/user.entity';
 import { UsersService } from './users.service';
 import { createMock } from '@golevelup/ts-jest';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -9,8 +9,8 @@ import { DeepPartial } from 'typeorm';
 
 describe('UsersService', () => {
   let usersService: UsersService;
-  let usersRepository: Repository<User>;
-  const USER_REPOSITORY_TOKEN = getRepositoryToken(User);
+  let usersRepository: Repository<UserEntity>;
+  const USER_REPOSITORY_TOKEN = getRepositoryToken(UserEntity);
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -18,13 +18,13 @@ describe('UsersService', () => {
         UsersService,
         {
           provide: USER_REPOSITORY_TOKEN,
-          useValue: createMock<Repository<User>>(),
+          useValue: createMock<Repository<UserEntity>>(),
         },
       ],
     }).compile();
 
     usersService = module.get<UsersService>(UsersService);
-    usersRepository = module.get<Repository<User>>(USER_REPOSITORY_TOKEN);
+    usersRepository = module.get<Repository<UserEntity>>(USER_REPOSITORY_TOKEN);
   });
 
   it('should be defined', () => {
@@ -40,8 +40,8 @@ describe('UsersService', () => {
   });
 
   it('should call usersRepository.findOne() method with object that have where field and passed value', () => {
-    usersService.findOne(User['id']);
-    expect(usersRepository.findOne).toBeCalledWith({ where: User['id'] });
+    usersService.findOne(UserEntity['id']);
+    expect(usersRepository.findOne).toBeCalledWith({ where: UserEntity['id'] });
   });
 
   it('should call usersRepository.findAndCount() method with options', () => {
@@ -55,12 +55,12 @@ describe('UsersService', () => {
   });
 
   it('should call usersRepository.save() and usersRepository.create() methods', () => {
-    const user: User = {
+    const user: UserEntity = {
       id: '1',
       firstname: 'Test',
-    } as User;
+    } as UserEntity;
 
-    usersService.update(user.id, user.firstname as DeepPartial<User>);
+    usersService.update(user.id, user.firstname as DeepPartial<UserEntity>);
 
     expect(usersRepository.save).toBeCalledWith(usersRepository.create(user));
   });

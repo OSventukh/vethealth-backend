@@ -1,25 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import { UserEntity } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { PaginationOptions } from '@/utils/types/pagination-options';
-import { EntityCondition } from '@/utils/types/entity-condition.type';
+import { PaginationOptions } from '@/utils/types/pagination-options.type';
+import { FindOptionsWhere } from 'typeorm';
 import { PaginationType } from '@/utils/types/pagination.type';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User) private usersRepository: Repository<User>,
+    @InjectRepository(UserEntity)
+    private usersRepository: Repository<UserEntity>,
   ) {}
 
-  create(createUserDto: CreateUserDto): Promise<User> {
+  create(createUserDto: CreateUserDto): Promise<UserEntity> {
     return this.usersRepository.save(
       this.usersRepository.create(createUserDto),
     );
   }
 
-  async findOne(fields: EntityCondition<User>): Promise<User | null> {
+  async findOne(
+    fields: FindOptionsWhere<UserEntity>,
+  ): Promise<UserEntity | null> {
     const user = await this.usersRepository.findOne({ where: fields });
 
     if (!user) {
@@ -31,7 +34,7 @@ export class UsersService {
 
   async findManyWithPagination(
     paginationOptions: PaginationOptions,
-  ): Promise<PaginationType<User>> {
+  ): Promise<PaginationType<UserEntity>> {
     const [items, count] = await this.usersRepository.findAndCount({
       skip: (paginationOptions.page - 1) * paginationOptions.size,
       take: paginationOptions.size,
@@ -45,7 +48,10 @@ export class UsersService {
     };
   }
 
-  update(id: User['id'], payload: DeepPartial<User>): Promise<User> {
+  update(
+    id: UserEntity['id'],
+    payload: DeepPartial<UserEntity>,
+  ): Promise<UserEntity> {
     return this.usersRepository.save(
       this.usersRepository.create({
         id,
@@ -54,7 +60,7 @@ export class UsersService {
     );
   }
 
-  async softDelete(id: User['id']): Promise<void> {
+  async softDelete(id: UserEntity['id']): Promise<void> {
     await this.usersRepository.softDelete(id);
   }
 }

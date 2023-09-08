@@ -15,7 +15,7 @@ import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostWhereQueryDto } from './dto/find-post.dto';
-import { Post as PostEntity } from './entities/post.entity';
+import { PostEntity } from './entities/post.entity';
 import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
 import { PostOrderQueryDto } from '@/posts/dto/order-post.dto';
 import { PaginationType } from '@/utils/types/pagination.type';

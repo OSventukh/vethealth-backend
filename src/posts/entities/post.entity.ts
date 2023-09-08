@@ -3,16 +3,20 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  ManyToMany,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  JoinTable,
+  JoinColumn,
 } from 'typeorm';
-
-import { PostStatusEnum } from '../post-status.enum';
-import { User } from '@/users/entities/user.entity';
+import { UserEntity } from '@/users/entities/user.entity';
+import { TopicEntity } from '@/topics/entities/topic.entity';
+import { CategoryEntity } from '@/categories/entities/category.entity';
+import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
 
 @Entity({ name: 'posts' })
-export class Post {
+export class PostEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -28,6 +32,9 @@ export class Post {
   @Column({ unique: true })
   slug: string;
 
+  @Column({ nullable: true })
+  featuredImage?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -37,12 +44,18 @@ export class Post {
   @DeleteDateColumn()
   deletedAt: Date;
 
-  @Column({ type: 'enum', enum: PostStatusEnum, default: PostStatusEnum.Draft })
-  status: string;
+  @ManyToOne(() => PostStatusEntity, { eager: true })
+  status: PostStatusEntity;
 
-  @Column({ nullable: true })
-  featuredImage?: string;
+  @ManyToMany(() => CategoryEntity)
+  @JoinTable({ name: 'PostCategory' })
+  categories: CategoryEntity[];
 
-  @ManyToOne(() => User, (user) => user.posts)
-  author: User;
+  @ManyToMany(() => TopicEntity)
+  @JoinTable({ name: 'PostTopic' })
+  topic: TopicEntity[];
+
+  @ManyToOne(() => UserEntity, (user) => user.posts)
+  @JoinColumn({ name: 'userId' })
+  author: UserEntity;
 }

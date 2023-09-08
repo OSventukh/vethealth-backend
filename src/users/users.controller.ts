@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { User } from './entities/user.entity';
+import { UserEntity } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginationType } from '@/utils/types/pagination.type';
@@ -25,13 +25,13 @@ export class UsersController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
+  createUser(@Body() createUserDto: CreateUserDto): Promise<UserEntity> {
     return this.usersService.create(createUserDto);
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  getOneUser(@Param('id') id: string): Promise<User | null> {
+  getOneUser(@Param('id') id: string): Promise<UserEntity | null> {
     return this.usersService.findOne({ id });
   }
 
@@ -39,7 +39,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   getAllUsers(
     @Query() pagination: PaginationQueryDto,
-  ): Promise<PaginationType<User>> {
+  ): Promise<PaginationType<UserEntity>> {
     return this.usersService.findManyWithPagination({
       page: pagination.page,
       size: pagination.size,
@@ -51,7 +51,7 @@ export class UsersController {
   updateUser(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<User> {
+  ): Promise<UserEntity> {
     return this.usersService.update(id, updateUserDto);
   }
 

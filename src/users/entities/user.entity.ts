@@ -9,13 +9,20 @@ import {
   BeforeInsert,
   BeforeUpdate,
   OneToMany,
+  ManyToMany,
+  ManyToOne,
+  JoinTable,
 } from 'typeorm';
-import { Exclude, Expose } from 'class-transformer';
-import { Post } from '@/posts/entities/post.entity';
+import { Exclude } from 'class-transformer';
+import { PostEntity } from '@/posts/entities/post.entity';
+import { RoleEntity } from '@/roles/entities/role.entity';
+import { UserStatusEntity } from '@/statuses/entities/user-status.entity';
+import { TopicEntity } from '@/topics/entities/topic.entity';
+
 import { hashPassword } from '@/utils/password-hash';
 
 @Entity({ name: 'users' })
-export class User {
+export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -57,8 +64,22 @@ export class User {
   @DeleteDateColumn()
   deletedAt: Date;
 
-  @OneToMany(() => Post, (post) => post.author)
-  posts: Post[];
+  @OneToMany(() => PostEntity, (post) => post.author)
+  posts: PostEntity[];
+
+  @ManyToOne(() => RoleEntity, {
+    eager: true,
+  })
+  role: RoleEntity;
+
+  @ManyToOne(() => UserStatusEntity, {
+    eager: true,
+  })
+  status: UserStatusEntity;
+
+  @JoinTable({ name: 'TopicUsers' })
+  @ManyToMany(() => TopicEntity)
+  topics: TopicEntity[];
 
   @BeforeInsert()
   @BeforeUpdate()
