@@ -10,6 +10,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { PagesModule } from './pages/pages.module';
 import { AuthModule } from './auth/auth.module';
 import { HomeModule } from './home/home.module';
+import { FilesModule } from './files/files.module';
 import databaseConfig from './config/database.config';
 import appConfig from './config/app.config';
 
@@ -33,6 +34,7 @@ import appConfig from './config/app.config';
     PagesModule,
     AuthModule,
     HomeModule,
+    FilesModule,
   ],
   controllers: [],
   providers: [],

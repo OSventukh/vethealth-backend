@@ -27,7 +27,12 @@ export type DatabaseConfig = {
   cert?: string;
 };
 
+export type FileConfig = {
+  maxFileSize: number;
+};
+
 export type AllConfigType = {
   app: AppConfig;
   database: DatabaseConfig;
+  file: FileConfig;
 };

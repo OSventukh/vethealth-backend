@@ -7,6 +7,7 @@ import {
   DeleteDateColumn,
   ManyToMany,
   ManyToOne,
+  OneToOne,
   OneToMany,
   JoinTable,
 } from 'typeorm';
@@ -17,6 +18,7 @@ import { CategoryEntity } from '@/categories/entities/category.entity';
 import { PageEntity } from '@/pages/entities/page.entity';
 import { UserEntity } from '@/users/entities/user.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
+import { FileEntity } from '@/files/entities/file.entity';
 
 @Entity({ name: 'topics' })
 export class TopicEntity {
@@ -26,8 +28,8 @@ export class TopicEntity {
   @Column()
   title: string;
 
-  @Column({ nullable: true })
-  image: string;
+  @OneToOne(() => FileEntity, { eager: true })
+  image: FileEntity;
 
   @Column({ nullable: true })
   description: string;
