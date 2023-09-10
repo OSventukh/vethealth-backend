@@ -14,6 +14,7 @@ import { UserEntity } from '@/users/entities/user.entity';
 import { TopicEntity } from '@/topics/entities/topic.entity';
 import { CategoryEntity } from '@/categories/entities/category.entity';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
+import { FileEntity } from '@/files/entities/file.entity';
 
 @Entity({ name: 'posts' })
 export class PostEntity {
@@ -32,8 +33,8 @@ export class PostEntity {
   @Column({ unique: true })
   slug: string;
 
-  @Column({ nullable: true })
-  featuredImage?: string;
+  @ManyToOne(() => FileEntity, { eager: true })
+  featuredImage?: FileEntity;
 
   @CreateDateColumn()
   createdAt: Date;
