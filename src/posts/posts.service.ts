@@ -19,9 +19,7 @@ export class PostsService {
     return this.postsRepository.save(post);
   }
 
-  async findOne(
-    fields: FindOptionsWhere<PostEntity>,
-  ): Promise<PostEntity | null> {
+  async findOne(fields: FindOptionsWhere<PostEntity>): Promise<PostEntity> {
     const post = await this.postsRepository.findOne({ where: fields });
     if (!post) {
       throw new NotFoundException();

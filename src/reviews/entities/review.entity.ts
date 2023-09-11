@@ -16,7 +16,11 @@ export class ReviewEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'enum', default: ReviewStatusEnum.Pending })
+  @Column({
+    type: 'enum',
+    enum: ReviewStatusEnum,
+    default: ReviewStatusEnum.Pending,
+  })
   status: ReviewStatusEnum;
 
   @OneToMany(() => ReviewCommentEntity, (comment) => comment.review)

@@ -21,14 +21,14 @@ export class CategoryEntity {
   slug: string;
 
   @ManyToOne(() => CategoryEntity, (category) => category.children)
-  parent: CategoryEntity;
+  parent?: CategoryEntity | null;
 
   @OneToMany(() => CategoryEntity, (category) => category.parent)
-  children: CategoryEntity;
+  children?: CategoryEntity[] | null;
 
   @ManyToMany(() => PostEntity)
-  posts: PostEntity[];
+  posts?: PostEntity[] | null;
 
   @ManyToMany(() => TopicEntity)
-  topics: TopicEntity[];
+  topics?: TopicEntity[] | null;
 }

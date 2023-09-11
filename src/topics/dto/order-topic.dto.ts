@@ -2,10 +2,10 @@ import { Transform } from 'class-transformer';
 import { IsIn, IsString, Validate } from 'class-validator';
 import { IsValidColumn } from '@/utils/validators/is-valid-column.validator';
 import { FindOptionsOrder } from 'typeorm';
-import { PostEntity } from '../entities/post.entity';
+import { TopicEntity } from '../entities/topic.entity';
 
-export class PostOrderQueryDto {
-  @Validate(IsValidColumn, ['PostEntity'], {
+export class TopicOrderQueryDto {
+  @Validate(IsValidColumn, ['TopicEntity'], {
     message: 'ColumnNotValid',
   })
   @IsString()
@@ -14,7 +14,7 @@ export class PostOrderQueryDto {
   @Transform(({ value }) => value?.toUpperCase())
   readonly sort? = 'ASC';
 
-  orderObject(): FindOptionsOrder<PostEntity> {
+  orderObject(): FindOptionsOrder<TopicEntity> {
     return { [this.order]: this.sort };
   }
 }
