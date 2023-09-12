@@ -5,7 +5,8 @@ import { DeepPartial, Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { createMock } from '@golevelup/ts-jest';
 import { CreatePostDto } from './dto/create-post.dto';
-import { PostStatusEnum } from './post-status.enum';
+import { UserEntity } from '@/users/entities/user.entity';
+import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
 import { PostOrderQueryDto } from './dto/order-post.dto';
 import { PostWhereQueryDto } from './dto/find-post.dto';
 
@@ -38,7 +39,8 @@ describe('PostsService', () => {
       title: 'Test title',
       content: 'Test content',
       excerpt: 'Test exerpt',
-      status: PostStatusEnum.Draft,
+      author: new UserEntity(),
+      status: new PostStatusEntity(),
     };
     postsService.create(createPostDto);
     expect(postsRepository.create).toBeCalledWith(createPostDto);

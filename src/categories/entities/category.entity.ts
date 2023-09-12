@@ -5,6 +5,10 @@ import {
   ManyToMany,
   OneToMany,
   ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  DeepPartial,
 } from 'typeorm';
 import { PostEntity } from '@/posts/entities/post.entity';
 import { TopicEntity } from '@/topics/entities/topic.entity';
@@ -20,11 +24,20 @@ export class CategoryEntity {
   @Column()
   slug: string;
 
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date;
+
   @ManyToOne(() => CategoryEntity, (category) => category.children)
-  parent?: CategoryEntity | null;
+  parent?: DeepPartial<CategoryEntity> | null;
 
   @OneToMany(() => CategoryEntity, (category) => category.parent)
-  children?: CategoryEntity[] | null;
+  children?: DeepPartial<CategoryEntity>[] | null;
 
   @ManyToMany(() => PostEntity)
   posts?: PostEntity[] | null;

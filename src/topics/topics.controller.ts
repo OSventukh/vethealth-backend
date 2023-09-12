@@ -23,30 +23,30 @@ import { UpdateTopicDto } from './dto/update-topic.dto';
 @ApiTags('Topics')
 @Controller('topics')
 export class TopicsController {
-  constructor(private readonly topicsServise: TopicsService) {}
+  constructor(private readonly topicsService: TopicsService) {}
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  createTopic(@Body() createTopicDto: CreateTopicDto): Promise<TopicEntity> {
-    return this.topicsServise.create(createTopicDto);
+  create(@Body() createTopicDto: CreateTopicDto): Promise<TopicEntity> {
+    return this.topicsService.create(createTopicDto);
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  getOneTopic(@Param('id') id: string): Promise<TopicEntity> {
-    return this.topicsServise.findOne({ id });
+  getOne(@Param('id') id: string): Promise<TopicEntity> {
+    return this.topicsService.findOne({ id });
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  getAllPosts(
+  getMany(
     @Query() pagination: PaginationQueryDto,
     @Query() orderDto: TopicOrderQueryDto,
     @Query() whereDto: TopicWhereQueryDto,
   ): Promise<PaginationType<TopicEntity>> | Promise<TopicEntity> {
     if (whereDto.slug) {
-      return this.topicsServise.findOne({ slug: whereDto.slug });
+      return this.topicsService.findOne({ slug: whereDto.slug });
     }
-    return this.topicsServise.findManyWithPagination(
+    return this.topicsService.findManyWithPagination(
       pagination,
       whereDto,
       orderDto.orderObject(),
@@ -55,16 +55,16 @@ export class TopicsController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  updateTopic(
+  update(
     @Param('id') id: string,
     @Body() updateTopicDto: UpdateTopicDto,
   ): Promise<TopicEntity> {
-    return this.topicsServise.update(id, updateTopicDto);
+    return this.topicsService.update(id, updateTopicDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteTopic(@Param('id') id: string): Promise<void> {
-    return this.topicsServise.softDelete(id);
+  delete(@Param('id') id: string): Promise<void> {
+    return this.topicsService.softDelete(id);
   }
 }

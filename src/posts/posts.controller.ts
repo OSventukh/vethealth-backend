@@ -26,19 +26,19 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  createPost(@Body() createPostDto: CreatePostDto): Promise<PostEntity> {
+  create(@Body() createPostDto: CreatePostDto): Promise<PostEntity> {
     return this.postsService.create(createPostDto);
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  getOnePost(@Param('id') id: string): Promise<PostEntity | null> {
+  getOne(@Param('id') id: string): Promise<PostEntity | null> {
     return this.postsService.findOne({ id });
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  getAllPosts(
+  getMany(
     @Query() pagination: PaginationQueryDto,
     @Query() orderDto: PostOrderQueryDto,
     @Query() whereDto?: PostWhereQueryDto,
@@ -55,7 +55,7 @@ export class PostsController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  updatePost(
+  update(
     @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,
   ): Promise<PostEntity> {
@@ -64,7 +64,7 @@ export class PostsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  deletePost(@Param('id') id: string): Promise<void> {
+  delete(@Param('id') id: string): Promise<void> {
     return this.postsService.softDelete(id);
   }
 }

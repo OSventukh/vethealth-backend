@@ -4,10 +4,12 @@ import { PostsService } from './posts.service';
 import { createMock } from '@golevelup/ts-jest';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { PostStatusEnum } from './post-status.enum';
 import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
 import { PostWhereQueryDto } from './dto/find-post.dto';
 import { PostOrderQueryDto } from './dto/order-post.dto';
+import { UserEntity } from '@/users/entities/user.entity';
+import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
+
 describe('PostsController', () => {
   let postsController: PostsController;
   let postsService: PostsService;
@@ -36,15 +38,16 @@ describe('PostsController', () => {
       title: 'Test title',
       content: 'Test Content',
       excerpt: 'Test excerpt',
-      status: PostStatusEnum.Draft,
+      author: new UserEntity(),
+      status: new PostStatusEntity(),
     };
-    postsController.createPost(createPostDto);
+    postsController.create(createPostDto);
     expect(postsService.create).toBeCalledWith(createPostDto);
   });
 
   it('should call a postsService.findOne() method with provided id', () => {
     const postId = '1';
-    postsController.getOnePost(postId);
+    postsController.getOne(postId);
     expect(postsService.findOne).toBeCalledWith({ id: postId });
   });
 
@@ -54,7 +57,7 @@ describe('PostsController', () => {
       size: 5,
     };
 
-    postsController.getAllPosts(
+    postsController.getMany(
       paginationQuery,
       new PostOrderQueryDto(),
       new PostWhereQueryDto(),
@@ -71,13 +74,13 @@ describe('PostsController', () => {
     const payload: UpdatePostDto = {
       title: 'Test Title',
     };
-    postsController.updatePost(postId, payload);
+    postsController.update(postId, payload);
     expect(postsService.update).toBeCalledWith(postId, payload);
   });
 
   it('should call a postsSerice.softDelete() method with provided id', () => {
     const postId = '1';
-    postsController.deletePost(postId);
+    postsController.delete(postId);
     expect(postsService.softDelete).toBeCalledWith(postId);
   });
 });
