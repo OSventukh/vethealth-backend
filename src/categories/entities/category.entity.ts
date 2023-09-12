@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   DeepPartial,
+  JoinTable,
 } from 'typeorm';
 import { PostEntity } from '@/posts/entities/post.entity';
 import { TopicEntity } from '@/topics/entities/topic.entity';
@@ -39,7 +40,8 @@ export class CategoryEntity {
   @OneToMany(() => CategoryEntity, (category) => category.parent)
   children?: DeepPartial<CategoryEntity>[] | null;
 
-  @ManyToMany(() => PostEntity)
+  @ManyToMany(() => PostEntity, (post) => post.categories)
+  @JoinTable({ name: 'category_post_relation' })
   posts?: PostEntity[] | null;
 
   @ManyToMany(() => TopicEntity)

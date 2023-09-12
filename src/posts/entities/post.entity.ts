@@ -7,7 +7,6 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  JoinTable,
   JoinColumn,
 } from 'typeorm';
 import { UserEntity } from '@/users/entities/user.entity';
@@ -48,13 +47,11 @@ export class PostEntity {
   @ManyToOne(() => PostStatusEntity, { eager: true })
   status: PostStatusEntity;
 
-  @ManyToMany(() => CategoryEntity)
-  @JoinTable({ name: 'PostCategory' })
+  @ManyToMany(() => CategoryEntity, (category) => category.posts)
   categories: CategoryEntity[];
 
-  @ManyToMany(() => TopicEntity)
-  @JoinTable({ name: 'PostTopic' })
-  topic: TopicEntity[];
+  @ManyToMany(() => TopicEntity, (topic) => topic.posts)
+  topics: TopicEntity[];
 
   @ManyToOne(() => UserEntity, (user) => user.posts)
   @JoinColumn({ name: 'userId' })

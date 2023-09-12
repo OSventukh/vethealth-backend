@@ -11,7 +11,6 @@ import {
   OneToMany,
   ManyToMany,
   ManyToOne,
-  JoinTable,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { PostEntity } from '@/posts/entities/post.entity';
@@ -77,8 +76,7 @@ export class UserEntity {
   })
   status: UserStatusEntity;
 
-  @JoinTable({ name: 'TopicUsers' })
-  @ManyToMany(() => TopicEntity)
+  @ManyToMany(() => TopicEntity, (topic) => topic.users)
   topics: TopicEntity[];
 
   @BeforeInsert()

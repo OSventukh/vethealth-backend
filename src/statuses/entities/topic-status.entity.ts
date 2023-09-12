@@ -2,7 +2,7 @@ import { Entity, PrimaryColumn, Column } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Allow } from 'class-validator';
 
-@Entity({ name: 'topicstatuses' })
+@Entity({ name: 'topic-statuses' })
 export class TopicStatusEntity {
   @ApiProperty({ example: 1 })
   @PrimaryColumn()

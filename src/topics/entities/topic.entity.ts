@@ -9,6 +9,7 @@ import {
   ManyToOne,
   OneToOne,
   OneToMany,
+  JoinColumn,
   JoinTable,
 } from 'typeorm';
 import { TopicContentEnum } from '../topic.enum';
@@ -29,6 +30,7 @@ export class TopicEntity {
   title: string;
 
   @OneToOne(() => FileEntity, { eager: true })
+  @JoinColumn()
   image: FileEntity;
 
   @Column({ nullable: true })
@@ -52,11 +54,12 @@ export class TopicEntity {
   @DeleteDateColumn()
   deletedAt: Date;
 
-  @ManyToMany(() => PostEntity)
+  @ManyToMany(() => PostEntity, (post) => post.topics)
+  @JoinTable({ name: 'topic_post_relation' })
   posts: PostEntity[];
 
-  @ManyToMany(() => CategoryEntity)
-  @JoinTable({ name: 'TopicCategory' })
+  @ManyToMany(() => CategoryEntity, (category) => category.topics)
+  @JoinTable({ name: 'topic_category_relation' })
   categories: CategoryEntity[];
 
   @ManyToOne(() => PageEntity)
@@ -68,6 +71,7 @@ export class TopicEntity {
   @OneToMany(() => TopicEntity, (topic) => topic.parent)
   children: TopicEntity;
 
-  @ManyToMany(() => UserEntity)
+  @ManyToMany(() => UserEntity, (user) => user.topics)
+  @JoinTable({ name: 'topic_user_relation' })
   users: UserEntity[];
 }
