@@ -1,0 +1,4 @@
+{
+  "**/*.ts": ["prettier --write", "eslint"],
+  "**/*.(ts)": "npm run type-check"
+}
