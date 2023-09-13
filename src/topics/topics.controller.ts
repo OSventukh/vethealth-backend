@@ -27,6 +27,7 @@ export class TopicsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createTopicDto: CreateTopicDto): Promise<TopicEntity> {
+    console.log(createTopicDto)
     return this.topicsService.create(createTopicDto);
   }
 

@@ -14,7 +14,6 @@ export class IsValidColumn implements ValidatorConstraintInterface {
     @InjectDataSource()
     private dataSource: DataSource,
   ) {}
-
   async validate(value: string, validationArguments: ValidationArguments) {
     const repository = validationArguments.constraints[0];
     const entityColumns = this.dataSource

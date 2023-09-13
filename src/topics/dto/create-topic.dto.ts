@@ -1,4 +1,4 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, Validate } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { FileEntity } from '@/files/entities/file.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
@@ -7,6 +7,7 @@ import { CategoryEntity } from '@/categories/entities/category.entity';
 import { PageEntity } from '@/pages/entities/page.entity';
 import { TopicEntity } from '../entities/topic.entity';
 import { DeepPartial } from 'typeorm';
+import { IsExist } from '@/utils/validators/is-exist.validator';
 
 export class CreateTopicDto {
   @ApiProperty()
@@ -17,9 +18,13 @@ export class CreateTopicDto {
   slug: string;
 
   @ApiProperty({ type: () => FileEntity })
+  @Validate(IsExist, ['FileEntity', 'id'], {
+    message: 'Image not found',
+  })
   image: FileEntity;
 
   @IsString()
+  @IsOptional()
   description?: string;
 
   @ApiProperty({ type: () => TopicStatusEntity })

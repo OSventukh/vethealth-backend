@@ -34,7 +34,7 @@ export class TopicEntity {
   image: FileEntity;
 
   @Column({ nullable: true })
-  description: string;
+  description?: string;
 
   @ManyToOne(() => TopicStatusEntity)
   status: TopicStatusEntity;
