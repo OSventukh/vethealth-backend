@@ -2,11 +2,13 @@ import { createTestModule } from './utils/test-module';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { PostsModule } from '@/posts/posts.module';
+
 import { DataSource } from 'typeorm';
 import { CreatePostDto } from '@/posts/dto/create-post.dto';
 import { UpdatePostDto } from '@/posts/dto/update-post.dto';
 import { PostsService } from '@/posts/posts.service';
-import { PostStatusEnum } from '@/posts/post-status.enum';
+import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
+import { UserEntity } from '@/users/entities/user.entity';
 
 describe('PostsController (e2e)', () => {
   let app: INestApplication;
@@ -18,7 +20,8 @@ describe('PostsController (e2e)', () => {
     content: 'Test content',
     excerpt: 'Test excerpt',
     slug: 'test-slug',
-    status: PostStatusEnum.Draft,
+    status: new PostStatusEntity(),
+    author: new UserEntity(),
   };
 
   beforeEach(async () => {
