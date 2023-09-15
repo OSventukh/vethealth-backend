@@ -11,7 +11,8 @@ export class CreateCategoryDto {
   name: string;
 
   @IsString()
-  slug: string;
+  @IsOptional()
+  slug?: string;
 
   @ApiProperty({ type: () => PostEntity })
   posts?: PostEntity[] | null;

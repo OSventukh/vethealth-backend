@@ -15,7 +15,8 @@ export class CreateTopicDto {
   title: string;
 
   @IsString()
-  slug: string;
+  @IsOptional()
+  slug?: string;
 
   @ApiProperty({ type: () => FileEntity })
   @Validate(IsExist, ['FileEntity', 'id'], {
