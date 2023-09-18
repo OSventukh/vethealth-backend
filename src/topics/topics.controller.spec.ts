@@ -76,7 +76,7 @@ describe('TopicsController', () => {
     expect(topicsService.update).toBeCalledWith(topicId, payload);
   });
 
-  it('should call a postsSerice.softDelete() method with provided id', () => {
+  it('should call a topicsService.softDelete() method with provided id', () => {
     const topicId = '1';
     topicsController.delete(topicId);
     expect(topicsService.softDelete).toBeCalledWith(topicId);

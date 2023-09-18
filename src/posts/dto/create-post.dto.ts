@@ -41,6 +41,7 @@ export class CreatePostDto {
   @ApiProperty()
   @Type(() => CategoryEntity)
   @IsOptional()
+  @IsString()
   categories?: CategoryEntity[] | null;
 
   @ApiProperty()

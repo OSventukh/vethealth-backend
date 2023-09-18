@@ -37,12 +37,10 @@ export class TopicsService {
     order: FindOptionsOrder<TopicEntity>,
   ): Promise<PaginationType<TopicEntity>> {
     const [items, count] = await this.topicsRepository.findAndCount({
-      where: { ...fields },
+      where: fields,
       skip: (paginationOptions.page - 1) * paginationOptions.size,
       take: paginationOptions.size,
-      order: {
-        ...order,
-      },
+      order: order,
     });
     return {
       items,
