@@ -12,7 +12,7 @@ import {
   JoinColumn,
   JoinTable,
 } from 'typeorm';
-import { TopicContentEnum } from '../topic.enum';
+import { TopicContentTypeEnum } from '../topic.enum';
 
 import { PostEntity } from '@/posts/entities/post.entity';
 import { CategoryEntity } from '@/categories/entities/category.entity';
@@ -36,14 +36,14 @@ export class TopicEntity {
   @Column({ nullable: true })
   description?: string;
 
-  @ManyToOne(() => TopicStatusEntity)
+  @ManyToOne(() => TopicStatusEntity, { eager: true })
   status: TopicStatusEntity;
 
   @Column()
   slug: string;
 
-  @Column({ type: 'enum', enum: TopicContentEnum })
-  content: TopicContentEnum;
+  @Column({ name: 'content_type', type: 'enum', enum: TopicContentTypeEnum })
+  contentType: TopicContentTypeEnum;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -69,7 +69,7 @@ export class TopicEntity {
   parent: TopicEntity;
 
   @OneToMany(() => TopicEntity, (topic) => topic.parent)
-  children: TopicEntity;
+  children: TopicEntity[];
 
   @ManyToMany(() => UserEntity, (user) => user.topics)
   @JoinTable({ name: 'topic_user_relation' })

@@ -8,7 +8,7 @@ import { TopicEntity } from './entities/topic.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
 import { TopicOrderQueryDto } from './dto/order-topic.dto';
 import { TopicWhereQueryDto } from './dto/find-topic.dto';
-import { TopicContentEnum } from './topic.enum';
+import { TopicContentTypeEnum } from './topic.enum';
 import { FileEntity } from '@/files/entities/file.entity';
 import { PostEntity } from '@/posts/entities/post.entity';
 
@@ -46,7 +46,7 @@ describe('TopicsService', () => {
   it('should call topicsRepository.create() method with createTopicDto object', () => {
     const createTopicDto: CreateTopicDto = {
       title: 'Test topics',
-      content: TopicContentEnum.Page,
+      contentType: TopicContentTypeEnum.Page,
       image: new FileEntity(),
       slug: 'test-topics',
       status: new TopicStatusEntity(),

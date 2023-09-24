@@ -7,8 +7,9 @@ import { DataSource } from 'typeorm';
 import { CreatePostDto } from '@/posts/dto/create-post.dto';
 import { UpdatePostDto } from '@/posts/dto/update-post.dto';
 import { PostsService } from '@/posts/posts.service';
-import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
 import { UserEntity } from '@/users/entities/user.entity';
+import { PostStatusSeedService } from '@/database/seeds/status/post-status-seed.service';
+import { StatusSeedModule } from '@/database/seeds/status/status-seed.module';
 
 describe('PostsController (e2e)', () => {
   let app: INestApplication;
@@ -20,17 +21,19 @@ describe('PostsController (e2e)', () => {
     content: 'Test content',
     excerpt: 'Test excerpt',
     slug: 'test-slug',
-    status: new PostStatusEntity(),
+    status: { id: '1' } as any,
     author: new UserEntity(),
   };
 
   beforeEach(async () => {
     const test = await createTestModule({
-      imports: [PostsModule],
+      imports: [PostsModule, StatusSeedModule],
     });
     app = test.app;
     connection = test.connection;
     postsService = app.get<PostsService>(PostsService);
+
+    await app.get(PostStatusSeedService).run();
     await app.init();
   });
 

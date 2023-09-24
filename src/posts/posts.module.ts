@@ -4,10 +4,11 @@ import { PostsController } from './posts.controller';
 import { PostsService } from './posts.service';
 import { PostEntity } from './entities/post.entity';
 import { IsValidColumn } from '@/utils/validators/is-valid-column.validator';
+import { IsExist } from '@/utils/validators/is-exist.validator';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PostEntity])],
   controllers: [PostsController],
-  providers: [PostsService, IsValidColumn],
+  providers: [PostsService, IsValidColumn, IsExist],
 })
 export class PostsModule {}

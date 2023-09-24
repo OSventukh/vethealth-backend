@@ -7,7 +7,7 @@ import { UpdateTopicDto } from './dto/update-topic.dto';
 import { TopicOrderQueryDto } from './dto/order-topic.dto';
 import { TopicWhereQueryDto } from './dto/find-topic.dto';
 import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
-import { TopicContentEnum } from './topic.enum';
+import { TopicContentTypeEnum } from './topic.enum';
 import { FileEntity } from '@/files/entities/file.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
 
@@ -35,7 +35,7 @@ describe('TopicsController', () => {
   it('should call a topicsService.create() method with CreateTopicDto object', () => {
     const createTopicDto: CreateTopicDto = {
       title: 'Test title',
-      content: TopicContentEnum.Page,
+      contentType: TopicContentTypeEnum.Page,
       image: new FileEntity(),
       status: new TopicStatusEntity(),
     };

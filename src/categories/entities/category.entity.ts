@@ -8,14 +8,15 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  DeepPartial,
   JoinTable,
 } from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
 import { PostEntity } from '@/posts/entities/post.entity';
 import { TopicEntity } from '@/topics/entities/topic.entity';
 
 @Entity({ name: 'categories' })
 export class CategoryEntity {
+  @ApiProperty({ example: 'cbcfa8b8-3a25-4adb-a9c6-e325f0d0f3ae' })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -35,10 +36,10 @@ export class CategoryEntity {
   deletedAt: Date;
 
   @ManyToOne(() => CategoryEntity, (category) => category.children)
-  parent?: DeepPartial<CategoryEntity> | null;
+  parent?: CategoryEntity | null;
 
   @OneToMany(() => CategoryEntity, (category) => category.parent)
-  children?: DeepPartial<CategoryEntity>[] | null;
+  children?: CategoryEntity[] | null;
 
   @ManyToMany(() => PostEntity, (post) => post.categories)
   @JoinTable({ name: 'category_post_relation' })
