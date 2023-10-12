@@ -38,15 +38,17 @@ export class CreatePostDto {
   })
   status: PostStatusEntity;
 
-  @ApiProperty({
-    type: () => FileEntity,
-  })
+  @ApiProperty()
   @Validate(IsExist, ['FileEntity', 'id'], {
     message: ERROR_MESSAGE.IMAGE_IS_NOT_VALID,
   })
   @Type(() => FileEntity)
   @IsOptional()
-  featuredImage?: FileEntity | null;
+  featuredImageFile?: FileEntity | null;
+
+  @ApiProperty()
+  @IsOptional()
+  featuredImageUrl?: string;
 
   @ApiProperty()
   @Type(() => CategoryEntity)

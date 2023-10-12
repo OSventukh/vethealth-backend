@@ -4,7 +4,7 @@ import { Exclude } from 'class-transformer';
 
 export class PostWhereQueryDto extends PartialType(CreatePostDto) {
   @Exclude()
-  featuredImage?: any;
+  featuredImageFile?: any;
 
   @Exclude()
   author: any;

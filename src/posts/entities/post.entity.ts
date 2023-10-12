@@ -8,7 +8,10 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   JoinColumn,
+  AfterInsert,
+  AfterLoad,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { UserEntity } from '@/users/entities/user.entity';
 import { TopicEntity } from '@/topics/entities/topic.entity';
 import { CategoryEntity } from '@/categories/entities/category.entity';
@@ -32,11 +35,15 @@ export class PostEntity {
   @Column({ unique: true })
   slug: string;
 
+  @Exclude({ toPlainOnly: true })
   @ManyToOne(() => FileEntity, { eager: true })
-  featuredImage?: FileEntity;
+  featuredImageFile?: FileEntity;
 
+  @Exclude({ toPlainOnly: true })
   @Column({ nullable: true })
   featuredImageUrl?: string;
+
+  featuredImage?: string;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -59,4 +66,10 @@ export class PostEntity {
   @ManyToOne(() => UserEntity, (user) => user.posts)
   @JoinColumn({ name: 'userId' })
   author: UserEntity;
+
+  @AfterInsert()
+  @AfterLoad()
+  getFeaturedImage() {
+    this.featuredImage = this.featuredImageFile?.path || this.featuredImageUrl;
+  }
 }

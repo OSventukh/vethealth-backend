@@ -7,6 +7,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { FilesService } from './files.service';
+import { Fields } from './constants/fields.enum';
 
 @ApiTags('Files')
 @Controller('files')
@@ -28,7 +29,7 @@ export class FilesController {
     },
   })
   @UseInterceptors(
-    FileInterceptor('post' || 'file' || 'topic' || 'post-featured'),
+    FileInterceptor(Fields.Post || Fields.Topic || Fields.PostFeatured),
   )
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
     return this.filesService.uploadFile(file);

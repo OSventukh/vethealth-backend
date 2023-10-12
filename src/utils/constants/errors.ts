@@ -8,4 +8,5 @@ export const ERROR_MESSAGE = {
   PARENT_IS_NOT_VALID: 'parentIsNotValid',
   CHILD_IS_NOT_VALID: 'childIsNotValid',
   STATUS_IS_NOT_VALID: 'statusIsNotValid',
+  FEATURED_IMAGE_NOT_VALID: 'featuredImageNotValid',
 } as const;
