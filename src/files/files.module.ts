@@ -1,5 +1,5 @@
 import * as path from 'path';
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import { Module, HttpException, HttpStatus } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterModule } from '@nestjs/platform-express';
@@ -10,6 +10,7 @@ import { FileEntity } from './entities/file.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AllConfigType } from '@/config/config.type';
 import slugify from 'slugify';
+import { directories } from './constants/directory.constant';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import slugify from 'slugify';
       useFactory: (configService: ConfigService<AllConfigType>) => {
         return {
           fileFilter: (request, file, callback) => {
-            if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/i)) {
+            if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
               return callback(
                 new HttpException(
                   {
@@ -38,37 +39,17 @@ import slugify from 'slugify';
             callback(null, true);
           },
           storage: diskStorage({
-            destination: (req, file, cb) => {
-              const uploadFolder = path.join(process.cwd(), 'uploads');
-              const imagesFolder = path.join(uploadFolder, 'images');
-              // create uploads/images folders if not exist
-              fs.mkdirSync(imagesFolder, { recursive: true });
-              let filePath: string;
-              switch (file.fieldname) {
-                case 'topic-image':
-                  const topicImages = path.join(imagesFolder, 'topics');
-                  // create folder upload/images/topics if not exist
-                  fs.mkdirSync(topicImages, { recursive: true });
-                  filePath = topicImages;
-                  break;
-                case 'post-image':
-                  const postImages = path.join(imagesFolder, 'posts');
-                  // create folder upload/images/posts if not exist
-                  fs.mkdirSync(postImages, { recursive: true });
-                  const dateFolder = path.join(
-                    postImages,
-                    new Date().toISOString().slice(0, 10),
-                  );
-                  // create folder upload/images/[yyyy-mm-dd] if not exist
-                  fs.mkdirSync(dateFolder, { recursive: true });
-                  filePath = dateFolder;
-
-                default:
-                  filePath = imagesFolder;
-                  break;
+            destination: async (req, file, cb) => {
+              const dir = directories[file.fieldname];
+              try {
+                await fs.mkdir(dir, {
+                  recursive: true,
+                });
+                const filePath = path.join(dir);
+                cb(null, filePath);
+              } catch (error) {
+                cb(error, null);
               }
-
-              cb(null, filePath);
             },
             filename: (req, file, cb) => {
               let fileName: string;

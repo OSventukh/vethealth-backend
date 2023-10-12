@@ -25,7 +25,7 @@ export class FilesService {
 
     return this.fileRepository.save(
       this.fileRepository.create({
-        path: file.path,
+        path: '/' + file.path.replace(/\\/g, '/'),
       }),
     );
   }

@@ -35,6 +35,9 @@ export class PostEntity {
   @ManyToOne(() => FileEntity, { eager: true })
   featuredImage?: FileEntity;
 
+  @Column({ nullable: true })
+  featuredImageUrl?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

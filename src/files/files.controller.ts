@@ -27,7 +27,9 @@ export class FilesController {
       },
     },
   })
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('post' || 'file' || 'topic' || 'post-featured'),
+  )
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
     return this.filesService.uploadFile(file);
   }
