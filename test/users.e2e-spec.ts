@@ -16,7 +16,7 @@ describe('UsersController (e2e)', () => {
     firstname: 'Test firstname',
     lastname: 'Test lastname',
     email: 'test@test.com',
-  };
+  } as CreateUserDto;
 
   beforeEach(async () => {
     const test = await createTestModule({

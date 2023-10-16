@@ -1,24 +1,24 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  AfterLoad,
-  BeforeInsert,
-  BeforeUpdate,
-  OneToMany,
-  ManyToMany,
-  ManyToOne,
-} from 'typeorm';
-import { Exclude } from 'class-transformer';
 import { PostEntity } from '@/posts/entities/post.entity';
 import { RoleEntity } from '@/roles/entities/role.entity';
 import { UserStatusEntity } from '@/statuses/entities/user-status.entity';
 import { TopicEntity } from '@/topics/entities/topic.entity';
-
 import { hashPassword } from '@/utils/password-hash';
+import { Exclude, Transform } from 'class-transformer';
+
+import {
+  AfterLoad,
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity({ name: 'users' })
 export class UserEntity {
@@ -69,14 +69,16 @@ export class UserEntity {
   @ManyToOne(() => RoleEntity, {
     eager: true,
   })
+  @Transform(({ obj }) => obj?.role?.name)
   role: RoleEntity;
 
   @ManyToOne(() => UserStatusEntity, {
     eager: true,
   })
+  @Transform(({ obj }) => obj?.status?.name)
   status: UserStatusEntity;
 
-  @ManyToMany(() => TopicEntity, (topic) => topic.users)
+  @ManyToMany(() => TopicEntity, (topic) => topic.users, { eager: true })
   topics: TopicEntity[];
 
   @BeforeInsert()

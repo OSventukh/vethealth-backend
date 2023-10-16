@@ -33,7 +33,7 @@ describe('UsersController', () => {
     const createUserDto: CreateUserDto = {
       email: 'test@test.com',
       firstname: 'Test',
-    };
+    } as CreateUserDto;
     usersController.createUser(createUserDto);
     expect(usersService.create).toBeCalledWith(createUserDto);
   });
