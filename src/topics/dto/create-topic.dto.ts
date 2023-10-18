@@ -36,7 +36,7 @@ export class CreateTopicDto {
   })
   contentType: TopicContentTypeEnum;
 
-  @ApiProperty({ type: () => TopicStatusEntity, example: 1 })
+  @ApiProperty({ type: () => TopicStatusEntity })
   @Validate(IsExist, ['TopicStatusEntity', 'id'], {
     message: ERROR_MESSAGE.STATUS_IS_NOT_VALID,
   })

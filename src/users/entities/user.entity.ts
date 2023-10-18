@@ -78,7 +78,7 @@ export class UserEntity {
   @Transform(({ obj }) => obj?.status?.name)
   status: UserStatusEntity;
 
-  @ManyToMany(() => TopicEntity, (topic) => topic.users, { eager: true })
+  @ManyToMany(() => TopicEntity, (topic) => topic.users)
   topics: TopicEntity[];
 
   @BeforeInsert()

@@ -1,22 +1,22 @@
+import { PaginationType } from '@/utils/types/pagination.type';
 import {
-  Controller,
   Body,
-  Param,
-  Query,
-  Get,
-  Post,
-  Patch,
+  Controller,
   Delete,
-  HttpStatus,
+  Get,
   HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { UsersService } from './users.service';
-import { UserEntity } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PaginationType } from '@/utils/types/pagination.type';
-import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
+import { UserQueryDto } from './dto/user-query.dto';
+import { UserEntity } from './entities/user.entity';
+import { UsersService } from './users.service';
 
 @ApiTags('Users')
 @Controller('users')
@@ -38,12 +38,9 @@ export class UsersController {
   @Get()
   @HttpCode(HttpStatus.OK)
   getAllUsers(
-    @Query() pagination: PaginationQueryDto,
+    @Query() queryDto: UserQueryDto,
   ): Promise<PaginationType<UserEntity>> {
-    return this.usersService.findManyWithPagination({
-      page: pagination.page,
-      size: pagination.size,
-    });
+    return this.usersService.findManyWithPagination(queryDto);
   }
 
   @Patch(':id')
