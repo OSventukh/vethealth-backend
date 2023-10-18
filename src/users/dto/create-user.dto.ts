@@ -14,7 +14,6 @@ import { ERROR_MESSAGE } from '@/utils/constants/errors';
 import { RoleEntity } from '@/roles/entities/role.entity';
 import { TopicEntity } from '@/topics/entities/topic.entity';
 import { UserStatusEntity } from '@/statuses/entities/user-status.entity';
-import { UserStatusEnum } from '@/statuses/user-statuses.enum';
 import { IsNotSuperAdmin } from '../utils/validators/is-not-admin.validator';
 
 export class CreateUserDto {
@@ -52,7 +51,7 @@ export class CreateUserDto {
   @Validate(IsExist, ['UserStatusEntity', 'id'], {
     message: ERROR_MESSAGE.STATUS_IS_NOT_VALID,
   })
-  status: UserStatusEntity = { id: UserStatusEnum.Pending } as UserStatusEntity;
+  status: UserStatusEntity;
 
   @ApiProperty({ example: [{ id: '55de06e1-0384-4f6f-b118-eb3dd529af1e' }] })
   @IsOptional()
