@@ -11,4 +11,6 @@ export const ERROR_MESSAGE = {
   FEATURED_IMAGE_NOT_VALID: 'featuredImageIsNotValid',
   ROLE_IS_NOT_VALID: 'roleIsNotValid',
   SUPERADMIN_IS_NOT_ALLOWED: 'superAdminIsNotAllowed',
+  INCLUDE_IS_NOT_VALID: 'includeIsNotValid',
+  COLUMN_IS_NOT_VALID: 'columnIsNotValid',
 } as const;

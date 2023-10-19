@@ -1,16 +1,12 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, FindOptionsWhere, Repository } from 'typeorm';
 import { PaginationType } from '@/utils/types/pagination.type';
-import { RoleEnum } from '@/roles/roles.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { UserEntity } from './entities/user.entity';
 import { UserStatusEnum } from '@/statuses/user-statuses.enum';
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -87,19 +83,6 @@ export class UsersService {
     id: UserEntity['id'],
     payload: DeepPartial<UserEntity>,
   ): Promise<UserEntity> {
-    const user = await this.findOne({ id });
-
-    if (!user) {
-      throw new NotFoundException();
-    }
-
-    if (
-      user.role.id === RoleEnum.SuperAdmin &&
-      (payload.role || payload.status)
-    ) {
-      throw new ForbiddenException();
-    }
-
     return this.usersRepository.save(
       this.usersRepository.create({
         id,
@@ -109,16 +92,6 @@ export class UsersService {
   }
 
   async softDelete(id: UserEntity['id']): Promise<void> {
-    const user = await this.findOne({ id });
-
-    if (!user) {
-      throw new NotFoundException();
-    }
-
-    if (user.role.id === RoleEnum.SuperAdmin) {
-      throw new ForbiddenException();
-    }
-
     await this.usersRepository.softDelete(id);
   }
 }

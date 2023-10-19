@@ -13,6 +13,8 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import databaseConfig from '@/config/database.config';
 import appConfig from '@/config/app.config';
 import { getDataSourceToken } from '@nestjs/typeorm';
+import { RoleSeedModule } from '@/database/seeds/role/role-seed.module';
+import { StatusSeedModule } from '@/database/seeds/status/status-seed.module';
 
 interface CreateTestModule {
   imports?: Type<any>[];
@@ -41,6 +43,8 @@ export async function createTestModule({
           return new DataSource(options).initialize();
         },
       }),
+      RoleSeedModule,
+      StatusSeedModule,
       ...imports,
     ],
     controllers: controllers,

@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -17,6 +18,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { UserEntity } from './entities/user.entity';
 import { UsersService } from './users.service';
+import { DeleteUserGuard } from './guards/delete-user.guard';
+import { UpdateUserGuard } from './guards/update-user.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -43,6 +46,7 @@ export class UsersController {
     return this.usersService.findManyWithPagination(queryDto);
   }
 
+  @UseGuards(UpdateUserGuard)
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   updateUser(
@@ -52,6 +56,7 @@ export class UsersController {
     return this.usersService.update(id, updateUserDto);
   }
 
+  @UseGuards(DeleteUserGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteUser(@Param('id') id: string): Promise<void> {
