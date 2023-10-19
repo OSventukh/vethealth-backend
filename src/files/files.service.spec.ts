@@ -42,10 +42,10 @@ describe('FilesService', () => {
       mimetype: 'image/jpeg',
       buffer: Buffer.from('This is a test file'),
       size: 100,
-      path: '/path-to-file',
+      path: 'path-to-file',
     } as Express.Multer.File;
 
     filesService.uploadFile(file);
-    expect(filesRepositry.create).toBeCalledWith({ path: file.path });
+    expect(filesRepositry.create).toBeCalledWith({ path: '/' + file.path });
   });
 });

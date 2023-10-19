@@ -6,6 +6,7 @@ import { createMock } from '@golevelup/ts-jest';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Repository } from 'typeorm';
 import { DeepPartial } from 'typeorm';
+import { UserStatusEnum } from '@/statuses/user-statuses.enum';
 
 describe('UsersService', () => {
   let usersService: UsersService;
@@ -31,12 +32,19 @@ describe('UsersService', () => {
     expect(usersService).toBeDefined();
   });
 
-  it('should call usersRepository.create() method with createUserDto object', () => {
+  it('should call usersRepository.create() method with createUserDto object and default status', () => {
     const createUserDto: CreateUserDto = {
       firstname: 'Test',
     } as CreateUserDto;
-    usersService.create(createUserDto);
-    expect(usersRepository.create).toBeCalledWith(createUserDto);
+    usersService.create({
+      ...createUserDto,
+    });
+    expect(usersRepository.create).toBeCalledWith({
+      ...createUserDto,
+      status: {
+        id: UserStatusEnum.Pending,
+      },
+    });
   });
 
   it('should call usersRepository.findOne() method with object that have where field and passed value', () => {
@@ -47,10 +55,29 @@ describe('UsersService', () => {
   it('should call usersRepository.findAndCount() method with options', () => {
     const page = 1;
     const size = 5;
-    usersService.findManyWithPagination({ page, size });
+    const order = 'createdAt';
+    const sort = 'ASC';
+
+    usersService.findManyWithPagination({ page, size, sort, order });
     expect(usersRepository.findAndCount).toBeCalledWith({
+      where: {
+        firstname: undefined,
+        lastname: undefined,
+        role: {
+          name: undefined,
+        },
+        status: {
+          name: undefined,
+        },
+      },
       skip: (page - 1) * size,
       take: size,
+      relations: {
+        topics: undefined,
+      },
+      order: {
+        [order]: sort,
+      },
     });
   });
 

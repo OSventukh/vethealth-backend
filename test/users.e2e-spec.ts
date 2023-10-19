@@ -6,6 +6,10 @@ import { CreateUserDto } from '@/users/dto/create-user.dto';
 import { UpdateUserDto } from '@/users/dto/update-user.dto';
 import { DataSource } from 'typeorm';
 import { UsersService } from '@/users/users.service';
+import { RoleEnum } from '@/roles/roles.enum';
+import { RoleSeedService } from '@/database/seeds/role/role-seed.service';
+import { UserStatusSeedService } from '@/database/seeds/status/user-status-seed.service';
+import { IsValidColumn } from '@/utils/validators/is-valid-column.validator';
 
 describe('UsersController (e2e)', () => {
   let app: INestApplication;
@@ -16,15 +20,21 @@ describe('UsersController (e2e)', () => {
     firstname: 'Test firstname',
     lastname: 'Test lastname',
     email: 'test@test.com',
+    role: {
+      id: RoleEnum.Writer,
+    },
   } as CreateUserDto;
 
   beforeEach(async () => {
     const test = await createTestModule({
       imports: [UsersModule],
+      providers: [IsValidColumn],
     });
     app = test.app;
     connection = test.connection;
     usersService = app.get<UsersService>(UsersService);
+    await app.get(UserStatusSeedService).run();
+    await app.get(RoleSeedService).run();
     await app.init();
   });
 

@@ -28,6 +28,7 @@ export class IsNotExist implements ValidatorConstraintInterface {
       where: {
         [validationArguments.property]: value,
       },
+      withDeleted: true,
     })) as ValidationEntity;
 
     if (entity?.id === currentValue?.id) {
