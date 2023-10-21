@@ -6,8 +6,6 @@ import { TopicsService } from './topics.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { TopicEntity } from './entities/topic.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
-import { TopicOrderQueryDto } from './dto/order-topic.dto';
-import { TopicWhereQueryDto } from './dto/find-topic.dto';
 import { TopicContentTypeEnum } from './topic.enum';
 import { FileEntity } from '@/files/entities/file.entity';
 import { PostEntity } from '@/posts/entities/post.entity';
@@ -66,11 +64,7 @@ describe('TopicsService', () => {
   it('should call topicsRepository.findAdnCount() mehtod with options', () => {
     const page = 1;
     const size = 5;
-    topicsService.findManyWithPagination(
-      { page, size },
-      new TopicWhereQueryDto(),
-      new TopicOrderQueryDto().orderObject(),
-    );
+    topicsService.findManyWithPagination({ page, size });
     expect(topicsRepository.findAndCount).toBeCalledWith({
       skip: (page - 1) * size,
       take: size,

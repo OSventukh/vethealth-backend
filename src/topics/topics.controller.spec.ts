@@ -4,8 +4,6 @@ import { TopicsController } from './topics.controller';
 import { TopicsService } from './topics.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
-import { TopicOrderQueryDto } from './dto/order-topic.dto';
-import { TopicWhereQueryDto } from './dto/find-topic.dto';
 import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
 import { TopicContentTypeEnum } from './topic.enum';
 import { FileEntity } from '@/files/entities/file.entity';
@@ -55,15 +53,9 @@ describe('TopicsController', () => {
       size: 5,
     };
 
-    topicsController.getMany(
-      paginationQuery,
-      new TopicOrderQueryDto(),
-      new TopicWhereQueryDto(),
-    );
+    topicsController.getMany(paginationQuery);
     expect(topicsService.findManyWithPagination).toBeCalledWith(
       paginationQuery,
-      new TopicWhereQueryDto(),
-      new TopicOrderQueryDto().orderObject(),
     );
   });
 

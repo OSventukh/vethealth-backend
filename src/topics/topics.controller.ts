@@ -15,10 +15,9 @@ import { ApiTags } from '@nestjs/swagger';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { TopicEntity } from './entities/topic.entity';
 import { TopicsService } from './topics.service';
-import { TopicOrderQueryDto } from './dto/order-topic.dto';
-import { TopicWhereQueryDto } from './dto/find-topic.dto';
 import { PaginationType } from '@/utils/types/pagination.type';
 import { UpdateTopicDto } from './dto/update-topic.dto';
+import { TopicQueryDto } from './dto/topic-query.dto';
 
 @ApiTags('Topics')
 @Controller('topics')
@@ -39,18 +38,12 @@ export class TopicsController {
   @Get()
   @HttpCode(HttpStatus.OK)
   getMany(
-    @Query() pagination: PaginationQueryDto,
-    @Query() orderDto: TopicOrderQueryDto,
-    @Query() whereDto: TopicWhereQueryDto,
+    @Query() queryDto: TopicQueryDto,
   ): Promise<PaginationType<TopicEntity>> | Promise<TopicEntity> {
-    if (whereDto.slug) {
-      return this.topicsService.findOne({ slug: whereDto.slug });
+    if (queryDto?.slug) {
+      return this.topicsService.findOne({ slug: queryDto.slug });
     }
-    return this.topicsService.findManyWithPagination(
-      pagination,
-      whereDto,
-      orderDto.orderObject(),
-    );
+    return this.topicsService.findManyWithPagination(queryDto);
   }
 
   @Patch(':id')

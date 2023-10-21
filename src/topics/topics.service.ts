@@ -1,15 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  DeepPartial,
-  FindOptionsOrder,
-  FindOptionsWhere,
-  Repository,
-} from 'typeorm';
+import { DeepPartial, FindOptionsWhere, Repository } from 'typeorm';
 import { TopicEntity } from './entities/topic.entity';
 import { CreateTopicDto } from './dto/create-topic.dto';
-import { PaginationOptions } from '@/utils/types/pagination-options.type';
 import { PaginationType } from '@/utils/types/pagination.type';
+import { TopicQueryDto } from './dto/topic-query.dto';
 
 @Injectable()
 export class TopicsService {
@@ -32,21 +27,34 @@ export class TopicsService {
   }
 
   async findManyWithPagination(
-    paginationOptions: PaginationOptions,
-    fields: FindOptionsWhere<TopicEntity>,
-    order: FindOptionsOrder<TopicEntity>,
+    queryDto: TopicQueryDto,
   ): Promise<PaginationType<TopicEntity>> {
+    const { title, slug, status, include, order, sort, page, size } = queryDto;
     const [items, count] = await this.topicsRepository.findAndCount({
-      where: fields,
-      skip: (paginationOptions.page - 1) * paginationOptions.size,
-      take: paginationOptions.size,
-      order: order,
+      where: {
+        title,
+        slug,
+        status: {
+          name: status,
+        },
+      },
+      skip: (page - 1) * size,
+      take: size,
+      order:
+        order === 'status' ? { status: { name: sort } } : { [order]: sort },
+      relations: {
+        users: include?.includes('users'),
+        categories: include?.includes('categories'),
+        page: include?.includes('page'),
+        parent: include?.includes('parent'),
+        children: include?.includes('children'),
+      },
     });
     return {
       items,
       count,
-      currentPage: paginationOptions.page,
-      totalPages: Math.ceil(count / paginationOptions.size),
+      currentPage: page,
+      totalPages: Math.ceil(count / size),
     };
   }
 
