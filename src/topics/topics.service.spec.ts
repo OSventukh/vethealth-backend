@@ -9,6 +9,7 @@ import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
 import { TopicContentTypeEnum } from './topic.enum';
 import { FileEntity } from '@/files/entities/file.entity';
 import { PostEntity } from '@/posts/entities/post.entity';
+import { TopicQueryDto } from './dto/topic-query.dto';
 
 describe('TopicsService', () => {
   let module: TestingModule;
@@ -62,15 +63,29 @@ describe('TopicsService', () => {
   });
 
   it('should call topicsRepository.findAdnCount() mehtod with options', () => {
-    const page = 1;
-    const size = 5;
-    topicsService.findManyWithPagination({ page, size });
+    const queryDto = new TopicQueryDto();
+    const { page, size, include, order, sort, slug, title, status } = queryDto;
+
+    topicsService.findManyWithPagination(queryDto);
     expect(topicsRepository.findAndCount).toBeCalledWith({
       skip: (page - 1) * size,
       take: size,
-      where: {},
+      where: {
+        slug,
+        title,
+        status: {
+          name: status,
+        },
+      },
       order: {
-        createdAt: 'ASC',
+        [order]: sort,
+      },
+      relations: {
+        users: Boolean(include?.includes('users')),
+        categories: Boolean(include?.includes('categories')),
+        page: Boolean(include?.includes('page')),
+        parent: Boolean(include?.includes('parent')),
+        children: Boolean(include?.includes('children')),
       },
     });
   });

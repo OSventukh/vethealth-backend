@@ -4,10 +4,10 @@ import { TopicsController } from './topics.controller';
 import { TopicsService } from './topics.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
-import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
 import { TopicContentTypeEnum } from './topic.enum';
 import { FileEntity } from '@/files/entities/file.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
+import { TopicQueryDto } from './dto/topic-query.dto';
 
 describe('TopicsController', () => {
   let module: TestingModule;
@@ -48,15 +48,13 @@ describe('TopicsController', () => {
   });
 
   it('should call a topicsService.findManyWithPafination() method with provided page and size', () => {
-    const paginationQuery: PaginationQueryDto = {
+    const queryDto: TopicQueryDto = {
       page: 1,
       size: 5,
     };
 
-    topicsController.getMany(paginationQuery);
-    expect(topicsService.findManyWithPagination).toBeCalledWith(
-      paginationQuery,
-    );
+    topicsController.getMany(queryDto);
+    expect(topicsService.findManyWithPagination).toBeCalledWith(queryDto);
   });
 
   it('should call a topicsService.update() method with provided id and payload object', () => {

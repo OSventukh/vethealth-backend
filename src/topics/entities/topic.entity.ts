@@ -20,6 +20,7 @@ import { PageEntity } from '@/pages/entities/page.entity';
 import { UserEntity } from '@/users/entities/user.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
 import { FileEntity } from '@/files/entities/file.entity';
+import { Transform } from 'class-transformer';
 
 @Entity({ name: 'topics' })
 export class TopicEntity {
@@ -37,6 +38,7 @@ export class TopicEntity {
   description?: string;
 
   @ManyToOne(() => TopicStatusEntity, { eager: true })
+  @Transform(({ obj }) => obj?.status?.name)
   status: TopicStatusEntity;
 
   @Column()

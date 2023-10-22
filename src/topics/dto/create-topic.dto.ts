@@ -1,4 +1,10 @@
-import { IsString, IsOptional, Validate, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  Validate,
+  IsArray,
+  IsObject,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { FileEntity } from '@/files/entities/file.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
@@ -20,6 +26,7 @@ export class CreateTopicDto {
   slug?: string;
 
   @ApiProperty({ type: () => FileEntity })
+  @IsObject()
   @Validate(IsExist, ['FileEntity', 'id'], {
     message: ERROR_MESSAGE.IMAGE_IS_NOT_VALID,
   })
@@ -37,6 +44,7 @@ export class CreateTopicDto {
   contentType: TopicContentTypeEnum;
 
   @ApiProperty({ type: () => TopicStatusEntity })
+  @IsObject()
   @Validate(IsExist, ['TopicStatusEntity', 'id'], {
     message: ERROR_MESSAGE.STATUS_IS_NOT_VALID,
   })
@@ -58,6 +66,7 @@ export class CreateTopicDto {
     type: () => PageEntity,
     example: { id: 'cbcfa8b8-3a25-4adb-a9c6-e325f0d0f3ae' },
   })
+  @IsObject()
   @IsOptional()
   @Validate(IsExist, ['PageEntity', 'id'], {
     message: ERROR_MESSAGE.PAGE_IS_NOT_VALID,
@@ -68,6 +77,7 @@ export class CreateTopicDto {
     type: () => TopicEntity,
     example: { id: 'cbcfa8b8-3a25-4adb-a9c6-e325f0d0f3ae' },
   })
+  @IsObject()
   @Validate(IsExist, ['TopicEntity', 'id'], {
     message: ERROR_MESSAGE.PARENT_IS_NOT_VALID,
   })

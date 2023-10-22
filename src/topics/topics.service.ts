@@ -43,11 +43,11 @@ export class TopicsService {
       order:
         order === 'status' ? { status: { name: sort } } : { [order]: sort },
       relations: {
-        users: include?.includes('users'),
-        categories: include?.includes('categories'),
-        page: include?.includes('page'),
-        parent: include?.includes('parent'),
-        children: include?.includes('children'),
+        users: Boolean(include?.includes('users')),
+        categories: Boolean(include?.includes('categories')),
+        page: Boolean(include?.includes('page')),
+        parent: Boolean(include?.includes('parent')),
+        children: Boolean(include?.includes('children')),
       },
     });
     return {
