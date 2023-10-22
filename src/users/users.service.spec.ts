@@ -63,10 +63,10 @@ describe('UsersService', () => {
       page,
       size,
       include,
-      order,
+      orderBy,
       sort,
     } = queryDto;
-    usersService.findManyWithPagination({ page, size, sort, order });
+    usersService.findManyWithPagination({ page, size, sort, orderBy });
     expect(usersRepository.findAndCount).toBeCalledWith({
       where: {
         firstname,
@@ -84,7 +84,7 @@ describe('UsersService', () => {
         topics: Boolean(include?.includes('topics')),
       },
       order: {
-        [order]: sort,
+        [orderBy]: sort,
       },
     });
   });

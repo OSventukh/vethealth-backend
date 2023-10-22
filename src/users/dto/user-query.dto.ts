@@ -5,6 +5,8 @@ import { IsValidColumn } from '@/utils/validators/is-valid-column.validator';
 import { IsValidIncludes } from '@/utils/validators/is-valid-includes.validator';
 import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
+import { FindOptionsOrderValue } from 'typeorm';
+import { UserEntity } from '../entities/user.entity';
 
 export class UserQueryDto extends PaginationQueryDto {
   @ApiProperty({ required: false })
@@ -42,10 +44,10 @@ export class UserQueryDto extends PaginationQueryDto {
     { message: ERROR_MESSAGE.COLUMN_IS_NOT_VALID },
   )
   @IsString()
-  readonly order? = 'createdAt';
+  readonly orderBy?: keyof UserEntity = 'createdAt';
 
   @ApiProperty({ required: false })
   @IsIn(['DESC', 'ASC'])
   @Transform(({ value }) => value?.toUpperCase())
-  readonly sort? = 'ASC';
+  readonly sort?: FindOptionsOrderValue = 'ASC';
 }

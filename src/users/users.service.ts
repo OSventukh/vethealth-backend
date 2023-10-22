@@ -6,7 +6,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { UserEntity } from './entities/user.entity';
 import { UserStatusEnum } from '@/statuses/user-statuses.enum';
-
+import { userOrder } from './utils/user-order';
 @Injectable()
 export class UsersService {
   constructor(
@@ -43,13 +43,12 @@ export class UsersService {
       lastname,
       role,
       status,
-      order,
+      orderBy,
       sort,
       include,
       page,
       size,
     } = queryDto;
-
     const [items, count] = await this.usersRepository.findAndCount({
       where: {
         firstname,
@@ -63,9 +62,7 @@ export class UsersService {
       },
       skip: (page - 1) * size,
       take: size,
-      order: {
-        [order]: sort,
-      },
+      order: userOrder(orderBy, sort),
       relations: {
         topics: Boolean(include?.includes('topics')),
       },
