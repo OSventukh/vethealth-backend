@@ -4,7 +4,7 @@ import { UsersService } from './users.service';
 import { createMock } from '@golevelup/ts-jest';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
+import { UserQueryDto } from './dto/user-query.dto';
 
 describe('UsersController', () => {
   let usersController: UsersController;
@@ -45,12 +45,12 @@ describe('UsersController', () => {
   });
 
   it('should call a usersService.findManyWithPagination() method with provided page and size', () => {
-    const paginationQuery: PaginationQueryDto = {
+    const queryDto: UserQueryDto = {
       page: 1,
       size: 5,
     };
-    usersController.getAllUsers(paginationQuery);
-    expect(usersService.findManyWithPagination).toBeCalledWith(paginationQuery);
+    usersController.getAllUsers(queryDto);
+    expect(usersService.findManyWithPagination).toBeCalledWith(queryDto);
   });
 
   it('should call a usersService.update() method with provided id and payload object', () => {

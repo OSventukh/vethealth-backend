@@ -7,6 +7,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { Repository } from 'typeorm';
 import { DeepPartial } from 'typeorm';
 import { UserStatusEnum } from '@/statuses/user-statuses.enum';
+import { UserQueryDto } from './dto/user-query.dto';
 
 describe('UsersService', () => {
   let usersService: UsersService;
@@ -53,27 +54,34 @@ describe('UsersService', () => {
   });
 
   it('should call usersRepository.findAndCount() method with options', () => {
-    const page = 1;
-    const size = 5;
-    const order = 'createdAt';
-    const sort = 'ASC';
-
+    const queryDto = new UserQueryDto();
+    const {
+      firstname,
+      lastname,
+      role,
+      status,
+      page,
+      size,
+      include,
+      order,
+      sort,
+    } = queryDto;
     usersService.findManyWithPagination({ page, size, sort, order });
     expect(usersRepository.findAndCount).toBeCalledWith({
       where: {
-        firstname: undefined,
-        lastname: undefined,
+        firstname,
+        lastname,
         role: {
-          name: undefined,
+          name: role,
         },
         status: {
-          name: undefined,
+          name: status,
         },
       },
       skip: (page - 1) * size,
       take: size,
       relations: {
-        topics: undefined,
+        topics: Boolean(include?.includes('topics')),
       },
       order: {
         [order]: sort,

@@ -67,7 +67,7 @@ export class UsersService {
         [order]: sort,
       },
       relations: {
-        topics: include?.includes('topics'),
+        topics: Boolean(include?.includes('topics')),
       },
     });
 
