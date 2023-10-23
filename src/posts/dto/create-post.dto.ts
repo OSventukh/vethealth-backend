@@ -8,10 +8,14 @@ import { TopicEntity } from '@/topics/entities/topic.entity';
 import { UserEntity } from '@/users/entities/user.entity';
 import { IsExist } from '@/utils/validators/is-exist.validator';
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
+import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
 
 export class CreatePostDto {
   @ApiProperty()
   @IsString()
+  @Validate(IsNotExist, ['PostEntity'], {
+    message: ERROR_MESSAGE.TITLE_MUST_BE_UNIQUE,
+  })
   title: string;
 
   @ApiProperty()
@@ -25,6 +29,9 @@ export class CreatePostDto {
   @ApiProperty()
   @IsString()
   @IsOptional()
+  @Validate(IsNotExist, ['PostEntity'], {
+    message: ERROR_MESSAGE.SLUG_MUST_BE_UNIQUE,
+  })
   slug?: string;
 
   @ApiProperty()

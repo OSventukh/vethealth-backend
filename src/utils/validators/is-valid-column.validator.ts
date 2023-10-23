@@ -18,7 +18,7 @@ export class IsValidColumn implements ValidatorConstraintInterface {
     const repository = validationArguments.constraints[0];
     const entityColumns = this.dataSource
       .getMetadata(repository)
-      .columns.map((column) => column.propertyName);
+      .columns.map((column) => column?.propertyName);
     return Boolean(entityColumns.includes(value));
   }
 }
