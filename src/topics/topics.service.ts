@@ -5,6 +5,7 @@ import { TopicEntity } from './entities/topic.entity';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { PaginationType } from '@/utils/types/pagination.type';
 import { TopicQueryDto } from './dto/topic-query.dto';
+import { topicOrder } from './utils/topic-order';
 
 @Injectable()
 export class TopicsService {
@@ -29,7 +30,8 @@ export class TopicsService {
   async findManyWithPagination(
     queryDto: TopicQueryDto,
   ): Promise<PaginationType<TopicEntity>> {
-    const { title, slug, status, include, order, sort, page, size } = queryDto;
+    const { title, slug, status, include, orderBy, sort, page, size } =
+      queryDto;
     const [items, count] = await this.topicsRepository.findAndCount({
       where: {
         title,
@@ -40,15 +42,8 @@ export class TopicsService {
       },
       skip: (page - 1) * size,
       take: size,
-      order:
-        order === 'status' ? { status: { name: sort } } : { [order]: sort },
-      relations: {
-        users: Boolean(include?.includes('users')),
-        categories: Boolean(include?.includes('categories')),
-        page: Boolean(include?.includes('page')),
-        parent: Boolean(include?.includes('parent')),
-        children: Boolean(include?.includes('children')),
-      },
+      order: topicOrder(orderBy, sort),
+      relations: include,
     });
     return {
       items,

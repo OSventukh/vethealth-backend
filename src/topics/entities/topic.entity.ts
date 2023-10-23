@@ -27,10 +27,11 @@ export class TopicEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   title: string;
 
   @OneToOne(() => FileEntity, { eager: true })
+  @Transform(({ obj }) => obj?.image?.path)
   @JoinColumn()
   image: FileEntity;
 
@@ -41,10 +42,14 @@ export class TopicEntity {
   @Transform(({ obj }) => obj?.status?.name)
   status: TopicStatusEntity;
 
-  @Column()
+  @Column({ unique: true })
   slug: string;
 
-  @Column({ name: 'content_type', type: 'enum', enum: TopicContentTypeEnum })
+  @Column({
+    name: 'content_type',
+    type: 'enum',
+    enum: TopicContentTypeEnum,
+  })
   contentType: TopicContentTypeEnum;
 
   @CreateDateColumn()

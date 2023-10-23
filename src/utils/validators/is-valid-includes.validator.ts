@@ -13,10 +13,21 @@ export class IsValidIncludes implements ValidatorConstraintInterface {
     if (!value) {
       return true;
     }
+
     if (!Array.isArray(validValues) || validValues.length === 0) {
       return false;
     }
-    const values = value.split(',');
+
+    let values: string[] = [];
+
+    if (typeof value === 'string') {
+      values = value?.split(',');
+    }
+
+    if (typeof value === 'object') {
+      values = Object.keys(value);
+    }
+
     return values.every((value) => validValues.includes(value));
   }
 }

@@ -64,7 +64,8 @@ describe('TopicsService', () => {
 
   it('should call topicsRepository.findAdnCount() mehtod with options', () => {
     const queryDto = new TopicQueryDto();
-    const { page, size, include, order, sort, slug, title, status } = queryDto;
+    const { page, size, include, orderBy, sort, slug, title, status } =
+      queryDto;
 
     topicsService.findManyWithPagination(queryDto);
     expect(topicsRepository.findAndCount).toBeCalledWith({
@@ -78,15 +79,9 @@ describe('TopicsService', () => {
         },
       },
       order: {
-        [order]: sort,
+        [orderBy]: sort,
       },
-      relations: {
-        users: Boolean(include?.includes('users')),
-        categories: Boolean(include?.includes('categories')),
-        page: Boolean(include?.includes('page')),
-        parent: Boolean(include?.includes('parent')),
-        children: Boolean(include?.includes('children')),
-      },
+      relations: include,
     });
   });
 
