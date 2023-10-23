@@ -14,8 +14,8 @@ import { CategoryEntity } from '@/categories/entities/category.entity';
 import { PageEntity } from '@/pages/entities/page.entity';
 import { TopicEntity } from '../entities/topic.entity';
 import { IsExist } from '@/utils/validators/is-exist.validator';
-import { ERROR_MESSAGE } from '@/utils/constants/errors';
 import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
+import { ERROR_MESSAGE } from '@/utils/constants/errors';
 
 export class CreateTopicDto {
   @ApiProperty()
@@ -49,6 +49,7 @@ export class CreateTopicDto {
     enum: TopicContentTypeEnum,
     examples: TopicContentTypeEnum,
   })
+  @IsEnum(TopicContentTypeEnum)
   @IsEnum(TopicContentTypeEnum)
   contentType: TopicContentTypeEnum;
 
