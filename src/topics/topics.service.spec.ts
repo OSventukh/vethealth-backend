@@ -10,6 +10,7 @@ import { TopicContentTypeEnum } from './topic.enum';
 import { FileEntity } from '@/files/entities/file.entity';
 import { PostEntity } from '@/posts/entities/post.entity';
 import { TopicQueryDto } from './dto/topic-query.dto';
+import { topicOrder } from './utils/topic-order';
 
 describe('TopicsService', () => {
   let module: TestingModule;
@@ -78,9 +79,7 @@ describe('TopicsService', () => {
           name: status,
         },
       },
-      order: {
-        [orderBy]: sort,
-      },
+      order: topicOrder(orderBy, sort),
       relations: include,
     });
   });

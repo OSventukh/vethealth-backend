@@ -3,9 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
 import { PostEntity } from './entities/post.entity';
 import { PaginationType } from 'src/utils/types/pagination.type';
-import { PaginationOptions } from 'src/utils/types/pagination-options.type';
 import { CreatePostDto } from './dto/create-post.dto';
-import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere } from 'typeorm';
+import { PostQueryDto } from './dto/post-query.dto';
+import { postOrder } from './utils/post-order';
 
 @Injectable()
 export class PostsService {
@@ -27,24 +28,31 @@ export class PostsService {
     return post;
   }
   async findManyWithPagination(
-    paginationOptions: PaginationOptions,
-    fields: FindOptionsWhere<PostEntity>,
-    order: FindOptionsOrder<PostEntity>,
+    queryDto: PostQueryDto,
   ): Promise<PaginationType<PostEntity>> {
+    const { title, author, status, include, page, size, orderBy, sort } =
+      queryDto;
     const [items, count] = await this.postsRepository.findAndCount({
-      where: { ...fields },
-      skip: (paginationOptions.page - 1) * paginationOptions.size,
-      take: paginationOptions.size,
-      order: {
-        ...order,
+      where: {
+        title,
+        status: {
+          name: status,
+        },
+        author: {
+          firstname: author,
+        },
       },
+      skip: (page - 1) * size,
+      take: size,
+      order: postOrder(orderBy, sort),
+      relations: include,
     });
 
     return {
       items,
       count,
-      currentPage: paginationOptions.page,
-      totalPages: Math.ceil(count / paginationOptions.size),
+      currentPage: page,
+      totalPages: Math.ceil(count / size),
     };
   }
 

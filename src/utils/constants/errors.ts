@@ -15,4 +15,5 @@ export const ERROR_MESSAGE = {
   COLUMN_IS_NOT_VALID: 'columnIsNotValid',
   TITLE_MUST_BE_UNIQUE: 'titleMustBeUnique',
   SLUG_MUST_BE_UNIQUE: 'slugMustBeUnique',
+  RELATION_IS_NOT_SET: 'relationIsNotSet',
 } as const;

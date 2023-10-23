@@ -1,6 +1,3 @@
-import { PostOrderQueryDto } from '@/posts/dto/order-post.dto';
-import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
-import { PaginationType } from '@/utils/types/pagination.type';
 import {
   Body,
   Controller,
@@ -15,12 +12,14 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { PaginationType } from '@/utils/types/pagination.type';
 import { CreatePostDto } from './dto/create-post.dto';
-import { PostWhereQueryDto } from './dto/find-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostEntity } from './entities/post.entity';
 import { FeaturedImagePipe } from './pipe/featured-image-validation.pipe';
 import { PostsService } from './posts.service';
+import { PostQueryDto } from './dto/post-query.dto';
+import { AuthorOrderValidationPipe } from './pipe/author-order-validation.pipe';
 
 @ApiTags('Posts')
 @UsePipes(FeaturedImagePipe)
@@ -40,20 +39,15 @@ export class PostsController {
   }
 
   @Get()
+  @UsePipes(AuthorOrderValidationPipe)
   @HttpCode(HttpStatus.OK)
   getMany(
-    @Query() pagination: PaginationQueryDto,
-    @Query() orderDto: PostOrderQueryDto,
-    @Query() whereDto?: PostWhereQueryDto,
+    @Query() queryDto: PostQueryDto,
   ): Promise<PaginationType<PostEntity>> | Promise<PostEntity> {
-    if (whereDto.slug) {
-      return this.postsService.findOne({ slug: whereDto.slug });
+    if (queryDto?.slug) {
+      return this.postsService.findOne({ slug: queryDto.slug });
     }
-    return this.postsService.findManyWithPagination(
-      pagination,
-      whereDto,
-      orderDto.orderObject(),
-    );
+    return this.postsService.findManyWithPagination(queryDto);
   }
 
   @Patch(':id')

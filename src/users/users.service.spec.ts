@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { DeepPartial } from 'typeorm';
 import { UserStatusEnum } from '@/statuses/user-statuses.enum';
 import { UserQueryDto } from './dto/user-query.dto';
+import { userOrder } from './utils/user-order';
 
 describe('UsersService', () => {
   let usersService: UsersService;
@@ -66,7 +67,7 @@ describe('UsersService', () => {
       orderBy,
       sort,
     } = queryDto;
-    usersService.findManyWithPagination({ page, size, sort, orderBy });
+    usersService.findManyWithPagination(queryDto);
     expect(usersRepository.findAndCount).toBeCalledWith({
       where: {
         firstname,
@@ -81,9 +82,7 @@ describe('UsersService', () => {
       skip: (page - 1) * size,
       take: size,
       relations: include,
-      order: {
-        [orderBy]: sort,
-      },
+      order: userOrder(orderBy, sort),
     });
   });
 
