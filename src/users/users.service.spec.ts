@@ -80,9 +80,7 @@ describe('UsersService', () => {
       },
       skip: (page - 1) * size,
       take: size,
-      relations: {
-        topics: Boolean(include?.includes('topics')),
-      },
+      relations: include,
       order: {
         [orderBy]: sort,
       },

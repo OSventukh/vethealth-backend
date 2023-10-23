@@ -63,9 +63,7 @@ export class UsersService {
       skip: (page - 1) * size,
       take: size,
       order: userOrder(orderBy, sort),
-      relations: {
-        topics: Boolean(include?.includes('topics')),
-      },
+      relations: include,
     });
 
     return {

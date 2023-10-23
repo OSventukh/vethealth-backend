@@ -5,8 +5,9 @@ import { IsValidColumn } from '@/utils/validators/is-valid-column.validator';
 import { IsValidIncludes } from '@/utils/validators/is-valid-includes.validator';
 import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
-import { FindOptionsOrderValue } from 'typeorm';
+import { FindOptionsOrderValue, FindOptionsRelations } from 'typeorm';
 import { UserEntity } from '../entities/user.entity';
+import { includeStringToObjectTransform } from '@/utils/transformers/include-transform';
 
 export class UserQueryDto extends PaginationQueryDto {
   @ApiProperty({ required: false })
@@ -30,10 +31,11 @@ export class UserQueryDto extends PaginationQueryDto {
   status?: string;
 
   @ApiProperty({ required: false })
+  @Transform(includeStringToObjectTransform)
   @Validate(IsValidIncludes, ['topics'], {
     message: ERROR_MESSAGE.INCLUDE_IS_NOT_VALID,
   })
-  include?: string;
+  include?: FindOptionsRelations<UserEntity>;
 
   @ApiProperty({ required: false })
   @Validate(IsValidColumn, ['UserEntity'], {
