@@ -13,4 +13,6 @@ export const ERROR_MESSAGE = {
   SUPERADMIN_IS_NOT_ALLOWED: 'superAdminIsNotAllowed',
   INCLUDE_IS_NOT_VALID: 'includeIsNotValid',
   COLUMN_IS_NOT_VALID: 'columnIsNotValid',
+  TITLE_MUST_BE_UNIQUE: 'titleMustBeUnique',
+  SLUG_MUST_BE_UNIQUE: 'slugMustBeUnique',
 } as const;

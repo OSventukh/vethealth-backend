@@ -5,7 +5,9 @@ import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
 import { IsValidColumn } from '@/utils/validators/is-valid-column.validator';
 import { IsValidIncludes } from '@/utils/validators/is-valid-includes.validator';
 import { Transform } from 'class-transformer';
-import { FindOptionsOrderValue } from 'typeorm';
+import { FindOptionsOrderValue, FindOptionsRelations } from 'typeorm';
+import { TopicEntity } from '../entities/topic.entity';
+import { includeStringToObjectTransform } from '@/utils/transformers/include-transform';
 
 export class TopicQueryDto extends PaginationQueryDto {
   @ApiProperty({ required: false })
@@ -24,6 +26,7 @@ export class TopicQueryDto extends PaginationQueryDto {
   slug?: string;
 
   @ApiProperty({ required: false })
+  @Transform(includeStringToObjectTransform)
   @Validate(
     IsValidIncludes,
     ['posts', 'categories', 'page', 'parent', 'children', 'users'],
@@ -31,7 +34,7 @@ export class TopicQueryDto extends PaginationQueryDto {
       message: ERROR_MESSAGE.INCLUDE_IS_NOT_VALID,
     },
   )
-  include?: string;
+  include?: FindOptionsRelations<TopicEntity>;
 
   @ApiProperty({ required: false })
   @Validate(IsValidColumn, ['TopicEntity'], {
@@ -39,7 +42,7 @@ export class TopicQueryDto extends PaginationQueryDto {
   })
   @IsNotIn([], { message: ERROR_MESSAGE.COLUMN_IS_NOT_VALID })
   @IsString()
-  order? = 'createdAt';
+  orderBy?: keyof TopicEntity = 'createdAt';
 
   @ApiProperty({ required: false })
   @IsIn(['DESC', 'ASC'])
