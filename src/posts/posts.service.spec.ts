@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PostsService } from './posts.service';
 import { PostEntity } from './entities/post.entity';
-import { DeepPartial, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { createMock } from '@golevelup/ts-jest';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -78,7 +78,7 @@ describe('PostsService', () => {
       id: '1',
       title: 'Test title',
     } as PostEntity;
-    postsService.update(post.id, post.title as DeepPartial<PostEntity>);
+    postsService.update(post);
     expect(postsRepository.save).toBeCalledWith(postsRepository.create(post));
   });
 

@@ -56,13 +56,8 @@ export class PostsService {
     };
   }
 
-  update(
-    id: PostEntity['id'],
-    payload: DeepPartial<PostEntity>,
-  ): Promise<PostEntity> {
-    return this.postsRepository.save(
-      this.postsRepository.create({ id, ...payload }),
-    );
+  update(payload: DeepPartial<PostEntity>): Promise<PostEntity> {
+    return this.postsRepository.save(this.postsRepository.create(payload));
   }
 
   async softDelete(id: PostEntity['id']): Promise<void> {

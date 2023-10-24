@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PagesService } from './pages.service';
-import { Repository, DeepPartial } from 'typeorm';
+import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { createMock } from '@golevelup/ts-jest';
 import { PageEntity } from './entities/page.entity';
@@ -82,7 +82,7 @@ describe('PagesService', () => {
       title: 'Test page',
     } as PageEntity;
 
-    pagesService.update(page.id, page.title as DeepPartial<PageEntity>);
+    pagesService.update(page);
     expect(pagesRepository.save).toBeCalledWith(pagesRepository.create(page));
   });
 

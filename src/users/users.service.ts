@@ -74,16 +74,8 @@ export class UsersService {
     };
   }
 
-  async update(
-    id: UserEntity['id'],
-    payload: DeepPartial<UserEntity>,
-  ): Promise<UserEntity> {
-    return this.usersRepository.save(
-      this.usersRepository.create({
-        id,
-        ...payload,
-      }),
-    );
+  async update(payload: DeepPartial<UserEntity>): Promise<UserEntity> {
+    return this.usersRepository.save(this.usersRepository.create(payload));
   }
 
   async softDelete(id: UserEntity['id']): Promise<void> {

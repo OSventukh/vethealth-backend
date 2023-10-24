@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Repository, DeepPartial } from 'typeorm';
+import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { createMock } from '@golevelup/ts-jest';
 import { TopicsService } from './topics.service';
@@ -90,7 +90,7 @@ describe('TopicsService', () => {
       title: 'Test topic',
     } as TopicEntity;
 
-    topicsService.update(topic.id, topic.title as DeepPartial<TopicEntity>);
+    topicsService.update(topic);
     expect(topicsRepository.save).toBeCalledWith(
       topicsRepository.create(topic),
     );

@@ -45,13 +45,10 @@ export class TopicsController {
     return this.topicsService.findManyWithPagination(queryDto);
   }
 
-  @Patch(':id')
+  @Patch()
   @HttpCode(HttpStatus.OK)
-  update(
-    @Param('id') id: string,
-    @Body() updateTopicDto: UpdateTopicDto,
-  ): Promise<TopicEntity> {
-    return this.topicsService.update(id, updateTopicDto);
+  update(@Body() updateTopicDto: UpdateTopicDto): Promise<TopicEntity> {
+    return this.topicsService.update(updateTopicDto);
   }
 
   @Delete(':id')

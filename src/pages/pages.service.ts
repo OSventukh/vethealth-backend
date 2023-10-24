@@ -52,13 +52,8 @@ export class PagesService {
     };
   }
 
-  update(
-    id: PageEntity['id'],
-    payload: DeepPartial<PageEntity>,
-  ): Promise<PageEntity> {
-    return this.pagesRepository.save(
-      this.pagesRepository.create({ id, ...payload }),
-    );
+  update(payload: DeepPartial<PageEntity>): Promise<PageEntity> {
+    return this.pagesRepository.save(this.pagesRepository.create(payload));
   }
 
   async softDelete(id: PageEntity['id']): Promise<void> {

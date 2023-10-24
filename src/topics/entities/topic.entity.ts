@@ -11,6 +11,8 @@ import {
   OneToMany,
   JoinColumn,
   JoinTable,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { TopicContentTypeEnum } from '../topic.enum';
 
@@ -21,6 +23,7 @@ import { UserEntity } from '@/users/entities/user.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
 import { FileEntity } from '@/files/entities/file.entity';
 import { Transform } from 'class-transformer';
+import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 
 @Entity({ name: 'topics' })
 export class TopicEntity {
@@ -81,4 +84,12 @@ export class TopicEntity {
   @ManyToMany(() => UserEntity, (user) => user.topics)
   @JoinTable({ name: 'topic_user_relation' })
   users: UserEntity[];
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  createSlug() {
+    if (this.slug || this.title) {
+      this.slug = stringToSlugTransform(this.slug || this.title);
+    }
+  }
 }

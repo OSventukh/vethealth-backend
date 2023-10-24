@@ -5,7 +5,6 @@ import { UsersService } from './users.service';
 import { createMock } from '@golevelup/ts-jest';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Repository } from 'typeorm';
-import { DeepPartial } from 'typeorm';
 import { UserStatusEnum } from '@/statuses/user-statuses.enum';
 import { UserQueryDto } from './dto/user-query.dto';
 import { userOrder } from './utils/user-order';
@@ -92,7 +91,7 @@ describe('UsersService', () => {
       firstname: 'Test',
     } as UserEntity;
 
-    usersService.update(user.id, user.firstname as DeepPartial<UserEntity>);
+    usersService.update(user);
 
     expect(usersRepository.save).toBeCalledWith(usersRepository.create(user));
   });

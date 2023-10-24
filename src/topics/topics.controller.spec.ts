@@ -58,12 +58,12 @@ describe('TopicsController', () => {
   });
 
   it('should call a topicsService.update() method with provided id and payload object', () => {
-    const topicId = '1';
     const payload: UpdateTopicDto = {
       title: 'Test Title',
+      id: 'testId',
     };
-    topicsController.update(topicId, payload);
-    expect(topicsService.update).toBeCalledWith(topicId, payload);
+    topicsController.update(payload);
+    expect(topicsService.update).toBeCalledWith(payload);
   });
 
   it('should call a topicsService.softDelete() method with provided id', () => {

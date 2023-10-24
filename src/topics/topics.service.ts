@@ -53,13 +53,8 @@ export class TopicsService {
     };
   }
 
-  update(
-    id: TopicEntity['id'],
-    payload: DeepPartial<TopicEntity>,
-  ): Promise<TopicEntity> {
-    return this.topicsRepository.save(
-      this.topicsRepository.create({ id, ...payload }),
-    );
+  update(payload: DeepPartial<TopicEntity>): Promise<TopicEntity> {
+    return this.topicsRepository.save(this.topicsRepository.create(payload));
   }
 
   async softDelete(id: TopicEntity['id']): Promise<void> {

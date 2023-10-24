@@ -47,11 +47,8 @@ export class PagesController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  update(
-    @Param('id') id: string,
-    @Body() updatePageDto: UpdatePageDto,
-  ): Promise<PageEntity> {
-    return this.pagesService.update(id, updatePageDto);
+  update(@Body() updatePageDto: UpdatePageDto): Promise<PageEntity> {
+    return this.pagesService.update(updatePageDto);
   }
 
   @Delete(':id')

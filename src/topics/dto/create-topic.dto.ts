@@ -16,6 +16,8 @@ import { TopicEntity } from '../entities/topic.entity';
 import { IsExist } from '@/utils/validators/is-exist.validator';
 import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
+import { Transform } from 'class-transformer';
+import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 
 export class CreateTopicDto {
   @ApiProperty()
@@ -28,6 +30,7 @@ export class CreateTopicDto {
   @ApiProperty()
   @IsString()
   @IsOptional()
+  @Transform(({ obj }) => stringToSlugTransform(obj.slug))
   @Validate(IsNotExist, ['TopicEntity'], {
     message: ERROR_MESSAGE.SLUG_MUST_BE_UNIQUE,
   })

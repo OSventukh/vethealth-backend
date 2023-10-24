@@ -93,6 +93,7 @@ describe('UsersController (e2e)', () => {
     const createdUser = await usersService.create(user);
     const payload: UpdateUserDto = {
       firstname: 'Updated firstname',
+      id: 'testId',
     };
 
     return request(app.getHttpServer())

@@ -96,6 +96,7 @@ describe('PostsController (e2e)', () => {
     const createdPost = await postsService.create(post);
     const payload: UpdatePostDto = {
       title: 'Updated Title',
+      id: 'testid',
     };
     return request(app.getHttpServer())
       .patch(`/posts/${createdPost.id}`)

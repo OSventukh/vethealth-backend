@@ -14,7 +14,7 @@ export class UpdateUserGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const body = request?.body;
-    const userId = request?.params?.id;
+    const userId = body?.id;
 
     const user = await this.usersService.findOne({ id: userId });
 

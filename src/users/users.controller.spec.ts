@@ -54,12 +54,12 @@ describe('UsersController', () => {
   });
 
   it('should call a usersService.update() method with provided id and payload object', () => {
-    const userId = '1';
     const payload: UpdateUserDto = {
       firstname: 'Test',
+      id: 'testId',
     };
-    usersController.updateUser(userId, payload);
-    expect(usersService.update).toBeCalledWith(userId, payload);
+    usersController.updateUser(payload);
+    expect(usersService.update).toBeCalledWith(payload);
   });
 
   it('should call a usersService.softDelete() method with provided id', () => {

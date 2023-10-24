@@ -10,6 +10,8 @@ import {
   JoinColumn,
   AfterInsert,
   AfterLoad,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { UserEntity } from '@/users/entities/user.entity';
@@ -17,6 +19,7 @@ import { TopicEntity } from '@/topics/entities/topic.entity';
 import { CategoryEntity } from '@/categories/entities/category.entity';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
 import { FileEntity } from '@/files/entities/file.entity';
+import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 
 @Entity({ name: 'posts' })
 export class PostEntity {
@@ -71,5 +74,13 @@ export class PostEntity {
   @AfterLoad()
   getFeaturedImage() {
     this.featuredImage = this.featuredImageFile?.path || this.featuredImageUrl;
+  }
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  createSlug() {
+    if (this.slug || this.title) {
+      this.slug = stringToSlugTransform(this.slug || this.title);
+    }
   }
 }

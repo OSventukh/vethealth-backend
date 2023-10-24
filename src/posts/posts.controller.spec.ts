@@ -60,12 +60,12 @@ describe('PostsController', () => {
   });
 
   it('should call a postsService.update() method with provided id and payload object', () => {
-    const postId = '1';
     const payload: UpdatePostDto = {
       title: 'Test Title',
+      id: 'testId',
     };
-    postsController.update(postId, payload);
-    expect(postsService.update).toBeCalledWith(postId, payload);
+    postsController.update(payload);
+    expect(postsService.update).toBeCalledWith(payload);
   });
 
   it('should call a postsSerice.softDelete() method with provided id', () => {

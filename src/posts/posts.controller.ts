@@ -55,11 +55,8 @@ export class PostsController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  update(
-    @Param('id') id: string,
-    @Body() updatePostDto: UpdatePostDto,
-  ): Promise<PostEntity> {
-    return this.postsService.update(id, updatePostDto);
+  update(@Body() updatePostDto: UpdatePostDto): Promise<PostEntity> {
+    return this.postsService.update(updatePostDto);
   }
 
   @Delete(':id')

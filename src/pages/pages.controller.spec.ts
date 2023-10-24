@@ -63,12 +63,12 @@ describe('PagesController', () => {
   });
 
   it('should call a pagesService.update() method with provided id and payload object', () => {
-    const pageId = '1';
     const payload: UpdatePageDto = {
       title: 'Test Title',
+      id: 'testid',
     };
-    pagesController.update(pageId, payload);
-    expect(pagesService.update).toBeCalledWith(pageId, payload);
+    pagesController.update(payload);
+    expect(pagesService.update).toBeCalledWith(payload);
   });
 
   it('should call a pagesService.softDelete() method with provided id', () => {
