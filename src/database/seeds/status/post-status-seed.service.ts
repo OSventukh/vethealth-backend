@@ -16,7 +16,7 @@ export class PostStatusSeedService {
     if (!count) {
       await this.postStatusRepository.save([
         this.postStatusRepository.create({
-          id: PostStatusEnum.Publidhed,
+          id: PostStatusEnum.Published,
           name: 'Published',
         }),
         this.postStatusRepository.create({

@@ -9,7 +9,7 @@ import {
 import { PostEntity } from '@/posts/entities/post.entity';
 import { UserEntity } from '@/users/entities/user.entity';
 import { ReviewCommentEntity } from './review-comment.entity';
-import { ReviewStatusEnum } from '../review-status.enum';
+import { ReviewStatusEnum } from '../enums/review-status.enum';
 
 @Entity({ name: 'reviews' })
 export class ReviewEntity {
@@ -19,7 +19,7 @@ export class ReviewEntity {
   @Column({
     type: 'enum',
     enum: ReviewStatusEnum,
-    default: ReviewStatusEnum.Pending,
+    default: ReviewStatusEnum.Awaiting,
   })
   status: ReviewStatusEnum;
 
