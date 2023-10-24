@@ -10,6 +10,7 @@ import {
   Post,
   Query,
   UsePipes,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { PaginationType } from '@/utils/types/pagination.type';
@@ -20,8 +21,10 @@ import { FeaturedImagePipe } from './pipe/featured-image-validation.pipe';
 import { PostsService } from './posts.service';
 import { PostQueryDto } from './dto/post-query.dto';
 import { AuthorOrderValidationPipe } from './pipe/author-order-validation.pipe';
+import { CreatePostGuard } from './guards/create-post.guard';
 
 @ApiTags('Posts')
+@UseGuards(CreatePostGuard)
 @UsePipes(FeaturedImagePipe)
 @Controller('posts')
 export class PostsController {

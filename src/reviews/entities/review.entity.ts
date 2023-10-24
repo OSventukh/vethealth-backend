@@ -19,7 +19,7 @@ export class ReviewEntity {
   @Column({
     type: 'enum',
     enum: ReviewStatusEnum,
-    default: ReviewStatusEnum.Pending,
+    default: ReviewStatusEnum.Awaiting,
   })
   status: ReviewStatusEnum;
 

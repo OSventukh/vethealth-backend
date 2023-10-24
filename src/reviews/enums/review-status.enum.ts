@@ -1,4 +1,7 @@
 export enum ReviewStatusEnum {
-  Awaiting = 'awaiting',
+  Approved = 'approved',
   Pending = 'pending',
+  Rejected = 'rejected',
+  Revision = 'revision',
+  Awaiting = 'awaiting',
 }
