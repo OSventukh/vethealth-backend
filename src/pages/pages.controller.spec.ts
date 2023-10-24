@@ -4,10 +4,8 @@ import { PagesController } from './pages.controller';
 import { PagesService } from './pages.service';
 import { CreatePageDto } from './dto/create-page.dto';
 import { UpdatePageDto } from './dto/update-page.dto';
-import { PageOrderQueryDto } from './dto/order-page.dto';
-import { PageWhereQueryDto } from './dto/find-page.dto';
+import { PageQueryDto } from './dto/page-query.dto';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
-import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
 
 describe('PagesController', () => {
   let module: TestingModule;
@@ -55,21 +53,13 @@ describe('PagesController', () => {
   });
 
   it('should call a pagesService.findManyWithPafination() method with provided page and size', () => {
-    const paginationQuery: PaginationQueryDto = {
+    const queryDto: PageQueryDto = {
       page: 1,
       size: 5,
     };
 
-    pagesController.getMany(
-      paginationQuery,
-      new PageOrderQueryDto(),
-      new PageWhereQueryDto(),
-    );
-    expect(pagesService.findManyWithPagination).toBeCalledWith(
-      paginationQuery,
-      new PageWhereQueryDto(),
-      new PageOrderQueryDto().orderObject(),
-    );
+    pagesController.getMany(queryDto);
+    expect(pagesService.findManyWithPagination).toBeCalledWith(queryDto);
   });
 
   it('should call a pagesService.update() method with provided id and payload object', () => {

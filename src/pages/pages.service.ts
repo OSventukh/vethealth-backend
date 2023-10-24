@@ -1,15 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  Repository,
-  DeepPartial,
-  FindOptionsOrder,
-  FindOptionsWhere,
-} from 'typeorm';
+import { Repository, DeepPartial, FindOptionsWhere } from 'typeorm';
 import { PageEntity } from './entities/page.entity';
 import { CreatePageDto } from './dto/create-page.dto';
-import { PaginationOptions } from '@/utils/types/pagination-options.type';
 import { PaginationType } from '@/utils/types/pagination.type';
+import { PageQueryDto } from './dto/page-query.dto';
+import { postOrder } from './utils/page-order';
 
 @Injectable()
 export class PagesService {
@@ -31,21 +27,28 @@ export class PagesService {
   }
 
   async findManyWithPagination(
-    paginationOptions: PaginationOptions,
-    fields: FindOptionsWhere<PageEntity>,
-    order: FindOptionsOrder<PageEntity>,
+    queryDto: PageQueryDto,
   ): Promise<PaginationType<PageEntity>> {
+    const { title, slug, status, page, size, include, orderBy, sort } =
+      queryDto;
     const [items, count] = await this.pagesRepository.findAndCount({
-      where: fields,
-      skip: (paginationOptions.page - 1) * paginationOptions.size,
-      take: paginationOptions.size,
-      order: order,
+      where: {
+        title,
+        slug,
+        status: {
+          name: status,
+        },
+      },
+      skip: (page - 1) * size,
+      take: size,
+      order: postOrder(orderBy, sort),
+      relations: include,
     });
     return {
       items,
       count,
-      currentPage: paginationOptions.page,
-      totalPages: Math.ceil(count / paginationOptions.size),
+      currentPage: page,
+      totalPages: Math.ceil(count / size),
     };
   }
 
