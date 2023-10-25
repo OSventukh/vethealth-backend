@@ -14,11 +14,9 @@ import { ApiTags } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { CategoryWhereQueryDto } from './dto/find-category.dto';
-import { CategoryOrderQueryDto } from './dto/order-category.dto';
 import { CategoryEntity } from './entities/category.entity';
-import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
 import { PaginationType } from '@/utils/types/pagination.type';
+import { CategoryQueryDto } from './dto/category-query.dto';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -41,27 +39,20 @@ export class CategoriesController {
   @Get()
   @HttpCode(HttpStatus.OK)
   getMany(
-    @Query() pagination: PaginationQueryDto,
-    @Query() orderDto: CategoryOrderQueryDto,
-    @Query() whereDto: CategoryWhereQueryDto,
+    @Query() queryDto: CategoryQueryDto,
   ): Promise<PaginationType<CategoryEntity>> | Promise<CategoryEntity> {
-    if (whereDto.slug) {
-      return this.categoriesService.findOne({ slug: whereDto.slug });
+    if (queryDto?.slug) {
+      return this.categoriesService.findOne({ slug: queryDto.slug });
     }
-    return this.categoriesService.findManyWithPagination(
-      pagination,
-      whereDto,
-      orderDto.orderObject(),
-    );
+    return this.categoriesService.findManyWithPagination(queryDto);
   }
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   update(
-    @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
   ): Promise<CategoryEntity> {
-    return this.categoriesService.update(id, updateCategoryDto);
+    return this.categoriesService.update(updateCategoryDto);
   }
 
   @Delete(':id')

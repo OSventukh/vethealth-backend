@@ -1,15 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  Repository,
-  FindOptionsWhere,
-  FindOptionsOrder,
-  DeepPartial,
-} from 'typeorm';
+import { Repository, FindOptionsWhere, DeepPartial } from 'typeorm';
 import { CategoryEntity } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
-import { PaginationOptions } from '@/utils/types/pagination-options.type';
 import { PaginationType } from '@/utils/types/pagination.type';
+import { CategoryQueryDto } from './dto/category-query.dto';
 
 @Injectable()
 export class CategoriesService {
@@ -34,32 +29,29 @@ export class CategoriesService {
   }
 
   async findManyWithPagination(
-    paginationOptions: PaginationOptions,
-    fields: FindOptionsWhere<CategoryEntity>,
-    order: FindOptionsOrder<CategoryEntity>,
+    queryDto: CategoryQueryDto,
   ): Promise<PaginationType<CategoryEntity>> {
+    const { name, include, orderBy, sort, page, size } = queryDto;
     const [items, count] = await this.categoriesRepository.findAndCount({
-      where: { ...fields },
-      skip: (paginationOptions.page - 1) * paginationOptions.size,
-      take: paginationOptions.size,
+      where: { name },
+      skip: (page - 1) * size,
+      take: size,
       order: {
-        ...order,
+        [orderBy]: sort,
       },
+      relations: include,
     });
     return {
       items,
       count,
-      currentPage: paginationOptions.page,
-      totalPages: Math.ceil(count / paginationOptions.size),
+      currentPage: page,
+      totalPages: Math.ceil(count / size),
     };
   }
 
-  update(
-    id: CategoryEntity['id'],
-    payload: DeepPartial<CategoryEntity>,
-  ): Promise<CategoryEntity> {
+  update(payload: DeepPartial<CategoryEntity>): Promise<CategoryEntity> {
     return this.categoriesRepository.save(
-      this.categoriesRepository.create({ id, ...payload }),
+      this.categoriesRepository.create(payload),
     );
   }
 

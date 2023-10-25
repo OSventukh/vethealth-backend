@@ -9,10 +9,13 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   JoinTable,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { PostEntity } from '@/posts/entities/post.entity';
 import { TopicEntity } from '@/topics/entities/topic.entity';
+import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 
 @Entity({ name: 'categories' })
 export class CategoryEntity {
@@ -46,5 +49,14 @@ export class CategoryEntity {
   posts?: PostEntity[] | null;
 
   @ManyToMany(() => TopicEntity)
+  @JoinTable({ name: 'topic_category_relation' })
   topics?: TopicEntity[] | null;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  createSlug() {
+    if (this.slug || this.name) {
+      this.slug = stringToSlugTransform(this.slug || this.name);
+    }
+  }
 }

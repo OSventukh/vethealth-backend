@@ -9,7 +9,7 @@ import { ERROR_MESSAGE } from '@/utils/constants/errors';
 export class CreateCategoryDto {
   @ApiProperty()
   @IsString()
-  name: string;
+  name?: string;
 
   @IsString()
   @IsOptional()
