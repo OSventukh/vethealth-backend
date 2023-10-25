@@ -11,13 +11,29 @@ import { ERROR_MESSAGE } from '@/utils/constants/errors';
 
 export class PostQueryDto extends PaginationQueryDto {
   @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   title?: string;
 
   @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   slug?: string;
 
   @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   author?: string;
+
+  @ApiProperty({ description: 'topic slug', example: 'dogs' })
+  @IsOptional()
+  @IsString()
+  topic?: string;
+
+  @ApiProperty({ description: 'category slug', example: 'treatment' })
+  @IsOptional()
+  @IsString()
+  category?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

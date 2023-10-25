@@ -30,8 +30,18 @@ export class PostsService {
   async findManyWithPagination(
     queryDto: PostQueryDto,
   ): Promise<PaginationType<PostEntity>> {
-    const { title, author, status, include, page, size, orderBy, sort } =
-      queryDto;
+    const {
+      title,
+      author,
+      topic,
+      category,
+      status,
+      include,
+      page,
+      size,
+      orderBy,
+      sort,
+    } = queryDto;
     const [items, count] = await this.postsRepository.findAndCount({
       where: {
         title,
@@ -40,6 +50,12 @@ export class PostsService {
         },
         author: {
           firstname: author,
+        },
+        topics: {
+          slug: topic,
+        },
+        categories: {
+          slug: category,
         },
       },
       skip: (page - 1) * size,
