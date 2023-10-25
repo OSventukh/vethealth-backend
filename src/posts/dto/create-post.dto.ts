@@ -62,6 +62,7 @@ export class CreatePostDto {
   @ApiProperty()
   @Type(() => CategoryEntity)
   @Validate(IsExist, ['CategoryEntity', 'id'], {
+    each: true,
     message: ERROR_MESSAGE.CATEGORY_IS_NOT_VALID,
   })
   @IsOptional()
@@ -71,6 +72,7 @@ export class CreatePostDto {
   @ApiProperty()
   @Type(() => TopicEntity)
   @Validate(IsExist, ['TopicEntity', 'id'], {
+    each: true,
     message: ERROR_MESSAGE.TOPIC_IS_NOT_VALID,
   })
   @IsOptional()
