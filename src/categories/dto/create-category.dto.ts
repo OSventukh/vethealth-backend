@@ -5,6 +5,9 @@ import { TopicEntity } from '@/topics/entities/topic.entity';
 import { PostEntity } from '@/posts/entities/post.entity';
 import { IsExist } from '@/utils/validators/is-exist.validator';
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
+import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
+import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
+import { Transform } from 'class-transformer';
 
 export class CreateCategoryDto {
   @ApiProperty()
@@ -13,10 +16,14 @@ export class CreateCategoryDto {
 
   @IsString()
   @IsOptional()
+  @Transform(({ obj }) => stringToSlugTransform(obj.slug))
+  @Validate(IsNotExist, ['CategoryEntity'], {
+    message: ERROR_MESSAGE.SLUG_MUST_BE_UNIQUE,
+  })
   slug?: string;
 
   @ApiProperty({ type: () => PostEntity })
-  @Validate(IsExist, ['PostEntity', 'id'], {
+  @Validate(IsExist, ['CategoryEntity', 'id'], {
     each: true,
     message: ERROR_MESSAGE.POST_IS_NOT_VALID,
   })
@@ -24,7 +31,7 @@ export class CreateCategoryDto {
   posts?: PostEntity[] | null;
 
   @ApiProperty({ type: () => TopicEntity })
-  @Validate(IsExist, ['TopicEntity', 'id'], {
+  @Validate(IsExist, ['CategoryEntity', 'id'], {
     each: true,
     message: ERROR_MESSAGE.TOPIC_IS_NOT_VALID,
   })
