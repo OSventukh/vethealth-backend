@@ -47,7 +47,7 @@ export class CategoriesController {
     return this.categoriesService.findManyWithPagination(queryDto);
   }
 
-  @Patch(':id')
+  @Patch()
   @HttpCode(HttpStatus.OK)
   update(
     @Body() updateCategoryDto: UpdateCategoryDto,

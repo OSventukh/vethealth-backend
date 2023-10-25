@@ -45,7 +45,7 @@ export class PagesController {
     return this.pagesService.findManyWithPagination(queryDto);
   }
 
-  @Patch(':id')
+  @Patch()
   @HttpCode(HttpStatus.OK)
   update(@Body() updatePageDto: UpdatePageDto): Promise<PageEntity> {
     return this.pagesService.update(updatePageDto);

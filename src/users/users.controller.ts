@@ -47,7 +47,7 @@ export class UsersController {
   }
 
   @UseGuards(UpdateUserGuard)
-  @Patch(':id')
+  @Patch()
   @HttpCode(HttpStatus.OK)
   updateUser(@Body() updateUserDto: UpdateUserDto): Promise<UserEntity> {
     return this.usersService.update(updateUserDto);

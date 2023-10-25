@@ -53,7 +53,7 @@ export class PostsController {
     return this.postsService.findManyWithPagination(queryDto);
   }
 
-  @Patch(':id')
+  @Patch()
   @HttpCode(HttpStatus.OK)
   update(@Body() updatePostDto: UpdatePostDto): Promise<PostEntity> {
     return this.postsService.update(updatePostDto);
