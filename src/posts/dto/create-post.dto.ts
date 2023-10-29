@@ -1,4 +1,4 @@
-import { IsString, IsOptional, Validate } from 'class-validator';
+import { IsString, IsOptional, Validate, IsArray } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
 import { FileEntity } from '@/files/entities/file.entity';
@@ -61,16 +61,17 @@ export class CreatePostDto {
 
   @ApiProperty()
   @Type(() => CategoryEntity)
+  @IsArray()
   @Validate(IsExist, ['CategoryEntity', 'id'], {
     each: true,
     message: ERROR_MESSAGE.CATEGORY_IS_NOT_VALID,
   })
   @IsOptional()
-  @IsString()
   categories?: CategoryEntity[] | null;
 
   @ApiProperty()
   @Type(() => TopicEntity)
+  @IsArray()
   @Validate(IsExist, ['TopicEntity', 'id'], {
     each: true,
     message: ERROR_MESSAGE.TOPIC_IS_NOT_VALID,
