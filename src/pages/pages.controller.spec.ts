@@ -48,8 +48,12 @@ describe('PagesController', () => {
 
   it('should call a pagesService.findOne() method with provided id', () => {
     const pageId = '1';
-    pagesController.getOne(pageId);
-    expect(pagesService.findOne).toBeCalledWith({ id: pageId });
+    const queryDto = new PageQueryDto();
+    pagesController.getOne(pageId, queryDto);
+    expect(pagesService.findOne).toBeCalledWith(
+      { id: pageId },
+      queryDto.include,
+    );
   });
 
   it('should call a pagesService.findManyWithPafination() method with provided page and size', () => {

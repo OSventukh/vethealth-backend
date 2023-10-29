@@ -45,8 +45,12 @@ describe('PostsController', () => {
 
   it('should call a postsService.findOne() method with provided id', () => {
     const postId = '1';
-    postsController.getOne(postId);
-    expect(postsService.findOne).toBeCalledWith({ id: postId });
+    const queryDto = new PostQueryDto();
+    postsController.getOne(postId, queryDto);
+    expect(postsService.findOne).toBeCalledWith(
+      { id: postId },
+      queryDto.include,
+    );
   });
 
   it('should call a postsService.findManyWithPafination() method with provided page and size', () => {

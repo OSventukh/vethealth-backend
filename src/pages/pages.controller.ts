@@ -30,8 +30,11 @@ export class PagesController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  getOne(@Param('id') id: string): Promise<PageEntity> {
-    return this.pagesService.findOne({ id });
+  getOne(
+    @Param('id') id: string,
+    @Query() queryDto: PageQueryDto,
+  ): Promise<PageEntity> {
+    return this.pagesService.findOne({ id }, queryDto.include);
   }
 
   @Get()
@@ -40,7 +43,10 @@ export class PagesController {
     @Query() queryDto: PageQueryDto,
   ): Promise<PaginationType<PageEntity>> | Promise<PageEntity> {
     if (queryDto?.slug) {
-      return this.pagesService.findOne({ slug: queryDto.slug });
+      return this.pagesService.findOne(
+        { slug: queryDto.slug },
+        queryDto.include,
+      );
     }
     return this.pagesService.findManyWithPagination(queryDto);
   }

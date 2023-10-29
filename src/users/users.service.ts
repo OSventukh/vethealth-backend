@@ -1,12 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, FindOptionsWhere, Repository } from 'typeorm';
+import {
+  DeepPartial,
+  FindOptionsRelations,
+  FindOptionsWhere,
+  Repository,
+} from 'typeorm';
 import { PaginationType } from '@/utils/types/pagination.type';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { UserEntity } from './entities/user.entity';
 import { UserStatusEnum } from '@/statuses/user-statuses.enum';
 import { userOrder } from './utils/user-order';
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -25,8 +31,12 @@ export class UsersService {
 
   async findOne(
     fields: FindOptionsWhere<UserEntity>,
+    include?: FindOptionsRelations<UserEntity>,
   ): Promise<UserEntity | null> {
-    const user = await this.usersRepository.findOne({ where: fields });
+    const user = await this.usersRepository.findOne({
+      where: fields,
+      relations: include,
+    });
 
     if (!user) {
       throw new NotFoundException();

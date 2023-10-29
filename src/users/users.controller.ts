@@ -28,19 +28,22 @@ export class UsersController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  createUser(@Body() createUserDto: CreateUserDto): Promise<UserEntity> {
+  create(@Body() createUserDto: CreateUserDto): Promise<UserEntity> {
     return this.usersService.create(createUserDto);
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  getOneUser(@Param('id') id: string): Promise<UserEntity | null> {
-    return this.usersService.findOne({ id });
+  getOne(
+    @Param('id') id: string,
+    @Query() queryDto: UserQueryDto,
+  ): Promise<UserEntity | null> {
+    return this.usersService.findOne({ id }, queryDto.include);
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  getAllUsers(
+  getMany(
     @Query() queryDto: UserQueryDto,
   ): Promise<PaginationType<UserEntity>> {
     return this.usersService.findManyWithPagination(queryDto);
@@ -49,14 +52,14 @@ export class UsersController {
   @UseGuards(UpdateUserGuard)
   @Patch()
   @HttpCode(HttpStatus.OK)
-  updateUser(@Body() updateUserDto: UpdateUserDto): Promise<UserEntity> {
+  update(@Body() updateUserDto: UpdateUserDto): Promise<UserEntity> {
     return this.usersService.update(updateUserDto);
   }
 
   @UseGuards(DeleteUserGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteUser(@Param('id') id: string): Promise<void> {
+  delete(@Param('id') id: string): Promise<void> {
     return this.usersService.softDelete(id);
   }
 }

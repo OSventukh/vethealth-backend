@@ -1,6 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, DeepPartial } from 'typeorm';
+import {
+  Repository,
+  FindOptionsWhere,
+  DeepPartial,
+  FindOptionsRelations,
+} from 'typeorm';
 import { CategoryEntity } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { PaginationType } from '@/utils/types/pagination.type';
@@ -20,8 +25,12 @@ export class CategoriesService {
 
   async findOne(
     fields: FindOptionsWhere<CategoryEntity>,
+    include?: FindOptionsRelations<CategoryEntity>,
   ): Promise<CategoryEntity> {
-    const topic = await this.categoriesRepository.findOne({ where: fields });
+    const topic = await this.categoriesRepository.findOne({
+      where: fields,
+      relations: include,
+    });
     if (!topic) {
       throw new NotFoundException();
     }

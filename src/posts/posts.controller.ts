@@ -37,8 +37,11 @@ export class PostsController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  getOne(@Param('id') id: string): Promise<PostEntity | null> {
-    return this.postsService.findOne({ id });
+  getOne(
+    @Param('id') id: string,
+    @Query() queryDto: PostQueryDto,
+  ): Promise<PostEntity | null> {
+    return this.postsService.findOne({ id }, queryDto.include);
   }
 
   @Get()
@@ -48,7 +51,10 @@ export class PostsController {
     @Query() queryDto: PostQueryDto,
   ): Promise<PaginationType<PostEntity>> | Promise<PostEntity> {
     if (queryDto?.slug) {
-      return this.postsService.findOne({ slug: queryDto.slug });
+      return this.postsService.findOne(
+        { slug: queryDto.slug },
+        queryDto.include,
+      );
     }
     return this.postsService.findManyWithPagination(queryDto);
   }

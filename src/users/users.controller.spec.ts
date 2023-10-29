@@ -34,14 +34,19 @@ describe('UsersController', () => {
       email: 'test@test.com',
       firstname: 'Test',
     } as CreateUserDto;
-    usersController.createUser(createUserDto);
+    usersController.create(createUserDto);
     expect(usersService.create).toBeCalledWith(createUserDto);
   });
 
   it('should call a usersService.findOne() with provided id', () => {
     const userId = '1';
-    usersController.getOneUser(userId);
-    expect(usersService.findOne).toBeCalledWith({ id: userId });
+    const queryDto = new UserQueryDto();
+
+    usersController.getOne(userId, queryDto);
+    expect(usersService.findOne).toBeCalledWith(
+      { id: userId },
+      queryDto.include,
+    );
   });
 
   it('should call a usersService.findManyWithPagination() method with provided page and size', () => {
@@ -49,7 +54,7 @@ describe('UsersController', () => {
       page: 1,
       size: 5,
     };
-    usersController.getAllUsers(queryDto);
+    usersController.getMany(queryDto);
     expect(usersService.findManyWithPagination).toBeCalledWith(queryDto);
   });
 
@@ -58,13 +63,13 @@ describe('UsersController', () => {
       firstname: 'Test',
       id: 'testId',
     };
-    usersController.updateUser(payload);
+    usersController.update(payload);
     expect(usersService.update).toBeCalledWith(payload);
   });
 
   it('should call a usersService.softDelete() method with provided id', () => {
     const userId = '1';
-    usersController.deleteUser(userId);
+    usersController.delete(userId);
     expect(usersService.softDelete).toBeCalledWith(userId);
   });
 });

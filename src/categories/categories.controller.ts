@@ -32,8 +32,11 @@ export class CategoriesController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  getOne(@Param('id') id: string): Promise<CategoryEntity> {
-    return this.categoriesService.findOne({ id });
+  getOne(
+    @Param('id') id: string,
+    @Query() queryDto: CategoryQueryDto,
+  ): Promise<CategoryEntity> {
+    return this.categoriesService.findOne({ id }, queryDto.include);
   }
 
   @Get()
@@ -42,7 +45,10 @@ export class CategoriesController {
     @Query() queryDto: CategoryQueryDto,
   ): Promise<PaginationType<CategoryEntity>> | Promise<CategoryEntity> {
     if (queryDto?.slug) {
-      return this.categoriesService.findOne({ slug: queryDto.slug });
+      return this.categoriesService.findOne(
+        { slug: queryDto.slug },
+        queryDto.include,
+      );
     }
     return this.categoriesService.findManyWithPagination(queryDto);
   }

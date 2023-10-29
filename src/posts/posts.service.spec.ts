@@ -53,8 +53,18 @@ describe('PostsService', () => {
 
   it('should call postsRepository.findAndCount() method with options', () => {
     const queryDto = new PostQueryDto();
-    const { title, author, include, status, page, size, orderBy, sort } =
-      queryDto;
+    const {
+      title,
+      author,
+      topic,
+      category,
+      include,
+      status,
+      page,
+      size,
+      orderBy,
+      sort,
+    } = queryDto;
     postsService.findManyWithPagination(queryDto);
     expect(postsRepository.findAndCount).toBeCalledWith({
       where: {
@@ -64,6 +74,12 @@ describe('PostsService', () => {
         },
         author: {
           firstname: author,
+        },
+        topics: {
+          slug: topic,
+        },
+        categories: {
+          slug: category,
         },
       },
       skip: (page - 1) * size,
