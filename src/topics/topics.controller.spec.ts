@@ -43,8 +43,13 @@ describe('TopicsController', () => {
 
   it('should call a topicsService.findOne() method with provided id', () => {
     const topicId = '1';
-    topicsController.getOne(topicId);
-    expect(topicsService.findOne).toBeCalledWith({ id: topicId });
+    const queryDto = new TopicQueryDto();
+
+    topicsController.getOne(topicId, queryDto);
+    expect(topicsService.findOne).toBeCalledWith(
+      { id: topicId },
+      queryDto.include,
+    );
   });
 
   it('should call a topicsService.findManyWithPafination() method with provided page and size', () => {

@@ -30,8 +30,11 @@ export class TopicsController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  getOne(@Param('id') id: string): Promise<TopicEntity> {
-    return this.topicsService.findOne({ id });
+  getOne(
+    @Param('id') id: string,
+    @Query() queryDto: TopicQueryDto,
+  ): Promise<TopicEntity> {
+    return this.topicsService.findOne({ id }, queryDto.include);
   }
 
   @Get()
@@ -40,7 +43,10 @@ export class TopicsController {
     @Query() queryDto: TopicQueryDto,
   ): Promise<PaginationType<TopicEntity>> | Promise<TopicEntity> {
     if (queryDto?.slug) {
-      return this.topicsService.findOne({ slug: queryDto.slug });
+      return this.topicsService.findOne(
+        { slug: queryDto.slug },
+        queryDto.include,
+      );
     }
     return this.topicsService.findManyWithPagination(queryDto);
   }

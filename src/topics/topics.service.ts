@@ -1,6 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, FindOptionsWhere, Repository } from 'typeorm';
+import {
+  DeepPartial,
+  FindOptionsRelations,
+  FindOptionsWhere,
+  Repository,
+} from 'typeorm';
 import { TopicEntity } from './entities/topic.entity';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { PaginationType } from '@/utils/types/pagination.type';
@@ -19,8 +24,14 @@ export class TopicsService {
     return this.topicsRepository.save(topic);
   }
 
-  async findOne(fields: FindOptionsWhere<TopicEntity>): Promise<TopicEntity> {
-    const topic = await this.topicsRepository.findOne({ where: fields });
+  async findOne(
+    fields: FindOptionsWhere<TopicEntity>,
+    include?: FindOptionsRelations<TopicEntity>,
+  ): Promise<TopicEntity> {
+    const topic = await this.topicsRepository.findOne({
+      where: fields,
+      relations: include,
+    });
     if (!topic) {
       throw new NotFoundException();
     }
