@@ -10,7 +10,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const configService = app.get(ConfigService<AllConfigType>);
-
+  app.enableCors({
+    origin: configService.getOrThrow('app.frontendDomain', { infer: true }),
+    credentials: true,
+  });
   const config = new DocumentBuilder()
     .setTitle('VetHealth API')
     .setDescription('VetHealth API Docs')
