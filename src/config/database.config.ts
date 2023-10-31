@@ -9,7 +9,7 @@ import {
   ValidateIf,
   IsBoolean,
 } from 'class-validator';
-import validateConfig from '@/validate-config';
+import validateConfig from '@/utils/validate-config';
 
 class EnvironmentVariablesValidator {
   @ValidateIf((envValues) => envValues.DATABASE_URL)

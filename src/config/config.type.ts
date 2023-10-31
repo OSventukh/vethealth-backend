@@ -31,8 +31,16 @@ export type FileConfig = {
   maxFileSize: number;
 };
 
+export type AuthConfig = {
+  secret: string;
+  expires: string;
+  refreshSecret: string;
+  refreshExpires: string;
+};
+
 export type AllConfigType = {
   app: AppConfig;
+  auth: AuthConfig;
   database: DatabaseConfig;
   file: FileConfig;
 };

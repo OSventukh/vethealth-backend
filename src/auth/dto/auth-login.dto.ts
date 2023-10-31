@@ -1,4 +1,4 @@
-import { lowerCaseTransformer } from '@/users/utils/transformers/lower-case.transformer';
+import { lowerCaseTransformer } from '@/utils/transformers/lower-case.transformer';
 import { IsExist } from '@/utils/validators/is-exist.validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
