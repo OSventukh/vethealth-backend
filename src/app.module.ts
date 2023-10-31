@@ -13,6 +13,7 @@ import { HomeModule } from './home/home.module';
 import { FilesModule } from './files/files.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { SessionModule } from './session/session.module';
 import databaseConfig from './config/database.config';
 import appConfig from './config/app.config';
 
@@ -39,6 +40,7 @@ import appConfig from './config/app.config';
     FilesModule,
     ReviewsModule,
     NotificationsModule,
+    SessionModule,
   ],
   controllers: [],
   providers: [],
