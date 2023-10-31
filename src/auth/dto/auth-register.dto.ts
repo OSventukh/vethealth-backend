@@ -13,9 +13,8 @@ import { ERROR_MESSAGE } from '@/utils/constants/errors';
 import { RoleEntity } from '@/roles/entities/role.entity';
 import { TopicEntity } from '@/topics/entities/topic.entity';
 import { IsNotSuperAdmin } from '@/utils/validators/is-not-admin.validator';
-import { UserStatusEntity } from '@/statuses/entities/user-status.entity';
 
-export class CreateUserDto {
+export class AuthRegisterDto {
   @ApiProperty()
   @IsNotEmpty()
   firstname: string;
@@ -44,8 +43,6 @@ export class CreateUserDto {
   })
   role: RoleEntity;
 
-  status: UserStatusEntity;
-
   @ApiProperty({ example: [{ id: '55de06e1-0384-4f6f-b118-eb3dd529af1e' }] })
   @IsOptional()
   @IsArray()
@@ -54,8 +51,4 @@ export class CreateUserDto {
     message: ERROR_MESSAGE.TOPIC_IS_NOT_VALID,
   })
   topics?: TopicEntity[] | null;
-
-  confirmationToken: string;
-
-  confirmationTokenExpires: number;
 }

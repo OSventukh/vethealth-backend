@@ -52,7 +52,7 @@ export class UserEntity {
 
   @Exclude({ toPlainOnly: true })
   @Column({ nullable: true })
-  confirmationTokenExpirationDate?: Date;
+  confirmationTokenExpires?: number;
 
   @CreateDateColumn()
   createdAt: Date;
