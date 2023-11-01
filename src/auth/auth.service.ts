@@ -4,13 +4,13 @@ import {
   UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import { AuthLoginDto } from './dto/auth-login.dto';
 import { comparePassword } from '@/utils/password-hash';
 import { UserStatusEnum } from '@/statuses/user-statuses.enum';
-import crypto from 'crypto';
-import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
 import ms from 'ms';
+import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
 import { UserStatusEntity } from '@/statuses/entities/user-status.entity';
 import { AuthRegisterDto } from './dto/auth-register.dto';
 import { AuthConfirmDto } from './dto/auth-confirm.dto';
@@ -42,7 +42,9 @@ export class AuthService {
     }
 
     if (user.status.id === UserStatusEnum.Pending) {
-      throw new UnprocessableEntityException('Confirm you email');
+      throw new UnprocessableEntityException(
+        ERROR_MESSAGE.USER_IS_NOT_CONFIRMED,
+      );
     }
 
     const isValid = await comparePassword(authDto.password, user.password);
@@ -85,7 +87,7 @@ export class AuthService {
       ...createUserDto,
       status: { id: UserStatusEnum.Pending } as UserStatusEntity,
       confirmationToken: hash,
-      confirmationTokenExpires: Date.now() + ms('1d'),
+      confirmationTokenExpires: new Date(Date.now() + ms('1d')),
     });
   }
 
@@ -95,11 +97,13 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnprocessableEntityException();
+      throw new UnprocessableEntityException(ERROR_MESSAGE.USER_IS_NOT_EXIST);
     }
 
-    if (user.confirmationTokenExpires < Date.now()) {
-      throw new UnprocessableEntityException('Confirmation token has expired');
+    if (user.confirmationTokenExpires.getTime() < Date.now()) {
+      throw new UnprocessableEntityException(
+        ERROR_MESSAGE.CONFIRMATION_TOKEN_HAS_EXPIRED,
+      );
     }
 
     await this.usersService.update({

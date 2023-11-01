@@ -57,5 +57,5 @@ export class CreateUserDto {
 
   confirmationToken: string;
 
-  confirmationTokenExpires: number;
+  confirmationTokenExpires: Date;
 }

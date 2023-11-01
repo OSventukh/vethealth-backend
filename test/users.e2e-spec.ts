@@ -1,6 +1,6 @@
 import { createTestModule } from './utils/test-module';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { UsersModule } from '@/users/users.module';
 import { CreateUserDto } from '@/users/dto/create-user.dto';
 import { UpdateUserDto } from '@/users/dto/update-user.dto';

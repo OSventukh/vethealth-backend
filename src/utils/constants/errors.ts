@@ -17,4 +17,7 @@ export const ERROR_MESSAGE = {
   TITLE_MUST_BE_UNIQUE: 'titleMustBeUnique',
   SLUG_MUST_BE_UNIQUE: 'slugMustBeUnique',
   RELATION_IS_NOT_SET: 'relationIsNotSet',
+  CONFIRMATION_TOKEN_HAS_EXPIRED: 'confirmationTokenHasExpired',
+  USER_IS_NOT_EXIST: 'userIsNotExist',
+  USER_IS_NOT_CONFIRMED: 'userIsNotConfirmed',
 } as const;

@@ -1,6 +1,6 @@
 import { createTestModule } from './utils/test-module';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { PostsModule } from '@/posts/posts.module';
 
 import { DataSource } from 'typeorm';

@@ -51,8 +51,8 @@ export class UserEntity {
   confirmationToken?: string;
 
   @Exclude({ toPlainOnly: true })
-  @Column({ nullable: true })
-  confirmationTokenExpires?: number;
+  @Column({ type: 'timestamp', nullable: true })
+  confirmationTokenExpires?: Date;
 
   @CreateDateColumn()
   createdAt: Date;
