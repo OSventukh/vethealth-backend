@@ -96,10 +96,10 @@ describe('PostsController (e2e)', () => {
     const createdPost = await postsService.create(post);
     const payload: UpdatePostDto = {
       title: 'Updated Title',
-      id: 'testid',
+      id: createdPost.id,
     };
     return request(app.getHttpServer())
-      .patch(`/posts/${createdPost.id}`)
+      .patch(`/posts`)
       .send(payload)
       .expect(200)
       .then((response) => {

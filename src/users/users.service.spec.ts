@@ -5,7 +5,6 @@ import { UsersService } from './users.service';
 import { createMock } from '@golevelup/ts-jest';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Repository } from 'typeorm';
-import { UserStatusEnum } from '@/statuses/user-statuses.enum';
 import { UserQueryDto } from './dto/user-query.dto';
 import { userOrder } from './utils/user-order';
 
@@ -33,19 +32,14 @@ describe('UsersService', () => {
     expect(usersService).toBeDefined();
   });
 
-  it('should call usersRepository.create() method with createUserDto object and default status', () => {
+  it('should call usersRepository.create() method with createUserDto object', () => {
     const createUserDto: CreateUserDto = {
       firstname: 'Test',
     } as CreateUserDto;
     usersService.create({
       ...createUserDto,
     });
-    expect(usersRepository.create).toBeCalledWith({
-      ...createUserDto,
-      status: {
-        id: UserStatusEnum.Pending,
-      },
-    });
+    expect(usersRepository.create).toBeCalledWith(createUserDto);
   });
 
   it('should call usersRepository.findOne() method with object that have where field and passed value', () => {

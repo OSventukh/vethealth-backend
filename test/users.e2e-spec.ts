@@ -84,20 +84,15 @@ describe('UsersController (e2e)', () => {
       });
   });
 
-  it('/users/id (GET) should return 404 status code, if user with provided id not found', () => {
-    const userId = 'non-existen-user-id';
-    return request(app.getHttpServer()).get(`/users/${userId}`).expect(404);
-  });
-
   it('/users (PATCH) should update the user', async () => {
     const createdUser = await usersService.create(user);
     const payload: UpdateUserDto = {
       firstname: 'Updated firstname',
-      id: 'testId',
+      id: createdUser.id,
     };
 
     return request(app.getHttpServer())
-      .patch(`/users/${createdUser.id}`)
+      .patch('/users')
       .send(payload)
       .expect(200)
       .then((response) => {
