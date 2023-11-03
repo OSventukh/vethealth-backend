@@ -4,11 +4,13 @@ import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
+  Entity,
   Index,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+@Entity({ name: 'forgot' })
 export class ForgotEntity {
   @PrimaryGeneratedColumn()
   id: number;

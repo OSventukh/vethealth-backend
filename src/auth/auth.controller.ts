@@ -6,6 +6,7 @@ import {
   Post,
   Body,
   Request,
+  Param,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthLoginDto } from './dto/auth-login.dto';
@@ -38,6 +39,13 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   register(@Body() registerDto: AuthRegisterDto) {
     return this.authService.register(registerDto);
+  }
+
+  @ApiBearerAuth()
+  @Get('confirm/:hash')
+  @HttpCode(HttpStatus.OK)
+  getPendingUser(@Param('hash') confirmationToken: string) {
+    return this.authService.getPendingUser(confirmationToken);
   }
 
   @ApiBearerAuth()

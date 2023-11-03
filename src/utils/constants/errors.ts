@@ -20,4 +20,6 @@ export const ERROR_MESSAGE = {
   CONFIRMATION_TOKEN_HAS_EXPIRED: 'confirmationTokenHasExpired',
   USER_IS_NOT_EXIST: 'userIsNotExist',
   USER_IS_NOT_CONFIRMED: 'userIsNotConfirmed',
+  PASSWORD_IS_NOT_MATCH:
+    'The password must contain at least one uppercase letter, one lowercase letter, one number, and be between 8 and 20 characters long',
 } as const;

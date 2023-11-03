@@ -91,9 +91,24 @@ export class AuthService {
     });
   }
 
+  async getPendingUser(confirmationToken: string): Promise<UserEntity> {
+    const user = await this.usersService.findOne({
+      confirmationToken,
+    });
+
+    if (!user) {
+      throw new UnprocessableEntityException(ERROR_MESSAGE.USER_IS_NOT_EXIST);
+    }
+
+    return {
+      firstname: user.firstname,
+      email: user.email,
+    } as UserEntity;
+  }
+
   async confirm(confirmDto: AuthConfirmDto): Promise<void> {
     const user = await this.usersService.findOne({
-      confirmationToken: confirmDto.сonfirmationToken,
+      confirmationToken: confirmDto.confirmationToken,
     });
 
     if (!user) {
@@ -110,6 +125,7 @@ export class AuthService {
       id: user.id,
       confirmationToken: null,
       confirmationTokenExpires: null,
+      password: confirmDto.password,
       status: { id: UserStatusEnum.Active },
     });
   }
