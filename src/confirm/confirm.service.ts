@@ -30,7 +30,7 @@ export class ConfirmService {
     return this.confirmRepository.save(this.confirmRepository.create(data));
   }
 
-  async softDelete(id: ConfirmEntity['id']): Promise<void> {
-    await this.confirmRepository.softDelete(id);
+  async delete(id: ConfirmEntity['id']): Promise<void> {
+    await this.confirmRepository.delete(id);
   }
 }

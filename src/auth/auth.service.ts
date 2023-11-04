@@ -91,7 +91,7 @@ export class AuthService {
     await this.confirmService.create({
       hash,
       user,
-      expiresIn: new Date(ms('1d')),
+      expiresIn: new Date(Date.now() + ms('1d')),
     });
   }
 
@@ -122,6 +122,7 @@ export class AuthService {
     }
 
     if (confirm.expiresIn.getTime() < Date.now()) {
+      await this.confirmService.delete(confirm.id);
       throw new UnprocessableEntityException(
         ERROR_MESSAGE.CONFIRMATION_TOKEN_HAS_EXPIRED,
       );
@@ -129,13 +130,15 @@ export class AuthService {
 
     const user = confirm.user;
 
+    await this.sessionService.softDelete({ user: { id: user.id } });
+
     await this.usersService.update({
       id: user.id,
       password: confirmDto.password,
       status: { id: UserStatusEnum.Active },
     });
 
-    await this.confirmService.softDelete(confirm.id);
+    await this.confirmService.delete(confirm.id);
   }
 
   async forgotPassword(email: string): Promise<void> {
@@ -153,30 +156,8 @@ export class AuthService {
     await this.confirmService.create({
       hash,
       user,
-      expiresIn: new Date(ms('1d')),
+      expiresIn: new Date(Date.now() + ms('1d')),
     });
-  }
-
-  async resetPassword(hash: string, password: string): Promise<void> {
-    const confirm = await this.confirmService.findOne({ hash });
-
-    if (!confirm) {
-      throw new UnprocessableEntityException();
-    }
-
-    if (confirm.expiresIn.getTime() < Date.now()) {
-      throw new UnprocessableEntityException(
-        ERROR_MESSAGE.CONFIRMATION_TOKEN_HAS_EXPIRED,
-      );
-    }
-
-    const user = confirm.user;
-
-    await this.sessionService.softDelete({ user: { id: user.id } });
-
-    await this.usersService.update({ id: user.id, password });
-
-    await this.confirmService.softDelete(confirm.id);
   }
 
   async refreshTokens(

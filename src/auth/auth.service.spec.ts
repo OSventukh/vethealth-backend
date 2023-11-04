@@ -4,7 +4,7 @@ import { createMock } from '@golevelup/ts-jest';
 import { JwtService } from '@nestjs/jwt';
 import { SessionService } from '@/session/session.service';
 import { ConfigService } from '@nestjs/config';
-import { ForgotService } from '@/forgot/forgot.service';
+import { ConfirmService } from '@/confirm/confirm.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -16,7 +16,7 @@ describe('AuthService', () => {
         { provide: AuthService, useValue: createMock<AuthService>() },
         { provide: SessionService, useValue: createMock<SessionService>() },
         { provide: ConfigService, useValue: createMock<ConfigService>() },
-        { provide: ForgotService, useValue: createMock<ForgotService>() },
+        { provide: ConfirmService, useValue: createMock<ConfirmService>() },
       ],
     }).compile();
 

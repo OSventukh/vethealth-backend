@@ -14,7 +14,6 @@ import { AuthRegisterDto } from './dto/auth-register.dto';
 import { AuthConfirmDto } from './dto/auth-confirm.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthForgotPasswordDto } from './dto/auth-forgot-password.dto';
-import { AuthResetPasswordDto } from './dto/auth-reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -60,16 +59,6 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   forgotPassword(@Body() forgotPasswordDto: AuthForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto.email);
-  }
-
-  @ApiBearerAuth()
-  @Post('reset-password')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  resetPassword(@Body() resetPasswordDto: AuthResetPasswordDto) {
-    return this.authService.resetPassword(
-      resetPasswordDto.hash,
-      resetPasswordDto.password,
-    );
   }
 
   @ApiBearerAuth()
