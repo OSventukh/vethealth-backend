@@ -7,6 +7,8 @@ import { UsersModule } from '@/users/users.module';
 import { SessionModule } from '@/session/session.module';
 import { IsExist } from '@/utils/validators/is-exist.validator';
 import { ConfirmModule } from '@/confirm/confirm.module';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 @Module({
   imports: [
     JwtModule.register({}),
@@ -16,6 +18,6 @@ import { ConfirmModule } from '@/confirm/confirm.module';
     ConfirmModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, IsExist],
+  providers: [AuthService, IsExist, JwtStrategy, JwtRefreshStrategy],
 })
 export class AuthModule {}

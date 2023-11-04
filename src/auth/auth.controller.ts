@@ -7,12 +7,15 @@ import {
   Body,
   Request,
   Param,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth } from '@nestjs/swagger';
+
 import { AuthService } from './auth.service';
 import { AuthLoginDto } from './dto/auth-login.dto';
 import { AuthRegisterDto } from './dto/auth-register.dto';
 import { AuthConfirmDto } from './dto/auth-confirm.dto';
-import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthForgotPasswordDto } from './dto/auth-forgot-password.dto';
 
 @Controller('auth')
@@ -27,6 +30,7 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   logout(@Request() request): Promise<void> {
