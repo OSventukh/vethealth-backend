@@ -46,14 +46,6 @@ export class UserEntity {
     this.previousPassword = this.password;
   }
 
-  @Exclude({ toPlainOnly: true })
-  @Column({ nullable: true })
-  confirmationToken?: string;
-
-  @Exclude({ toPlainOnly: true })
-  @Column({ type: 'timestamp', nullable: true })
-  confirmationTokenExpires?: Date;
-
   @CreateDateColumn()
   createdAt: Date;
 

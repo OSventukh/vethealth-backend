@@ -7,6 +7,7 @@ import { UsersModule } from '@/users/users.module';
 import { SessionModule } from '@/session/session.module';
 import { IsExist } from '@/utils/validators/is-exist.validator';
 import { ForgotModule } from '@/forgot/forgot.module';
+import { ConfirmModule } from '@/confirm/confirm.module';
 @Module({
   imports: [
     JwtModule.register({}),
@@ -14,6 +15,7 @@ import { ForgotModule } from '@/forgot/forgot.module';
     UsersModule,
     SessionModule,
     ForgotModule,
+    ConfirmModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, IsExist],

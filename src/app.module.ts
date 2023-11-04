@@ -15,6 +15,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SessionModule } from './session/session.module';
 import { ForgotModule } from './forgot/forgot.module';
+import { ConfirmModule } from './confirm/confirm.module';
 import databaseConfig from './config/database.config';
 import appConfig from './config/app.config';
 import authConfig from './config/auth.config';
@@ -44,6 +45,7 @@ import authConfig from './config/auth.config';
     NotificationsModule,
     SessionModule,
     ForgotModule,
+    ConfirmModule,
   ],
   controllers: [],
   providers: [],

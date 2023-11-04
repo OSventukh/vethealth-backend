@@ -23,7 +23,7 @@ import { JwtRefreshPayloadType } from './strategies/types/jwt-refresh-payload.ty
 import { LoginResponseType } from './types/login-response.type';
 import { JwtPayloadType } from './strategies/types/jwt-payload.type';
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
-import { ForgotService } from '@/forgot/forgot.service';
+import { ConfirmService } from '@/confirm/confirm.service';
 
 @Injectable()
 export class AuthService {
@@ -32,7 +32,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly sessionService: SessionService,
     private readonly configService: ConfigService<AllConfigType>,
-    private readonly forgotService: ForgotService,
+    private readonly confirmService: ConfirmService,
   ) {}
 
   async validateLogin(authDto: AuthLoginDto): Promise<LoginResponseType> {
@@ -83,22 +83,28 @@ export class AuthService {
       .update(randomStringGenerator())
       .digest('hex');
 
-    await this.usersService.create({
+    const user = await this.usersService.create({
       ...createUserDto,
       status: { id: UserStatusEnum.Pending } as UserStatusEntity,
-      confirmationToken: hash,
-      confirmationTokenExpires: new Date(Date.now() + ms('1d')),
+    });
+
+    await this.confirmService.create({
+      hash,
+      user,
+      expiresIn: new Date(ms('1d')),
     });
   }
 
   async getPendingUser(confirmationToken: string): Promise<UserEntity> {
-    const user = await this.usersService.findOne({
-      confirmationToken,
+    const confirm = await this.confirmService.findOne({
+      hash: confirmationToken,
     });
 
-    if (!user) {
+    if (!confirm) {
       throw new UnprocessableEntityException(ERROR_MESSAGE.USER_IS_NOT_EXIST);
     }
+
+    const user = confirm.user;
 
     return {
       firstname: user.firstname,
@@ -107,27 +113,29 @@ export class AuthService {
   }
 
   async confirm(confirmDto: AuthConfirmDto): Promise<void> {
-    const user = await this.usersService.findOne({
-      confirmationToken: confirmDto.confirmationToken,
+    const confirm = await this.confirmService.findOne({
+      hash: confirmDto.confirmationToken,
     });
 
-    if (!user) {
+    if (!confirm) {
       throw new UnprocessableEntityException(ERROR_MESSAGE.USER_IS_NOT_EXIST);
     }
 
-    if (user.confirmationTokenExpires.getTime() < Date.now()) {
+    if (confirm.expiresIn.getTime() < Date.now()) {
       throw new UnprocessableEntityException(
         ERROR_MESSAGE.CONFIRMATION_TOKEN_HAS_EXPIRED,
       );
     }
 
+    const user = confirm.user;
+
     await this.usersService.update({
       id: user.id,
-      confirmationToken: null,
-      confirmationTokenExpires: null,
       password: confirmDto.password,
       status: { id: UserStatusEnum.Active },
     });
+
+    await this.confirmService.softDelete(confirm.id);
   }
 
   async forgotPassword(email: string): Promise<void> {
@@ -142,26 +150,33 @@ export class AuthService {
       .update(randomStringGenerator())
       .digest('hex');
 
-    await this.forgotService.create({
+    await this.confirmService.create({
       hash,
       user,
+      expiresIn: new Date(ms('1d')),
     });
   }
 
   async resetPassword(hash: string, password: string): Promise<void> {
-    const forgot = await this.forgotService.findOne({ hash });
+    const confirm = await this.confirmService.findOne({ hash });
 
-    if (!forgot) {
+    if (!confirm) {
       throw new UnprocessableEntityException();
     }
 
-    const user = forgot.user;
+    if (confirm.expiresIn.getTime() < Date.now()) {
+      throw new UnprocessableEntityException(
+        ERROR_MESSAGE.CONFIRMATION_TOKEN_HAS_EXPIRED,
+      );
+    }
+
+    const user = confirm.user;
 
     await this.sessionService.softDelete({ user: { id: user.id } });
 
     await this.usersService.update({ id: user.id, password });
 
-    await this.forgotService.softDelete(forgot.id);
+    await this.confirmService.softDelete(confirm.id);
   }
 
   async refreshTokens(

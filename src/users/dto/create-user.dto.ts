@@ -54,8 +54,4 @@ export class CreateUserDto {
     message: ERROR_MESSAGE.TOPIC_IS_NOT_VALID,
   })
   topics?: TopicEntity[] | null;
-
-  confirmationToken: string;
-
-  confirmationTokenExpires: Date;
 }
