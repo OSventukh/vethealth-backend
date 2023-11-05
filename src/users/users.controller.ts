@@ -20,6 +20,7 @@ import { UserEntity } from './entities/user.entity';
 import { UsersService } from './users.service';
 import { DeleteUserGuard } from './guards/delete-user.guard';
 import { UpdateUserGuard } from './guards/update-user.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Users')
 @Controller('users')
@@ -27,12 +28,14 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createUserDto: CreateUserDto): Promise<UserEntity> {
     return this.usersService.create(createUserDto);
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   getOne(
     @Param('id') id: string,
@@ -42,6 +45,7 @@ export class UsersController {
   }
 
   @Get()
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   getMany(
     @Query() queryDto: UserQueryDto,
@@ -49,14 +53,14 @@ export class UsersController {
     return this.usersService.findManyWithPagination(queryDto);
   }
 
-  @UseGuards(UpdateUserGuard)
+  @UseGuards(AuthGuard('jwt'), UpdateUserGuard)
   @Patch()
   @HttpCode(HttpStatus.OK)
   update(@Body() updateUserDto: UpdateUserDto): Promise<UserEntity> {
     return this.usersService.update(updateUserDto);
   }
 
-  @UseGuards(DeleteUserGuard)
+  @UseGuards(AuthGuard('jwt'), DeleteUserGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id') id: string): Promise<void> {

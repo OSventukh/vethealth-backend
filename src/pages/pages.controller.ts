@@ -9,8 +9,11 @@ import {
   HttpStatus,
   Param,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+
 import { PagesService } from './pages.service';
 import { PageEntity } from './entities/page.entity';
 import { CreatePageDto } from './dto/create-page.dto';
@@ -29,6 +32,7 @@ export class PagesController {
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   getOne(
     @Param('id') id: string,
@@ -52,12 +56,14 @@ export class PagesController {
   }
 
   @Patch()
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   update(@Body() updatePageDto: UpdatePageDto): Promise<PageEntity> {
     return this.pagesService.update(updatePageDto);
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id') id: string): Promise<void> {
     return this.pagesService.softDelete(id);

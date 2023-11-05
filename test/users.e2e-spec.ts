@@ -1,15 +1,17 @@
 import { createTestModule } from './utils/test-module';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
+import { DataSource } from 'typeorm';
+
 import { UsersModule } from '@/users/users.module';
 import { CreateUserDto } from '@/users/dto/create-user.dto';
 import { UpdateUserDto } from '@/users/dto/update-user.dto';
-import { DataSource } from 'typeorm';
 import { UsersService } from '@/users/users.service';
 import { RoleEnum } from '@/roles/roles.enum';
 import { RoleSeedService } from '@/database/seeds/role/role-seed.service';
 import { UserStatusSeedService } from '@/database/seeds/status/user-status-seed.service';
 import { IsValidColumn } from '@/utils/validators/is-valid-column.validator';
+import { AuthModule } from '@/auth/auth.module';
 
 describe('UsersController (e2e)', () => {
   let app: INestApplication;
@@ -24,10 +26,9 @@ describe('UsersController (e2e)', () => {
       id: RoleEnum.Writer,
     },
   } as CreateUserDto;
-
   beforeEach(async () => {
     const test = await createTestModule({
-      imports: [UsersModule],
+      imports: [AuthModule, UsersModule],
       providers: [IsValidColumn],
     });
     app = test.app;

@@ -9,8 +9,11 @@ import {
   Delete,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { TopicEntity } from './entities/topic.entity';
 import { TopicsService } from './topics.service';
@@ -23,6 +26,7 @@ import { TopicQueryDto } from './dto/topic-query.dto';
 export class TopicsController {
   constructor(private readonly topicsService: TopicsService) {}
   @Post()
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createTopicDto: CreateTopicDto): Promise<TopicEntity> {
     return this.topicsService.create(createTopicDto);
@@ -52,12 +56,14 @@ export class TopicsController {
   }
 
   @Patch()
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   update(@Body() updateTopicDto: UpdateTopicDto): Promise<TopicEntity> {
     return this.topicsService.update(updateTopicDto);
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id') id: string): Promise<void> {
     return this.topicsService.softDelete(id);

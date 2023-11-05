@@ -13,6 +13,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+
 import { PaginationType } from '@/utils/types/pagination.type';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -24,7 +26,7 @@ import { AuthorOrderValidationPipe } from './pipe/author-order-validation.pipe';
 import { CreatePostGuard } from './guards/create-post.guard';
 
 @ApiTags('Posts')
-@UseGuards(CreatePostGuard)
+@UseGuards(AuthGuard('jwt'), CreatePostGuard)
 @UsePipes(FeaturedImagePipe)
 @Controller('posts')
 export class PostsController {
@@ -60,12 +62,14 @@ export class PostsController {
   }
 
   @Patch()
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   update(@Body() updatePostDto: UpdatePostDto): Promise<PostEntity> {
     return this.postsService.update(updatePostDto);
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id') id: string): Promise<void> {
     return this.postsService.softDelete(id);

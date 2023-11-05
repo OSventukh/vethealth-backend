@@ -9,8 +9,11 @@ import {
   Delete,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -23,6 +26,7 @@ import { CategoryQueryDto } from './dto/category-query.dto';
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
   @Post()
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
   create(
     @Body() createCategoryDto: CreateCategoryDto,
@@ -54,6 +58,7 @@ export class CategoriesController {
   }
 
   @Patch()
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   update(
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -62,6 +67,7 @@ export class CategoriesController {
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id') id: string): Promise<void> {
     return this.categoriesService.softDelete(id);

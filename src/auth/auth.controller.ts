@@ -38,6 +38,7 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   register(@Body() registerDto: AuthRegisterDto) {
@@ -66,6 +67,7 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @Get('current-user')
   @HttpCode(HttpStatus.OK)
   currentUser(@Request() request) {
@@ -73,6 +75,7 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt-refresh'))
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   refresh(@Request() request) {
