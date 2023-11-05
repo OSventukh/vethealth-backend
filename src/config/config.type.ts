@@ -48,6 +48,7 @@ export type MailConfig = {
   ignoreTLS: boolean;
   secure: boolean;
   requireTLS: boolean;
+  rejectUnauthorized: boolean;
 };
 
 export type AllConfigType = {

@@ -38,7 +38,7 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(AuthGuard('jwt'))
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   register(@Body() registerDto: AuthRegisterDto) {

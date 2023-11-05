@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { SessionService } from '@/session/session.service';
 import { ConfigService } from '@nestjs/config';
 import { ConfirmService } from '@/confirm/confirm.service';
+import { MailService } from '@/mail/mail.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -17,6 +18,7 @@ describe('AuthService', () => {
         { provide: SessionService, useValue: createMock<SessionService>() },
         { provide: ConfigService, useValue: createMock<ConfigService>() },
         { provide: ConfirmService, useValue: createMock<ConfirmService>() },
+        { provide: MailService, useValue: createMock<MailService>() },
       ],
     }).compile();
 

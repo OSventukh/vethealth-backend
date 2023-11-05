@@ -19,9 +19,13 @@ export class MailerService {
         user: configService.get('mail.user', { infer: true }),
         pass: configService.get('mail.password', { infer: true }),
       },
+      tls: {
+        rejectUnauthorized: configService.get('mail.rejectUnauthorized', {
+          infer: true,
+        }),
+      },
     });
   }
-
   async sendMail({
     templatePath,
     context,

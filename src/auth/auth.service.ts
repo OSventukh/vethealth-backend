@@ -6,10 +6,11 @@ import {
 } from '@nestjs/common';
 import crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
+import ms from 'ms';
+
 import { AuthLoginDto } from './dto/auth-login.dto';
 import { comparePassword } from '@/utils/password-hash';
 import { UserStatusEnum } from '@/statuses/user-statuses.enum';
-import ms from 'ms';
 import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
 import { UserStatusEntity } from '@/statuses/entities/user-status.entity';
 import { AuthRegisterDto } from './dto/auth-register.dto';
@@ -24,6 +25,7 @@ import { LoginResponseType } from './types/login-response.type';
 import { JwtPayloadType } from './strategies/types/jwt-payload.type';
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
 import { ConfirmService } from '@/confirm/confirm.service';
+import { MailService } from '@/mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -33,6 +35,7 @@ export class AuthService {
     private readonly sessionService: SessionService,
     private readonly configService: ConfigService<AllConfigType>,
     private readonly confirmService: ConfirmService,
+    private readonly mailService: MailService,
   ) {}
 
   async validateLogin(authDto: AuthLoginDto): Promise<LoginResponseType> {
@@ -92,6 +95,11 @@ export class AuthService {
       hash,
       user,
       expiresIn: new Date(Date.now() + ms('1d')),
+    });
+
+    await this.mailService.userSignUp({
+      to: createUserDto.email,
+      data: { hash },
     });
   }
 
@@ -157,6 +165,13 @@ export class AuthService {
       hash,
       user,
       expiresIn: new Date(Date.now() + ms('1d')),
+    });
+
+    await this.mailService.forgotPassword({
+      to: email,
+      data: {
+        hash,
+      },
     });
   }
 

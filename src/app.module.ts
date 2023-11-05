@@ -20,15 +20,16 @@ import { MailModule } from './mail/mail.module';
 import databaseConfig from './config/database.config';
 import appConfig from './config/app.config';
 import authConfig from './config/auth.config';
-import { CookieResolver, I18nModule } from 'nestjs-i18n';
+import { CookieResolver, HeaderResolver, I18nModule } from 'nestjs-i18n';
 import { AllConfigType } from './config/config.type';
 import path from 'path';
+import mailConfig from './config/mail.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, appConfig, authConfig],
+      load: [databaseConfig, appConfig, authConfig, mailConfig],
       envFilePath: ['.env'],
     }),
     TypeOrmModule.forRootAsync({
@@ -44,7 +45,10 @@ import path from 'path';
         }),
         loaderOptions: { path: path.join(__dirname, '/i18n/'), watch: true },
       }),
-      resolvers: [{ use: CookieResolver, options: ['lang'] }],
+      resolvers: [
+        { use: CookieResolver, options: ['lang'] },
+        new HeaderResolver(['x-lang']),
+      ],
       imports: [ConfigModule],
       inject: [ConfigService],
     }),

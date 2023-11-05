@@ -22,6 +22,9 @@ class EnvironmentVariablesValidator {
   @IsOptional()
   NODE_ENV: Environment;
 
+  @IsString()
+  APP_NAME: string;
+
   @IsInt()
   @Min(0)
   @Max(65535)
