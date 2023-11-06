@@ -6,6 +6,7 @@ import { SessionService } from '@/session/session.service';
 import { ConfigService } from '@nestjs/config';
 import { ConfirmService } from '@/confirm/confirm.service';
 import { MailService } from '@/mail/mail.service';
+import { MailerService } from '@/mailer/mailer.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -19,6 +20,7 @@ describe('AuthService', () => {
         { provide: ConfigService, useValue: createMock<ConfigService>() },
         { provide: ConfirmService, useValue: createMock<ConfirmService>() },
         { provide: MailService, useValue: createMock<MailService>() },
+        { provide: MailerService, useValue: createMock<MailerService>() },
       ],
     }).compile();
 
