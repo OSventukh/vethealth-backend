@@ -20,6 +20,7 @@ import { TopicsService } from './topics.service';
 import { PaginationType } from '@/utils/types/pagination.type';
 import { UpdateTopicDto } from './dto/update-topic.dto';
 import { TopicQueryDto } from './dto/topic-query.dto';
+import { GetTopicsGuard } from './guards/get-topics.guard';
 
 @ApiTags('Topics')
 @Controller('topics')
@@ -42,6 +43,7 @@ export class TopicsController {
   }
 
   @Get()
+  @UseGuards(GetTopicsGuard)
   @HttpCode(HttpStatus.OK)
   getMany(
     @Query() queryDto: TopicQueryDto,
