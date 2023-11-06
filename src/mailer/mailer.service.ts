@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer';
 import Handlebars from 'handlebars';
 
 import { AllConfigType } from '@/config/config.type';
+
 @Injectable()
 export class MailerService {
   private readonly transporter: nodemailer.Transporter;
