@@ -10,6 +10,7 @@ import { IsExist } from '@/utils/validators/is-exist.validator';
 import { ConfirmModule } from '@/confirm/confirm.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { AnonymousStrategy } from './strategies/anonymous.strategy';
 import { MailModule } from '@/mail/mail.module';
 
 @Module({
@@ -22,7 +23,13 @@ import { MailModule } from '@/mail/mail.module';
     MailModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, IsExist, JwtStrategy, JwtRefreshStrategy],
+  providers: [
+    AuthService,
+    IsExist,
+    JwtStrategy,
+    JwtRefreshStrategy,
+    AnonymousStrategy,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}
