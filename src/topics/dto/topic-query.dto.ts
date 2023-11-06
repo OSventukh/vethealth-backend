@@ -1,11 +1,12 @@
 import { IsIn, IsNotIn, IsOptional, IsString, Validate } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { FindOptionsOrderValue, FindOptionsRelations } from 'typeorm';
+
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
 import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
 import { IsValidColumn } from '@/utils/validators/is-valid-column.validator';
 import { IsValidIncludes } from '@/utils/validators/is-valid-includes.validator';
-import { Transform } from 'class-transformer';
-import { FindOptionsOrderValue, FindOptionsRelations } from 'typeorm';
 import { TopicEntity } from '../entities/topic.entity';
 import { includeStringToObjectTransform } from '@/utils/transformers/include-transform';
 
@@ -18,7 +19,8 @@ export class TopicQueryDto extends PaginationQueryDto {
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
-  status?: string;
+  @IsIn(['active', 'inactive'])
+  status? = 'active';
 
   @ApiProperty({ required: false })
   @IsString()
