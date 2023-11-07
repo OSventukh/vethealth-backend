@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { APP_GUARD } from '@nestjs/core';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -12,6 +13,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { AnonymousStrategy } from './strategies/anonymous.strategy';
 import { MailModule } from '@/mail/mail.module';
+import { AuthDataGuard } from './guards/auth-data.guard';
 
 @Module({
   imports: [
@@ -29,6 +31,10 @@ import { MailModule } from '@/mail/mail.module';
     JwtStrategy,
     JwtRefreshStrategy,
     AnonymousStrategy,
+    {
+      provide: APP_GUARD,
+      useClass: AuthDataGuard,
+    },
   ],
   exports: [AuthService],
 })
