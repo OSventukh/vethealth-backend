@@ -14,7 +14,7 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { AnonymousStrategy } from './strategies/anonymous.strategy';
 import { MailModule } from '@/mail/mail.module';
 import { AuthDataGuard } from './guards/auth-data.guard';
-import { RolesGuard } from '@/roles/guards/roles.guard';
+import { RolesGuard } from '@/auth/guards/roles.guard';
 
 @Module({
   imports: [

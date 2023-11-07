@@ -22,8 +22,9 @@ import { PageEntity } from '@/pages/entities/page.entity';
 import { UserEntity } from '@/users/entities/user.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
 import { FileEntity } from '@/files/entities/file.entity';
-import { Transform } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
+import { RoleEnum } from '@/roles/roles.enum';
 
 @Entity({ name: 'topics' })
 export class TopicEntity {
@@ -55,12 +56,15 @@ export class TopicEntity {
   })
   contentType: TopicContentTypeEnum;
 
+  @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin] })
   @CreateDateColumn()
   createdAt: Date;
 
+  @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin] })
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin] })
   @DeleteDateColumn()
   deletedAt: Date;
 

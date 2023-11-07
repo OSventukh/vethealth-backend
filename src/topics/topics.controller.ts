@@ -10,6 +10,7 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -23,6 +24,7 @@ import { TopicQueryDto } from './dto/topic-query.dto';
 import { GetTopicsGuard } from './guards/get-topics.guard';
 import { Roles } from '@/roles/decorators/roles.decorator';
 import { RoleEnum } from '@/roles/roles.enum';
+import { RolesSerializerInterceptor } from '@/auth/interceptors/roles-serializer.interceptor';
 
 @ApiTags('Topics')
 @Controller('topics')
@@ -37,6 +39,7 @@ export class TopicsController {
   }
 
   @Get(':id')
+  @UseInterceptors(RolesSerializerInterceptor)
   @HttpCode(HttpStatus.OK)
   getOne(
     @Param('id') id: string,
@@ -46,6 +49,7 @@ export class TopicsController {
   }
 
   @Get()
+  @UseInterceptors(RolesSerializerInterceptor)
   @UseGuards(GetTopicsGuard)
   @HttpCode(HttpStatus.OK)
   getMany(

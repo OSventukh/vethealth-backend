@@ -13,13 +13,14 @@ import {
   BeforeInsert,
   BeforeUpdate,
 } from 'typeorm';
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import { UserEntity } from '@/users/entities/user.entity';
 import { TopicEntity } from '@/topics/entities/topic.entity';
 import { CategoryEntity } from '@/categories/entities/category.entity';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
 import { FileEntity } from '@/files/entities/file.entity';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
+import { RoleEnum } from '@/roles/roles.enum';
 
 @Entity({ name: 'posts' })
 export class PostEntity {
@@ -54,10 +55,12 @@ export class PostEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin] })
   @DeleteDateColumn()
   deletedAt: Date;
 
   @ManyToOne(() => PostStatusEntity, { eager: true })
+  @Transform(({ obj }: { obj: PostEntity }) => obj?.status?.name)
   status: PostStatusEntity;
 
   @ManyToMany(() => CategoryEntity, (category) => category.posts)
@@ -67,6 +70,7 @@ export class PostEntity {
   topics: TopicEntity[];
 
   @ManyToOne(() => UserEntity, (user) => user.posts)
+  @Transform(({ obj }: { obj: PostEntity }) => obj?.author?.firstname)
   @JoinColumn({ name: 'userId' })
   author: UserEntity;
 

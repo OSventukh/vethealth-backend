@@ -10,6 +10,7 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -20,6 +21,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryEntity } from './entities/category.entity';
 import { PaginationType } from '@/utils/types/pagination.type';
 import { CategoryQueryDto } from './dto/category-query.dto';
+import { RolesSerializerInterceptor } from '@/auth/interceptors/roles-serializer.interceptor';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -35,6 +37,7 @@ export class CategoriesController {
   }
 
   @Get(':id')
+  @UseInterceptors(RolesSerializerInterceptor)
   @HttpCode(HttpStatus.OK)
   getOne(
     @Param('id') id: string,
@@ -44,6 +47,7 @@ export class CategoriesController {
   }
 
   @Get()
+  @UseInterceptors(RolesSerializerInterceptor)
   @HttpCode(HttpStatus.OK)
   getMany(
     @Query() queryDto: CategoryQueryDto,

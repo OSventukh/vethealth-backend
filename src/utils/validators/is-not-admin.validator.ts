@@ -13,7 +13,7 @@ export class IsNotSuperAdmin implements ValidatorConstraintInterface {
     value: { id: string | number },
     validationArguments: ValidationArguments,
   ) {
-    if (+value?.id === RoleEnum.SuperAdmin) {
+    if (value?.id?.toString() === RoleEnum.SuperAdmin) {
       return false;
     }
     return true;

@@ -11,6 +11,7 @@ import {
   Query,
   UsePipes,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -24,20 +25,23 @@ import { PostsService } from './posts.service';
 import { PostQueryDto } from './dto/post-query.dto';
 import { AuthorOrderValidationPipe } from './pipe/author-order-validation.pipe';
 import { CreatePostGuard } from './guards/create-post.guard';
+import { RolesSerializerInterceptor } from '@/auth/interceptors/roles-serializer.interceptor';
 
 @ApiTags('Posts')
-@UseGuards(AuthGuard('jwt'), CreatePostGuard)
 @UsePipes(FeaturedImagePipe)
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
+
   @Post()
+  @UseGuards(AuthGuard('jwt'), CreatePostGuard)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createPostDto: CreatePostDto): Promise<PostEntity> {
     return this.postsService.create(createPostDto);
   }
 
   @Get(':id')
+  @UseInterceptors(RolesSerializerInterceptor)
   @HttpCode(HttpStatus.OK)
   getOne(
     @Param('id') id: string,
@@ -48,6 +52,7 @@ export class PostsController {
 
   @Get()
   @UsePipes(AuthorOrderValidationPipe)
+  @UseInterceptors(RolesSerializerInterceptor)
   @HttpCode(HttpStatus.OK)
   getMany(
     @Query() queryDto: PostQueryDto,

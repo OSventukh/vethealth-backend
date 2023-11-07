@@ -57,9 +57,13 @@ describe('TopicsService', () => {
   });
 
   it('should call topicsRepository.findOne() mehtod with object that have where field and passed value', () => {
-    topicsService.findOne(TopicEntity['id']);
+    const queryDto = new TopicQueryDto();
+    const { include, status } = queryDto;
+
+    topicsService.findOne(TopicEntity['id'], new TopicQueryDto());
     expect(topicsRepository.findOne).toBeCalledWith({
-      where: PostEntity['id'],
+      where: { ...PostEntity['id'], status: { name: status } },
+      relations: include,
     });
   });
 

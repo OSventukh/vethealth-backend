@@ -6,7 +6,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class RoleEntity {
   @ApiProperty({ example: 1 })
   @PrimaryColumn()
-  id: number;
+  id: string;
 
   @ApiProperty({ example: 'Admin' })
   @Column()

@@ -11,6 +11,7 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -21,6 +22,7 @@ import { UsersService } from './users.service';
 import { DeleteUserGuard } from './guards/delete-user.guard';
 import { UpdateUserGuard } from './guards/update-user.guard';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesSerializerInterceptor } from '@/auth/interceptors/roles-serializer.interceptor';
 
 @ApiTags('Users')
 @Controller('users')
@@ -35,6 +37,7 @@ export class UsersController {
   }
 
   @Get(':id')
+  @UseInterceptors(RolesSerializerInterceptor)
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   getOne(
@@ -45,6 +48,7 @@ export class UsersController {
   }
 
   @Get()
+  @UseInterceptors(RolesSerializerInterceptor)
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   getMany(
