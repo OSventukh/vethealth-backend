@@ -21,6 +21,8 @@ import { PaginationType } from '@/utils/types/pagination.type';
 import { UpdateTopicDto } from './dto/update-topic.dto';
 import { TopicQueryDto } from './dto/topic-query.dto';
 import { GetTopicsGuard } from './guards/get-topics.guard';
+import { Roles } from '@/roles/decorators/roles.decorator';
+import { RoleEnum } from '@/roles/roles.enum';
 
 @ApiTags('Topics')
 @Controller('topics')
@@ -28,6 +30,7 @@ export class TopicsController {
   constructor(private readonly topicsService: TopicsService) {}
   @Post()
   @UseGuards(AuthGuard('jwt'))
+  @Roles(RoleEnum.SuperAdmin, RoleEnum.Admin)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createTopicDto: CreateTopicDto): Promise<TopicEntity> {
     return this.topicsService.create(createTopicDto);
