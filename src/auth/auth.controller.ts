@@ -79,6 +79,8 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   refresh(@Request() request) {
-    this.authService.refreshTokens({ sessionId: request.user.sessionId });
+    return this.authService.refreshTokens({
+      sessionId: request.user.sessionId,
+    });
   }
 }
