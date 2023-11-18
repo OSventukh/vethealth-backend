@@ -1,32 +1,41 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { TypeOrmConfigService } from './database/typeorm-config.service';
-import { UsersModule } from './users/users.module';
-import { PostsModule } from './posts/posts.module';
-import { TopicsModule } from './topics/topics.module';
-import { CategoriesModule } from './categories/categories.module';
-import { PagesModule } from './pages/pages.module';
+
+import { CookieResolver, HeaderResolver, I18nModule } from 'nestjs-i18n';
+import path from 'path';
 import { AuthModule } from './auth/auth.module';
-import { HomeModule } from './home/home.module';
-import { FilesModule } from './files/files.module';
-import { ReviewsModule } from './reviews/reviews.module';
-import { NotificationsModule } from './notifications/notifications.module';
-import { SessionModule } from './session/session.module';
-import { ConfirmModule } from './confirm/confirm.module';
-import { MailerModule } from './mailer/mailer.module';
-import { MailModule } from './mail/mail.module';
-import databaseConfig from './config/database.config';
+import { CategoriesModule } from './categories/categories.module';
 import appConfig from './config/app.config';
 import authConfig from './config/auth.config';
-import { CookieResolver, HeaderResolver, I18nModule } from 'nestjs-i18n';
 import { AllConfigType } from './config/config.type';
-import path from 'path';
+import databaseConfig from './config/database.config';
 import mailConfig from './config/mail.config';
+import { ConfirmModule } from './confirm/confirm.module';
+import { TypeOrmConfigService } from './database/typeorm-config.service';
+import { FilesModule } from './files/files.module';
+import { HomeModule } from './home/home.module';
+import { MailModule } from './mail/mail.module';
+import { MailerModule } from './mailer/mailer.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { PagesModule } from './pages/pages.module';
+import { PostsModule } from './posts/posts.module';
+import { ReviewsModule } from './reviews/reviews.module';
+import { SessionModule } from './session/session.module';
+import { TopicsModule } from './topics/topics.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: path.join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads/',
+      serveStaticOptions: {
+        index: false,
+      },
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig, appConfig, authConfig, mailConfig],

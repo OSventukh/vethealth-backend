@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { useContainer } from 'class-validator';
 import { AppModule } from './app.module';
 import { AllConfigType } from './config/config.type';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
