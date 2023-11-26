@@ -19,7 +19,6 @@ describe('PostsController (e2e)', () => {
   const post: CreatePostDto = {
     title: 'Test title',
     content: 'Test content',
-    excerpt: 'Test excerpt',
     slug: 'test-slug',
     status: { id: '1' } as any,
     author: new UserEntity(),

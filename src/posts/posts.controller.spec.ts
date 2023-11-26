@@ -35,7 +35,6 @@ describe('PostsController', () => {
     const createPostDto: CreatePostDto = {
       title: 'Test title',
       content: 'Test Content',
-      excerpt: 'Test excerpt',
       author: new UserEntity(),
       status: new PostStatusEntity(),
     };

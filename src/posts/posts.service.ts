@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, FindOptionsRelations, Repository } from 'typeorm';
+import { DeepPartial, FindOptionsRelations, Repository, Like } from 'typeorm';
 import { PostEntity } from './entities/post.entity';
 import { PaginationType } from 'src/utils/types/pagination.type';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -50,7 +50,7 @@ export class PostsService {
     } = queryDto;
     const [items, count] = await this.postsRepository.findAndCount({
       where: {
-        title,
+        title: title && Like(`%${title}%`),
         status: {
           name: status,
         },

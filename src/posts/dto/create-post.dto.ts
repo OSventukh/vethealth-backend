@@ -21,10 +21,6 @@ export class CreatePostDto {
 
   @ApiProperty()
   @IsString()
-  excerpt: string;
-
-  @ApiProperty()
-  @IsString()
   content: string;
 
   @ApiProperty()

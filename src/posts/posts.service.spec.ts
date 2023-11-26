@@ -38,7 +38,6 @@ describe('PostsService', () => {
     const createPostDto: CreatePostDto = {
       title: 'Test title',
       content: 'Test content',
-      excerpt: 'Test exerpt',
       author: new UserEntity(),
       status: new PostStatusEntity(),
     };

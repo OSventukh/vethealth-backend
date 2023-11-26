@@ -31,9 +31,6 @@ export class PostEntity {
   title: string;
 
   @Column({ type: 'text' })
-  excerpt: string;
-
-  @Column({ type: 'text' })
   content: string;
 
   @Column({ unique: true })

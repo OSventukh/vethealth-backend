@@ -58,5 +58,5 @@ export class PostQueryDto extends PaginationQueryDto {
   @ApiProperty({ required: false })
   @IsIn(['DESC', 'ASC'])
   @Transform(({ value }) => value?.toUpperCase())
-  readonly sort?: FindOptionsOrderValue = 'ASC';
+  readonly sort?: FindOptionsOrderValue = 'DESC';
 }
