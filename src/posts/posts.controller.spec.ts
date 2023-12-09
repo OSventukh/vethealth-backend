@@ -55,7 +55,7 @@ describe('PostsController', () => {
   it('should call a postsService.findManyWithPafination() method with provided page and size', () => {
     const queryDto: PostQueryDto = {
       page: 1,
-      size: 5,
+      size: 10,
     };
 
     postsController.getMany(queryDto);

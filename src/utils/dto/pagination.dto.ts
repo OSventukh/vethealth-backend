@@ -10,5 +10,5 @@ export class PaginationQueryDto {
   @IsInt()
   @Min(1)
   @Type(() => Number)
-  readonly size = 5;
+  readonly size = 10;
 }

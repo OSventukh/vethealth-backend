@@ -41,7 +41,7 @@ describe('CategoriesController', () => {
   it('should call a categoriesService.findManyWithPafination() method with provided page and size', () => {
     const queryDto: CategoryQueryDto = {
       page: 1,
-      size: 5,
+      size: 10,
     };
 
     categoriesController.getMany(queryDto);

@@ -1,4 +1,10 @@
-import { IsString, IsOptional, Validate, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  Validate,
+  IsArray,
+  IsNotEmpty,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
 import { FileEntity } from '@/files/entities/file.entity';
@@ -14,6 +20,7 @@ import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 export class CreatePostDto {
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   @Validate(IsNotExist, ['PostEntity'], {
     message: ERROR_MESSAGE.TITLE_MUST_BE_UNIQUE,
   })

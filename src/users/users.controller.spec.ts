@@ -52,7 +52,7 @@ describe('UsersController', () => {
   it('should call a usersService.findManyWithPagination() method with provided page and size', () => {
     const queryDto: UserQueryDto = {
       page: 1,
-      size: 5,
+      size: 10,
     };
     usersController.getMany(queryDto);
     expect(usersService.findManyWithPagination).toBeCalledWith(queryDto);

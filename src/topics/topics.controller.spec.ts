@@ -52,7 +52,7 @@ describe('TopicsController', () => {
   it('should call a topicsService.findManyWithPafination() method with provided page and size', () => {
     const queryDto: TopicQueryDto = {
       page: 1,
-      size: 5,
+      size: 10,
     };
 
     topicsController.getMany(queryDto);
