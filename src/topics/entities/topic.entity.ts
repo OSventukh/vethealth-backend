@@ -43,7 +43,6 @@ export class TopicEntity {
   description?: string;
 
   @ManyToOne(() => TopicStatusEntity, { eager: true })
-  @Transform(({ obj }) => obj?.status?.name)
   status: TopicStatusEntity;
 
   @Column({ unique: true })
