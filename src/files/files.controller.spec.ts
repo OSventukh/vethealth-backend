@@ -43,6 +43,10 @@ describe('FilesController', () => {
       topic: [file],
       'post-featured': [file],
     });
-    expect(filesService.uploadFile).toBeCalledWith(file);
+    expect(filesService.uploadFile).toBeCalledWith({
+      post: [file],
+      topic: [file],
+      'post-featured': [file],
+    });
   });
 });
