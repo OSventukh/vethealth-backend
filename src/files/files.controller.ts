@@ -2,13 +2,17 @@ import {
   Controller,
   Post,
   UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 
-import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from '@nestjs/platform-express';
 import { FilesService } from './files.service';
 import { Fields } from './constants/fields.enum';
 
@@ -33,9 +37,21 @@ export class FilesController {
     },
   })
   @UseInterceptors(
-    FileInterceptor(Fields.Post || Fields.Topic || Fields.PostFeatured),
+    // FileInterceptor(Fields.Post || Fields.Topic || Fields.PostFeatured),
+    FileFieldsInterceptor([
+      { name: Fields.Post },
+      { name: Fields.Topic },
+      { name: Fields.PostFeatured },
+    ]),
   )
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return this.filesService.uploadFile(file);
+  async uploadFile(
+    @UploadedFiles()
+    files: {
+      [Fields.Post]: Express.Multer.File[];
+      [Fields.Topic]: Express.Multer.File[];
+      [Fields.PostFeatured]: Express.Multer.File[];
+    },
+  ) {
+    return this.filesService.uploadFile(files);
   }
 }

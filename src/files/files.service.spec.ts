@@ -45,7 +45,11 @@ describe('FilesService', () => {
       path: 'path-to-file',
     } as Express.Multer.File;
 
-    filesService.uploadFile(file);
+    filesService.uploadFile({
+      post: [file],
+      topic: [file],
+      'post-featured': [file],
+    });
     expect(filesRepositry.create).toBeCalledWith({ path: '/' + file.path });
   });
 });

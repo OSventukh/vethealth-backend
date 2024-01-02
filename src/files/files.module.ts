@@ -11,6 +11,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AllConfigType } from '@/config/config.type';
 import slugify from 'slugify';
 import { directories } from './constants/directory.constant';
+import { Fields } from './constants/fields.enum';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { directories } from './constants/directory.constant';
       useFactory: (configService: ConfigService<AllConfigType>) => {
         return {
           fileFilter: (request, file, callback) => {
-            if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+            if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
               return callback(
                 new HttpException(
                   {
@@ -53,11 +54,8 @@ import { directories } from './constants/directory.constant';
             },
             filename: (req, file, cb) => {
               let fileName: string;
-              if (file.fieldname === 'topic-image') {
-                fileName = slugify(
-                  req.body.title + path.extname(file.originalname),
-                  { lower: true },
-                );
+              if (file.fieldname === Fields.Topic) {
+                fileName = slugify(file.originalname, { lower: true });
               } else {
                 fileName = `${file.fieldname}-${Date.now()}-${Math.round(
                   Math.random() * 1e9,

@@ -38,7 +38,11 @@ describe('FilesController', () => {
       size: 100,
     } as Express.Multer.File;
 
-    filesController.uploadFile(file);
+    filesController.uploadFile({
+      post: [file],
+      topic: [file],
+      'post-featured': [file],
+    });
     expect(filesService.uploadFile).toBeCalledWith(file);
   });
 });
