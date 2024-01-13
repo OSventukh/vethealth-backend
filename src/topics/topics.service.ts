@@ -1,6 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, FindOptionsWhere, Repository } from 'typeorm';
+import {
+  DeepPartial,
+  FindOptionsWhere,
+  IsNull,
+  Like,
+  Repository,
+} from 'typeorm';
 
 import { TopicEntity } from './entities/topic.entity';
 import { CreateTopicDto } from './dto/create-topic.dto';
@@ -42,8 +48,9 @@ export class TopicsService {
       queryDto;
     const [items, count] = await this.topicsRepository.findAndCount({
       where: {
-        title,
+        title: title && Like(`%${title}%`),
         slug,
+        parent: IsNull(),
         status: {
           name: status,
         },

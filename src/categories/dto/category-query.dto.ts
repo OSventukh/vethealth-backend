@@ -22,7 +22,7 @@ export class CategoryQueryDto extends PaginationQueryDto {
 
   @ApiProperty({ required: false })
   @Transform(includeStringToObjectTransform)
-  @Validate(IsValidIncludes, ['children', 'posts', 'topics'], {
+  @Validate(IsValidIncludes, ['children', 'posts', 'topics', 'parent'], {
     message: ERROR_MESSAGE.INCLUDE_IS_NOT_VALID,
   })
   include?: FindOptionsRelations<CategoryEntity>;

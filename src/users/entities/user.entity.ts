@@ -32,7 +32,7 @@ export class UserEntity {
   @Column({ nullable: true })
   lastname?: string;
 
-  @Expose({ groups: [RoleEnum.Admin, 'me'] })
+  @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin, 'me'] })
   @Column({ unique: true })
   email: string;
 
@@ -66,13 +66,11 @@ export class UserEntity {
   @ManyToOne(() => RoleEntity, {
     eager: true,
   })
-  @Transform(({ obj }) => obj?.role?.name)
   role: RoleEntity;
 
   @ManyToOne(() => UserStatusEntity, {
     eager: true,
   })
-  @Transform(({ obj }) => obj?.status?.name)
   status: UserStatusEntity;
 
   @ManyToMany(() => TopicEntity, (topic) => topic.users)

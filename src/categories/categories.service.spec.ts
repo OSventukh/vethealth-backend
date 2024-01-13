@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Repository } from 'typeorm';
+import { IsNull, Like, Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CategoryEntity } from './entities/category.entity';
 import { CategoriesService } from './categories.service';
@@ -54,7 +54,7 @@ describe('CategoriesService', () => {
     expect(categoriesRepository.findAndCount).toBeCalledWith({
       skip: (page - 1) * size,
       take: size,
-      where: { name },
+      where: { name: name && Like(`%${name}%`), parent: IsNull() },
       order: {
         [orderBy]: sort,
       },

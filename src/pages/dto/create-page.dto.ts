@@ -1,4 +1,4 @@
-import { IsOptional, IsString, Validate } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Validate } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
@@ -10,6 +10,7 @@ import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
 export class CreatePageDto {
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   @Validate(IsNotExist, ['PageEntity'], {
     message: ERROR_MESSAGE.TITLE_MUST_BE_UNIQUE,
   })

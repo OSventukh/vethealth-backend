@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Repository } from 'typeorm';
+import { IsNull, Like, Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { createMock } from '@golevelup/ts-jest';
 import { TopicsService } from './topics.service';
@@ -78,7 +78,8 @@ describe('TopicsService', () => {
       take: size,
       where: {
         slug,
-        title,
+        title: title && Like(`%${title}%`),
+        parent: IsNull(),
         status: {
           name: status,
         },

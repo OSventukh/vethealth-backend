@@ -22,7 +22,7 @@ import { PageEntity } from '@/pages/entities/page.entity';
 import { UserEntity } from '@/users/entities/user.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
 import { FileEntity } from '@/files/entities/file.entity';
-import { Expose, Transform } from 'class-transformer';
+import { Expose } from 'class-transformer';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 import { RoleEnum } from '@/roles/roles.enum';
 
@@ -35,7 +35,6 @@ export class TopicEntity {
   title: string;
 
   @OneToOne(() => FileEntity, { eager: true })
-  @Transform(({ obj }) => obj?.image?.path)
   @JoinColumn()
   image: FileEntity;
 

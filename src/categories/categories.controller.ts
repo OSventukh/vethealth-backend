@@ -22,6 +22,7 @@ import { CategoryEntity } from './entities/category.entity';
 import { PaginationType } from '@/utils/types/pagination.type';
 import { CategoryQueryDto } from './dto/category-query.dto';
 import { RolesSerializerInterceptor } from '@/auth/interceptors/roles-serializer.interceptor';
+import { UpdateResult } from 'typeorm';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -73,7 +74,7 @@ export class CategoriesController {
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@Param('id') id: string): Promise<void> {
+  delete(@Param('id') id: string): Promise<UpdateResult> {
     return this.categoriesService.softDelete(id);
   }
 }

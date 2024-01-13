@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 import { RoleEnum } from '@/roles/roles.enum';
 
 @Entity({ name: 'pages' })
@@ -29,6 +29,7 @@ export class PageEntity {
   slug: string;
 
   @ManyToOne(() => PostStatusEntity, { eager: true })
+  @Transform(({ obj }: { obj: PageEntity }) => obj?.status?.name)
   status: PostStatusEntity;
 
   @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin] })

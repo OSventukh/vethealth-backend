@@ -5,7 +5,11 @@ import {
   FindOptionsWhere,
   DeepPartial,
   FindOptionsRelations,
+  Like,
+  IsNull,
+  UpdateResult,
 } from 'typeorm';
+
 import { CategoryEntity } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { PaginationType } from '@/utils/types/pagination.type';
@@ -41,8 +45,9 @@ export class CategoriesService {
     queryDto: CategoryQueryDto,
   ): Promise<PaginationType<CategoryEntity>> {
     const { name, include, orderBy, sort, page, size } = queryDto;
+
     const [items, count] = await this.categoriesRepository.findAndCount({
-      where: { name },
+      where: { name: name && Like(`%${name}%`), parent: IsNull() },
       skip: (page - 1) * size,
       take: size,
       order: {
@@ -64,7 +69,7 @@ export class CategoriesService {
     );
   }
 
-  async softDelete(id: CategoryEntity['id']): Promise<void> {
-    await this.categoriesRepository.softDelete(id);
+  softDelete(id: CategoryEntity['id']): Promise<UpdateResult> {
+    return this.categoriesRepository.softDelete(id);
   }
 }
