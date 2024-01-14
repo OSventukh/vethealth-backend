@@ -20,7 +20,6 @@ export class AuthRegisterDto {
   firstname: string;
 
   @ApiProperty()
-  @IsNotEmpty()
   @IsOptional()
   lastname?: string | null;
 

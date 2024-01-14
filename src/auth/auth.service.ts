@@ -80,7 +80,7 @@ export class AuthService {
     });
   }
 
-  async register(createUserDto: AuthRegisterDto): Promise<void> {
+  async register(createUserDto: AuthRegisterDto): Promise<UserEntity> {
     const hash = crypto
       .createHash('sha256')
       .update(randomStringGenerator())
@@ -101,6 +101,12 @@ export class AuthService {
       to: createUserDto.email,
       data: { hash },
     });
+
+    return {
+      id: user.id,
+      firstname: user.firstname,
+      email: user.email,
+    } as UserEntity;
   }
 
   async getPendingUser(confirmationToken: string): Promise<UserEntity> {
