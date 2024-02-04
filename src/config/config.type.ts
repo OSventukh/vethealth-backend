@@ -36,6 +36,9 @@ export type AuthConfig = {
   expires: string;
   refreshSecret: string;
   refreshExpires: string;
+  adminEmail: string;
+  adminPassword: string;
+  adminName: string;
 };
 
 export type MailConfig = {

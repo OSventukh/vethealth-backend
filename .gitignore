@@ -40,3 +40,6 @@ lerna-debug.log*
 .env
 .env.test
 /ormconfig.json
+
+# docker
+/data

@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_DATABASE: vethealth
+      MYSQL_PASSWORD: dsdasdasda
+      MYSQL_ROOT_PASSWORD: dsdasdasda
+    volumes:
+      - ./data:/var/lib/mysql
+    ports:
+      - 3306:3306
