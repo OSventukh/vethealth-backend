@@ -44,7 +44,7 @@ export class CategoriesController {
     @Param('id') id: string,
     @Query() queryDto: CategoryQueryDto,
   ): Promise<CategoryEntity> {
-    return this.categoriesService.findOne({ id }, queryDto.include);
+    return this.categoriesService.findOne({ id }, queryDto);
   }
 
   @Get()
@@ -54,10 +54,7 @@ export class CategoriesController {
     @Query() queryDto: CategoryQueryDto,
   ): Promise<PaginationType<CategoryEntity>> | Promise<CategoryEntity> {
     if (queryDto?.slug) {
-      return this.categoriesService.findOne(
-        { slug: queryDto.slug },
-        queryDto.include,
-      );
+      return this.categoriesService.findOne({ slug: queryDto.slug }, queryDto);
     }
     return this.categoriesService.findManyWithPagination(queryDto);
   }

@@ -29,25 +29,30 @@ export class CategoriesService {
 
   async findOne(
     fields: FindOptionsWhere<CategoryEntity>,
-    include?: FindOptionsRelations<CategoryEntity>,
+    queryDto: CategoryQueryDto,
   ): Promise<CategoryEntity> {
-    const topic = await this.categoriesRepository.findOne({
-      where: fields,
+    const { topic, include } = queryDto;
+    const category = await this.categoriesRepository.findOne({
+      where: { ...fields, topics: { slug: topic } },
       relations: include,
     });
-    if (!topic) {
+    if (!category) {
       throw new NotFoundException();
     }
-    return topic;
+    return category;
   }
 
   async findManyWithPagination(
     queryDto: CategoryQueryDto,
   ): Promise<PaginationType<CategoryEntity>> {
-    const { name, include, orderBy, sort, page, size } = queryDto;
+    const { name, include, topic, orderBy, sort, page, size } = queryDto;
 
     const [items, count] = await this.categoriesRepository.findAndCount({
-      where: { name: name && Like(`%${name}%`), parent: IsNull() },
+      where: {
+        name: name && Like(`%${name}%`),
+        parent: IsNull(),
+        topics: { slug: topic },
+      },
       skip: (page - 1) * size,
       take: size,
       order: {

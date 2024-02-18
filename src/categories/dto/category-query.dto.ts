@@ -27,6 +27,11 @@ export class CategoryQueryDto extends PaginationQueryDto {
   })
   include?: FindOptionsRelations<CategoryEntity>;
 
+  @ApiProperty({ description: 'topic slug', example: 'dogs' })
+  @IsOptional()
+  @IsString()
+  topic?: string;
+
   @ApiProperty({ required: false })
   @Validate(IsValidColumn, ['CategoryEntity'], {
     message: ERROR_MESSAGE.COLUMN_IS_NOT_VALID,
