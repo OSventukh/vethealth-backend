@@ -1,4 +1,11 @@
-import { IsIn, IsNotIn, IsOptional, IsString, Validate } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsNotIn,
+  IsOptional,
+  IsString,
+  Validate,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { FindOptionsOrderValue, FindOptionsRelations } from 'typeorm';
@@ -26,6 +33,13 @@ export class TopicQueryDto extends PaginationQueryDto {
   @IsString()
   @IsOptional()
   slug?: string;
+
+  @ApiProperty({ required: false })
+  @IsBoolean()
+  @IsIn([true, false, ''])
+  @Transform(({ value }) => value?.toLowerCase() === 'true' || value === '')
+  @IsOptional()
+  showAll?: boolean;
 
   @ApiProperty({ required: false })
   @Transform(includeStringToObjectTransform)

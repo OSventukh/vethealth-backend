@@ -26,6 +26,7 @@ import { PostQueryDto } from './dto/post-query.dto';
 import { AuthorOrderValidationPipe } from './pipe/author-order-validation.pipe';
 import { CreatePostGuard } from './guards/create-post.guard';
 import { RolesSerializerInterceptor } from '@/auth/interceptors/roles-serializer.interceptor';
+import { ChildrenInterceptor } from './dto/interceptors/children.interceptor';
 
 @ApiTags('Posts')
 @UsePipes(FeaturedImagePipe)
@@ -68,6 +69,7 @@ export class PostsController {
 
   @Patch()
   @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(ChildrenInterceptor)
   @HttpCode(HttpStatus.OK)
   update(@Body() updatePostDto: UpdatePostDto): Promise<PostEntity> {
     return this.postsService.update(updatePostDto);
