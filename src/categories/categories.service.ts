@@ -4,7 +4,6 @@ import {
   Repository,
   FindOptionsWhere,
   DeepPartial,
-  FindOptionsRelations,
   Like,
   IsNull,
   UpdateResult,
@@ -45,12 +44,13 @@ export class CategoriesService {
   async findManyWithPagination(
     queryDto: CategoryQueryDto,
   ): Promise<PaginationType<CategoryEntity>> {
-    const { name, include, topic, orderBy, sort, page, size } = queryDto;
+    const { name, include, topic, orderBy, sort, page, size, showAll } =
+      queryDto;
 
     const [items, count] = await this.categoriesRepository.findAndCount({
       where: {
         name: name && Like(`%${name}%`),
-        parent: IsNull(),
+        ...(!showAll && { parent: IsNull() }),
         topics: { slug: topic },
       },
       skip: (page - 1) * size,

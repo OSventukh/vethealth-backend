@@ -44,13 +44,13 @@ export class TopicsService {
   async findManyWithPagination(
     queryDto: TopicQueryDto,
   ): Promise<PaginationType<TopicEntity>> {
-    const { title, slug, status, include, orderBy, sort, page, size } =
+    const { title, slug, status, include, orderBy, sort, page, size, showAll } =
       queryDto;
     const [items, count] = await this.topicsRepository.findAndCount({
       where: {
         title: title && Like(`%${title}%`),
         slug,
-        parent: IsNull(),
+        ...(!showAll && { parent: IsNull() }),
         status: {
           name: status,
         },
