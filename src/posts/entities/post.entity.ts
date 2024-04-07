@@ -36,11 +36,11 @@ export class PostEntity {
   @Column({ unique: true })
   slug: string;
 
-  @Exclude({ toPlainOnly: true })
+  // @Exclude({ toPlainOnly: true })
   @ManyToOne(() => FileEntity, { eager: true })
   featuredImageFile?: FileEntity;
 
-  @Exclude({ toPlainOnly: true })
+  // @Exclude({ toPlainOnly: true })
   @Column({ nullable: true })
   featuredImageUrl?: string;
 

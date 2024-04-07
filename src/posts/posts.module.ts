@@ -9,15 +9,23 @@ import { CreatePostGuard } from './guards/create-post.guard';
 import { PostEntity } from './entities/post.entity';
 import { CategoryEntity } from '@/categories/entities/category.entity';
 import { TopicEntity } from '@/topics/entities/topic.entity';
+import { UserEntity } from '@/users/entities/user.entity';
+import { UsersService } from '@/users/users.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PostEntity, CategoryEntity, TopicEntity]),
+    TypeOrmModule.forFeature([
+      PostEntity,
+      CategoryEntity,
+      TopicEntity,
+      UserEntity,
+    ]),
   ],
   controllers: [PostsController],
   providers: [
     PostsService,
     CreatePostGuard,
+    UsersService,
     IsValidColumn,
     IsExist,
     IsNotExist,

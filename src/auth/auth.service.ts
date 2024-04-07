@@ -17,7 +17,6 @@ import { AuthRegisterDto } from './dto/auth-register.dto';
 import { AuthConfirmDto } from './dto/auth-confirm.dto';
 import { SessionService } from '@/session/session.service';
 import { UserEntity } from '@/users/entities/user.entity';
-import { SessionEntity } from '@/session/entities/session.entity';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '@/config/config.type';
 import { JwtRefreshPayloadType } from './strategies/types/jwt-refresh-payload.type';
@@ -26,6 +25,7 @@ import { JwtPayloadType } from './strategies/types/jwt-payload.type';
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
 import { ConfirmService } from '@/confirm/confirm.service';
 import { MailService } from '@/mail/mail.service';
+import { LoginRequestType } from './types/login-request.type';
 
 @Injectable()
 export class AuthService {
@@ -211,11 +211,7 @@ export class AuthService {
     });
   }
 
-  private async getTokensData(data: {
-    id: UserEntity['id'];
-    role: UserEntity['role'];
-    sessionId: SessionEntity['id'];
-  }) {
+  private async getTokensData(data: LoginRequestType) {
     const tokenExpiresIn = this.configService.getOrThrow('auth.expires', {
       infer: true,
     });

@@ -38,6 +38,8 @@ export class PostQueryDto extends PaginationQueryDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  @IsIn(['all', 'published', 'draft', 'onreview'])
+  @Transform(({ value }) => value?.toLowerCase())
   status?: string;
 
   @ApiProperty({ required: false })
