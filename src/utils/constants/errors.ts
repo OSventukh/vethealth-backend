@@ -18,8 +18,10 @@ export const ERROR_MESSAGE = {
   SLUG_MUST_BE_UNIQUE: 'slugMustBeUnique',
   RELATION_IS_NOT_SET: 'relationIsNotSet',
   CONFIRMATION_TOKEN_HAS_EXPIRED: 'confirmationTokenHasExpired',
+  CONFIRMATION_TOKEN_IS_NOT_EXIST: 'confirmationTokenIsNotExist',
   USER_IS_NOT_EXIST: 'userIsNotExist',
   USER_IS_NOT_CONFIRMED: 'userIsNotConfirmed',
   PASSWORD_IS_NOT_MATCH:
     'The password must contain at least one uppercase letter, one lowercase letter, one number, and be between 8 and 20 characters long',
+  PASSWORD_IS_NOT_EQUAL: 'passwordIsNotEqual',
 } as const;

@@ -126,9 +126,9 @@ export class AuthService {
     } as UserEntity;
   }
 
-  async confirm(confirmDto: AuthConfirmDto): Promise<void> {
+  async confirm(confirmDto: AuthConfirmDto): Promise<{ message: string }> {
     const confirm = await this.confirmService.findOne({
-      hash: confirmDto.confirmationToken,
+      hash: confirmDto.hash,
     });
 
     if (!confirm) {
@@ -153,6 +153,7 @@ export class AuthService {
     });
 
     await this.confirmService.delete(confirm.id);
+    return { message: 'Email confirmed successfully' };
   }
 
   async forgotPassword(email: string): Promise<void> {

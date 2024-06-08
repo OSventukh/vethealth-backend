@@ -4,7 +4,7 @@ import { RoleEnum } from '@/roles/roles.enum';
 import { UserStatusEntity } from '@/statuses/entities/user-status.entity';
 import { TopicEntity } from '@/topics/entities/topic.entity';
 import { hashPassword } from '@/utils/password-hash';
-import { Exclude, Expose, Transform } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 
 import {
   AfterLoad,
