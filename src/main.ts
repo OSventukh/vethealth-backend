@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { useContainer } from 'class-validator';
 import { AppModule } from './app.module';
 import { AllConfigType } from './config/config.type';
+import { I18nValidationExceptionFilter, I18nValidationPipe } from 'nestjs-i18n';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -29,7 +30,9 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
     }),
+    new I18nValidationPipe(),
   );
+  app.useGlobalFilters(new I18nValidationExceptionFilter());
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   await app.listen(configService.getOrThrow('app.port', { infer: true }));
 }

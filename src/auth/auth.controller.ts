@@ -48,20 +48,20 @@ export class AuthController {
   @ApiBearerAuth()
   @Get('confirm/:hash')
   @HttpCode(HttpStatus.OK)
-  getPendingUser(@Param('hash') confirmationToken: string) {
-    return this.authService.getPendingUser(confirmationToken);
+  getPendingUser(@Param('hash') hash: string) {
+    return this.authService.getPendingUser(hash);
   }
 
   @ApiBearerAuth()
   @Post('confirm')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   confirmEmail(@Body() confirmDto: AuthConfirmDto) {
     return this.authService.confirm(confirmDto);
   }
 
   @ApiBearerAuth()
   @Post('forgot-password')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   forgotPassword(@Body() forgotPasswordDto: AuthForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto.email);
   }

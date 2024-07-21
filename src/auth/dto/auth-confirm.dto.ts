@@ -1,11 +1,10 @@
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
+import { i18nValidationMessage } from 'nestjs-i18n';
 import { IsEqualTo } from '@/utils/validators/is-equal.validator';
 import { IsExist } from '@/utils/validators/is-exist.validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, Matches, Validate } from 'class-validator';
-
-const passwordRegex =
-  /^(?=.*[a-zа-щьюяїієґ])(?=.*[A-ZА-ЩЬЮЯЇІЄҐ])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`])[a-zA-Zа-щьюяїієґА-ЩЬЮЯЇІЄҐ\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`]{8,20}$/;
+import { PASSWORD_REGEX } from '../constants/password-regex';
 
 export class AuthConfirmDto {
   @ApiProperty()
@@ -19,7 +18,7 @@ export class AuthConfirmDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  @Matches(passwordRegex, {
+  @Matches(PASSWORD_REGEX, {
     message: ERROR_MESSAGE.PASSWORD_IS_NOT_MATCH,
   })
   password: string;
@@ -27,11 +26,11 @@ export class AuthConfirmDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  @Matches(passwordRegex, {
+  @Matches(PASSWORD_REGEX, {
     message: ERROR_MESSAGE.PASSWORD_IS_NOT_MATCH,
   })
   @IsEqualTo('password', {
-    message: ERROR_MESSAGE.PASSWORD_IS_NOT_EQUAL,
+    message: i18nValidationMessage('errors.matchPassword'),
   })
   confirmPassword: string;
 }
