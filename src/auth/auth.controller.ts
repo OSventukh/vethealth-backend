@@ -8,6 +8,7 @@ import {
   Request,
   Param,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth } from '@nestjs/swagger';
@@ -17,6 +18,7 @@ import { AuthLoginDto } from './dto/auth-login.dto';
 import { AuthRegisterDto } from './dto/auth-register.dto';
 import { AuthConfirmDto } from './dto/auth-confirm.dto';
 import { AuthForgotPasswordDto } from './dto/auth-forgot-password.dto';
+import { AuthChangePasswordDto } from './dto/auth-change-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -64,6 +66,13 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   forgotPassword(@Body() forgotPasswordDto: AuthForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto.email);
+  }
+
+  @ApiBearerAuth()
+  @Patch('change-password')
+  @HttpCode(HttpStatus.OK)
+  changePassword(@Body() changePasswordDto: AuthChangePasswordDto) {
+    return this.authService.changePassword(changePasswordDto);
   }
 
   @ApiBearerAuth()

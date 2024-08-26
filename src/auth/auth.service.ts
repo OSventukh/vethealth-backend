@@ -26,6 +26,7 @@ import { ERROR_MESSAGE } from '@/utils/constants/errors';
 import { ConfirmService } from '@/confirm/confirm.service';
 import { MailService } from '@/mail/mail.service';
 import { LoginRequestType } from './types/login-request.type';
+import { AuthChangePasswordDto } from './dto/auth-change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -179,6 +180,26 @@ export class AuthService {
       data: {
         hash,
       },
+    });
+  }
+
+  async changePassword(
+    changePasswordDto: AuthChangePasswordDto,
+  ): Promise<void> {
+    const { id, password } = changePasswordDto;
+    const user = await this.usersService.findOne({ id });
+
+    if (!user) {
+      throw new UnprocessableEntityException(ERROR_MESSAGE.USER_IS_NOT_EXIST);
+    }
+
+    await this.usersService.update({
+      id,
+      password,
+    });
+
+    await this.mailService.changePassword({
+      to: user.email,
     });
   }
 

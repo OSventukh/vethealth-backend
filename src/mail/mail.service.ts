@@ -108,4 +108,45 @@ export class MailService {
       },
     });
   }
+
+  async changePassword(mailData: { to: string }): Promise<void> {
+    const i18n = I18nContext.current();
+    let changePasswordTitle: string | undefined;
+    let text1: string | undefined;
+    let text2: string | undefined;
+    let text3: string | undefined;
+
+    if (i18n) {
+      [changePasswordTitle, text1, text2, text3] = await Promise.all([
+        i18n.t('common.changePassword'),
+        i18n.t('change-password.text1'),
+        i18n.t('change-password.text2'),
+        i18n.t('change-password.text3'),
+      ]);
+    }
+
+    await this.mailerService.sendMail({
+      to: mailData.to,
+      subject: changePasswordTitle,
+      templatePath: path.join(
+        this.configService.getOrThrow('app.workingDirectory', {
+          infer: true,
+        }),
+        'src',
+        'mail',
+        'mail-templates',
+        'change-password.hbs',
+      ),
+      context: {
+        title: changePasswordTitle,
+        actionTitle: changePasswordTitle,
+        app_name: this.configService.get('app.name', {
+          infer: true,
+        }),
+        text1,
+        text2,
+        text3,
+      },
+    });
+  }
 }
