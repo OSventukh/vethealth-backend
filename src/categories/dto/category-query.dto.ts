@@ -55,7 +55,12 @@ export class CategoryQueryDto extends PaginationQueryDto {
   @ApiProperty({ required: false })
   @IsBoolean()
   @IsIn([true, false, ''])
-  @Transform(({ value }) => value?.toLowerCase() === 'true' || value === '')
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.toLowerCase() === 'true' || value === '';
+    }
+    return value === true || value === false || value === '';
+  })
   @IsOptional()
   showAll?: boolean;
 }
