@@ -1,15 +1,14 @@
-version: '3.8'
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-      platform: linux/arm64
-    container_name: nest-docker-postgres
+    platform: ${PLATFORM}
+    container_name: nest-app
     environment:
-      - PORT=${PORT}
+      - PORT=${APP_PORT}
     ports:
-      - '3000:3000'
+      - '5000:5000'
     depends_on:
       - db
     volumes:
@@ -17,8 +16,9 @@ services:
 
   db:
     image: mysql:latest
-    platform: linux/arm64
+    platform: ${PLATFORM}
     restart: always
+    container_name: nest-db
     environment:
       MYSQL_DATABASE: vethealth
       MYSQL_PASSWORD: dsdasdasda
@@ -27,9 +27,10 @@ services:
       - ./data:/var/lib/mysql
     ports:
       - 3306:3306
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    platform: linux/arm64
+    platform: ${PLATFORM}
     restart: always
     container_name: nest-phpmyadmin
     environment:
