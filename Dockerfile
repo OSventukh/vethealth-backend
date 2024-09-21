@@ -10,4 +10,6 @@ COPY . .
 
 RUN npm run build
 
-CMD [ "/bin/sh", "-c", "npm run start:prod && npm run seed:run" ]
+RUN npm run seed:run
+
+CMD [ "npm", "run", "start:prod" ]
