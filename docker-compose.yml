@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      platform: linux/arm64
     container_name: nest-docker-postgres
     environment:
       - PORT=${PORT}
@@ -16,6 +17,7 @@ services:
 
   db:
     image: mysql:latest
+    platform: linux/arm64
     restart: always
     environment:
       MYSQL_DATABASE: vethealth
@@ -27,6 +29,7 @@ services:
       - 3306:3306
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
+    platform: linux/arm64
     restart: always
     container_name: nest-phpmyadmin
     environment:
