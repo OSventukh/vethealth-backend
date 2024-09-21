@@ -10,6 +10,4 @@ COPY . .
 
 RUN npm run build
 
-RUN npm run seed:run
-
 CMD [ "npm", "run", "start:prod" ]

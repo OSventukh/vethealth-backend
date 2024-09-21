@@ -13,6 +13,7 @@ services:
       - db
     volumes:
       - ./src:/app/src
+    command: /bin/sh -c "npm run start:prod && npm run seed:run"
 
   db:
     image: mysql:latest
