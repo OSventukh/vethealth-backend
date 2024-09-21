@@ -1,8 +1,19 @@
 version: '3.8'
 services:
-  build:
-    context: .
-    dockerfile: Dockerfile
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nest-docker-postgres
+    environment:
+      - PORT=${PORT}
+    ports:
+      - '3000:3000'
+    depends_on:
+      - db
+    volumes:
+      - ./src:/app/src
+
   db:
     image: mysql:latest
     restart: always
@@ -14,3 +25,14 @@ services:
       - ./data:/var/lib/mysql
     ports:
       - 3306:3306
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    container_name: nest-phpmyadmin
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: dsdasdasda
+    ports:
+      - '8080:80'
+    depends_on:
+      - db
