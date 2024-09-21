@@ -1,5 +1,8 @@
 version: '3.8'
 services:
+  build:
+    context: .
+    dockerfile: dockerfile
   db:
     image: mysql:latest
     restart: always
