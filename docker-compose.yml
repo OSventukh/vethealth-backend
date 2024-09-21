@@ -12,8 +12,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./src:/app/src
-    command: /bin/sh -c "npm run start:prod && npm run seed:run"
+      - ./src:/app/srcnpm
 
   db:
     image: mysql:latest
