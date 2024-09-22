@@ -14,7 +14,7 @@
     "schema:drop": "npm run typeorm -- --dataSource=src/database/data-source.ts schema:drop",
     "seed:create": "hygen seeds create",
     "seed:run": "ts-node -r tsconfig-paths/register ./src/database/seeds/run-seed.ts",
-    "seed:run:prod": "node dist/src/database/seeds/run-seed.js",
+    "seed:run:prod": "node dist/database/seeds/run-seed.js",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "type-check": "tsc --project tsconfig.json --pretty --noEmit && echo ",
