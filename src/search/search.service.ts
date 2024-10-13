@@ -1,4 +1,3 @@
-import { postOrder } from '@/pages/utils/page-order';
 import { PostEntity } from '@/posts/entities/post.entity';
 import { PaginationType } from '@/utils/types/pagination.type';
 import { Injectable } from '@nestjs/common';
@@ -16,22 +15,46 @@ export class SearchService {
   async findManyWithPagination(
     queryDto: SearchQueryDto,
   ): Promise<PaginationType<PostEntity>> {
-    const { searchQuery, page, size } = queryDto;
+    const { query, page, size } = queryDto;
     const [items, count] = await this.postsRepository.findAndCount({
-      where: {
-        title: searchQuery && Like(`%${searchQuery}%`),
-        content: searchQuery && Like(`%${searchQuery}%`),
-        status: { name: 'Published' },
-      },
+      where: [
+        { title: query && Like(`%${query}%`), status: { name: 'Published' } },
+        { content: query && Like(`%${query}%`), status: { name: 'Published' } },
+      ],
       skip: (page - 1) * size,
       take: size,
     });
 
+    const filteredItems = items.filter(item => {
+      const content = JSON.parse(item.content);
+      const textContent = this.extractTextFromJson(content);
+      return textContent.includes(query);
+    });
+
     return {
-      items,
-      count,
+      items: filteredItems,
+      count: filteredItems.length,
       currentPage: page,
-      totalPages: Math.ceil(count / size),
+      totalPages: Math.ceil(filteredItems.length / size),
     };
+  }
+
+  private extractTextFromJson(json: any): string {
+    let text = '';
+
+    const traverse = (node: any) => {
+      
+      if (Array.isArray(node)) {
+        node.forEach(child => traverse(child));
+      } else if (typeof node === 'object' && node !== null) {
+        if (node.type === 'text' && node.text) {
+          text += node.text + ' ';
+        }
+        Object.values(node).forEach(value => traverse(value));
+      }
+    };
+
+    traverse(json);
+    return text.trim();
   }
 }

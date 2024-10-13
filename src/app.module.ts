@@ -26,6 +26,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { SessionModule } from './session/session.module';
 import { TopicsModule } from './topics/topics.module';
 import { UsersModule } from './users/users.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { UsersModule } from './users/users.module';
     ConfirmModule,
     MailerModule,
     MailModule,
+    SearchModule,
   ],
   controllers: [],
   providers: [],
