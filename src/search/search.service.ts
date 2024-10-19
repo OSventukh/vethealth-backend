@@ -23,6 +23,7 @@ export class SearchService {
       ],
       skip: (page - 1) * size,
       take: size,
+      relations: ['topics']
     });
 
     const filteredItems = items.filter(item => {

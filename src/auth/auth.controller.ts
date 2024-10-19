@@ -19,12 +19,14 @@ import { AuthRegisterDto } from './dto/auth-register.dto';
 import { AuthConfirmDto } from './dto/auth-confirm.dto';
 import { AuthForgotPasswordDto } from './dto/auth-forgot-password.dto';
 import { AuthChangePasswordDto } from './dto/auth-change-password.dto';
+import { minutes, Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @ApiBearerAuth()
+  @Throttle({ default: { limit: 10, ttl: minutes(60) } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   login(@Body() authDto: AuthLoginDto) {
@@ -55,6 +57,7 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
+  @Throttle({ default: { limit: 10, ttl: minutes(60) } })
   @Post('confirm')
   @HttpCode(HttpStatus.OK)
   confirmEmail(@Body() confirmDto: AuthConfirmDto) {
@@ -62,6 +65,7 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
+  @Throttle({ default: { limit: 10, ttl: minutes(60) } })
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   forgotPassword(@Body() forgotPasswordDto: AuthForgotPasswordDto) {

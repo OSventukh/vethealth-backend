@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerGuard, ThrottlerModule, minutes } from '@nestjs/throttler';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource, DataSourceOptions } from 'typeorm';
@@ -27,6 +28,7 @@ import { SessionModule } from './session/session.module';
 import { TopicsModule } from './topics/topics.module';
 import { UsersModule } from './users/users.module';
 import { SearchModule } from './search/search.module';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -62,6 +64,13 @@ import { SearchModule } from './search/search.module';
       imports: [ConfigModule],
       inject: [ConfigService],
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'api',
+        ttl: minutes(1),
+        limit: 20,
+      }
+    ]),
     UsersModule,
     PostsModule,
     TopicsModule,
@@ -79,6 +88,11 @@ import { SearchModule } from './search/search.module';
     SearchModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
