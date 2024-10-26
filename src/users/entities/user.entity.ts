@@ -1,9 +1,10 @@
 import { PostEntity } from '@/posts/entities/post.entity';
 import { RoleEntity } from '@/roles/entities/role.entity';
+import { RoleEnum } from '@/roles/roles.enum';
 import { UserStatusEntity } from '@/statuses/entities/user-status.entity';
 import { TopicEntity } from '@/topics/entities/topic.entity';
 import { hashPassword } from '@/utils/password-hash';
-import { Exclude, Transform } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 
 import {
   AfterLoad,
@@ -31,6 +32,7 @@ export class UserEntity {
   @Column({ nullable: true })
   lastname?: string;
 
+  @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin, 'me'] })
   @Column({ unique: true })
   email: string;
 
@@ -46,20 +48,15 @@ export class UserEntity {
     this.previousPassword = this.password;
   }
 
-  @Exclude({ toPlainOnly: true })
-  @Column({ nullable: true })
-  confirmationToken?: string;
-
-  @Exclude({ toPlainOnly: true })
-  @Column({ nullable: true })
-  confirmationTokenExpirationDate?: Date;
-
+  @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin] })
   @CreateDateColumn()
   createdAt: Date;
 
+  @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin] })
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin] })
   @DeleteDateColumn()
   deletedAt: Date;
 
@@ -69,13 +66,11 @@ export class UserEntity {
   @ManyToOne(() => RoleEntity, {
     eager: true,
   })
-  @Transform(({ obj }) => obj?.role?.name)
   role: RoleEntity;
 
   @ManyToOne(() => UserStatusEntity, {
     eager: true,
   })
-  @Transform(({ obj }) => obj?.status?.name)
   status: UserStatusEntity;
 
   @ManyToMany(() => TopicEntity, (topic) => topic.users)

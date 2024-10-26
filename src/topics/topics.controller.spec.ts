@@ -4,12 +4,10 @@ import { TopicsController } from './topics.controller';
 import { TopicsService } from './topics.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
-import { TopicOrderQueryDto } from './dto/order-topic.dto';
-import { TopicWhereQueryDto } from './dto/find-topic.dto';
-import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
 import { TopicContentTypeEnum } from './topic.enum';
 import { FileEntity } from '@/files/entities/file.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
+import { TopicQueryDto } from './dto/topic-query.dto';
 
 describe('TopicsController', () => {
   let module: TestingModule;
@@ -45,35 +43,29 @@ describe('TopicsController', () => {
 
   it('should call a topicsService.findOne() method with provided id', () => {
     const topicId = '1';
-    topicsController.getOne(topicId);
-    expect(topicsService.findOne).toBeCalledWith({ id: topicId });
+    const queryDto = new TopicQueryDto();
+
+    topicsController.getOne(topicId, queryDto);
+    expect(topicsService.findOne).toBeCalledWith({ id: topicId }, queryDto);
   });
 
   it('should call a topicsService.findManyWithPafination() method with provided page and size', () => {
-    const paginationQuery: PaginationQueryDto = {
+    const queryDto: TopicQueryDto = {
       page: 1,
-      size: 5,
+      size: 10,
     };
 
-    topicsController.getMany(
-      paginationQuery,
-      new TopicOrderQueryDto(),
-      new TopicWhereQueryDto(),
-    );
-    expect(topicsService.findManyWithPagination).toBeCalledWith(
-      paginationQuery,
-      new TopicWhereQueryDto(),
-      new TopicOrderQueryDto().orderObject(),
-    );
+    topicsController.getMany(queryDto);
+    expect(topicsService.findManyWithPagination).toBeCalledWith(queryDto);
   });
 
   it('should call a topicsService.update() method with provided id and payload object', () => {
-    const topicId = '1';
     const payload: UpdateTopicDto = {
       title: 'Test Title',
+      id: 'testId',
     };
-    topicsController.update(topicId, payload);
-    expect(topicsService.update).toBeCalledWith(topicId, payload);
+    topicsController.update(payload);
+    expect(topicsService.update).toBeCalledWith(payload);
   });
 
   it('should call a topicsService.softDelete() method with provided id', () => {

@@ -3,13 +3,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   Repository,
   FindOptionsWhere,
-  FindOptionsOrder,
   DeepPartial,
+  Like,
+  IsNull,
+  UpdateResult,
 } from 'typeorm';
+
 import { CategoryEntity } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
-import { PaginationOptions } from '@/utils/types/pagination-options.type';
 import { PaginationType } from '@/utils/types/pagination.type';
+import { CategoryQueryDto } from './dto/category-query.dto';
 
 @Injectable()
 export class CategoriesService {
@@ -25,45 +28,53 @@ export class CategoriesService {
 
   async findOne(
     fields: FindOptionsWhere<CategoryEntity>,
+    queryDto: CategoryQueryDto,
   ): Promise<CategoryEntity> {
-    const topic = await this.categoriesRepository.findOne({ where: fields });
-    if (!topic) {
+    const { topic, include } = queryDto;
+    const category = await this.categoriesRepository.findOne({
+      where: { ...fields, topics: { slug: topic } },
+      relations: include,
+    });
+    if (!category) {
       throw new NotFoundException();
     }
-    return topic;
+    return category;
   }
 
   async findManyWithPagination(
-    paginationOptions: PaginationOptions,
-    fields: FindOptionsWhere<CategoryEntity>,
-    order: FindOptionsOrder<CategoryEntity>,
+    queryDto: CategoryQueryDto,
   ): Promise<PaginationType<CategoryEntity>> {
+    const { name, include, topic, orderBy, sort, page, size, showAll } =
+      queryDto;
+
     const [items, count] = await this.categoriesRepository.findAndCount({
-      where: { ...fields },
-      skip: (paginationOptions.page - 1) * paginationOptions.size,
-      take: paginationOptions.size,
-      order: {
-        ...order,
+      where: {
+        name: name && Like(`%${name}%`),
+        ...(!showAll && { parent: IsNull() }),
+        topics: { slug: topic },
       },
+      skip: (page - 1) * size,
+      take: size,
+      order: {
+        [orderBy]: sort,
+      },
+      relations: include,
     });
     return {
       items,
       count,
-      currentPage: paginationOptions.page,
-      totalPages: Math.ceil(count / paginationOptions.size),
+      currentPage: page,
+      totalPages: Math.ceil(count / size),
     };
   }
 
-  update(
-    id: CategoryEntity['id'],
-    payload: DeepPartial<CategoryEntity>,
-  ): Promise<CategoryEntity> {
+  update(payload: DeepPartial<CategoryEntity>): Promise<CategoryEntity> {
     return this.categoriesRepository.save(
-      this.categoriesRepository.create({ id, ...payload }),
+      this.categoriesRepository.create(payload),
     );
   }
 
-  async softDelete(id: CategoryEntity['id']): Promise<void> {
-    await this.categoriesRepository.softDelete(id);
+  softDelete(id: CategoryEntity['id']): Promise<UpdateResult> {
+    return this.categoriesRepository.softDelete(id);
   }
 }

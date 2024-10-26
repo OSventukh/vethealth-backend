@@ -11,6 +11,8 @@ import {
   OneToMany,
   JoinColumn,
   JoinTable,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { TopicContentTypeEnum } from '../topic.enum';
 
@@ -20,13 +22,16 @@ import { PageEntity } from '@/pages/entities/page.entity';
 import { UserEntity } from '@/users/entities/user.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
 import { FileEntity } from '@/files/entities/file.entity';
+import { Expose } from 'class-transformer';
+import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
+import { RoleEnum } from '@/roles/roles.enum';
 
 @Entity({ name: 'topics' })
 export class TopicEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   title: string;
 
   @OneToOne(() => FileEntity, { eager: true })
@@ -39,18 +44,25 @@ export class TopicEntity {
   @ManyToOne(() => TopicStatusEntity, { eager: true })
   status: TopicStatusEntity;
 
-  @Column()
+  @Column({ unique: true })
   slug: string;
 
-  @Column({ name: 'content_type', type: 'enum', enum: TopicContentTypeEnum })
+  @Column({
+    name: 'content_type',
+    type: 'enum',
+    enum: TopicContentTypeEnum,
+  })
   contentType: TopicContentTypeEnum;
 
+  @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin] })
   @CreateDateColumn()
   createdAt: Date;
 
+  @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin] })
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin] })
   @DeleteDateColumn()
   deletedAt: Date;
 
@@ -74,4 +86,12 @@ export class TopicEntity {
   @ManyToMany(() => UserEntity, (user) => user.topics)
   @JoinTable({ name: 'topic_user_relation' })
   users: UserEntity[];
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  createSlug() {
+    if (this.slug || this.title) {
+      this.slug = stringToSlugTransform(this.slug || this.title);
+    }
+  }
 }

@@ -2,14 +2,17 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   DeepPartial,
-  FindOptionsOrder,
   FindOptionsWhere,
+  IsNull,
+  Like,
   Repository,
 } from 'typeorm';
+
 import { TopicEntity } from './entities/topic.entity';
 import { CreateTopicDto } from './dto/create-topic.dto';
-import { PaginationOptions } from '@/utils/types/pagination-options.type';
 import { PaginationType } from '@/utils/types/pagination.type';
+import { TopicQueryDto } from './dto/topic-query.dto';
+import { topicOrder } from './utils/topic-order';
 
 @Injectable()
 export class TopicsService {
@@ -23,8 +26,15 @@ export class TopicsService {
     return this.topicsRepository.save(topic);
   }
 
-  async findOne(fields: FindOptionsWhere<TopicEntity>): Promise<TopicEntity> {
-    const topic = await this.topicsRepository.findOne({ where: fields });
+  async findOne(
+    fields: FindOptionsWhere<TopicEntity>,
+    queryDto?: TopicQueryDto,
+  ): Promise<TopicEntity> {
+    const { include, status } = queryDto;
+    const topic = await this.topicsRepository.findOne({
+      where: { ...fields, status: { name: status } },
+      relations: include,
+    });
     if (!topic) {
       throw new NotFoundException();
     }
@@ -32,31 +42,34 @@ export class TopicsService {
   }
 
   async findManyWithPagination(
-    paginationOptions: PaginationOptions,
-    fields: FindOptionsWhere<TopicEntity>,
-    order: FindOptionsOrder<TopicEntity>,
+    queryDto: TopicQueryDto,
   ): Promise<PaginationType<TopicEntity>> {
+    const { title, slug, status, include, orderBy, sort, page, size, showAll } =
+      queryDto;
     const [items, count] = await this.topicsRepository.findAndCount({
-      where: fields,
-      skip: (paginationOptions.page - 1) * paginationOptions.size,
-      take: paginationOptions.size,
-      order: order,
+      where: {
+        title: title && Like(`%${title}%`),
+        slug,
+        ...(!showAll && { parent: IsNull() }),
+        status: {
+          name: status,
+        },
+      },
+      skip: (page - 1) * size,
+      take: size,
+      order: topicOrder(orderBy, sort),
+      relations: include,
     });
     return {
       items,
       count,
-      currentPage: paginationOptions.page,
-      totalPages: Math.ceil(count / paginationOptions.size),
+      currentPage: page,
+      totalPages: Math.ceil(count / size),
     };
   }
 
-  update(
-    id: TopicEntity['id'],
-    payload: DeepPartial<TopicEntity>,
-  ): Promise<TopicEntity> {
-    return this.topicsRepository.save(
-      this.topicsRepository.create({ id, ...payload }),
-    );
+  update(payload: DeepPartial<TopicEntity>): Promise<TopicEntity> {
+    return this.topicsRepository.save(this.topicsRepository.create(payload));
   }
 
   async softDelete(id: TopicEntity['id']): Promise<void> {

@@ -1,12 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Repository, DeepPartial } from 'typeorm';
+import { IsNull, Like, Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CategoryEntity } from './entities/category.entity';
 import { CategoriesService } from './categories.service';
 import { createMock } from '@golevelup/ts-jest';
 import { CreateCategoryDto } from './dto/create-category.dto';
-import { CategoryOrderQueryDto } from './dto/order-category.dto';
-import { CategoryWhereQueryDto } from './dto/find-category.dto';
+import { CategoryQueryDto } from './dto/category-query.dto';
 
 describe('CategoriesService', () => {
   let categoriesService: CategoriesService;
@@ -50,20 +49,16 @@ describe('CategoriesService', () => {
   });
 
   it('should call categoriesRepository.findAndCount() method with options', () => {
-    const page = 1;
-    const size = 5;
-    categoriesService.findManyWithPagination(
-      { page, size },
-      new CategoryWhereQueryDto(),
-      new CategoryOrderQueryDto().orderObject(),
-    );
+    const { name, include, page, size, orderBy, sort } = new CategoryQueryDto();
+    categoriesService.findManyWithPagination(new CategoryQueryDto());
     expect(categoriesRepository.findAndCount).toBeCalledWith({
       skip: (page - 1) * size,
       take: size,
-      where: {},
+      where: { name: name && Like(`%${name}%`), parent: IsNull() },
       order: {
-        createdAt: 'ASC',
+        [orderBy]: sort,
       },
+      relations: include,
     });
   });
 
@@ -72,7 +67,7 @@ describe('CategoriesService', () => {
       id: '1',
       name: 'Test name',
     } as CategoryEntity;
-    categoriesService.update(post.id, post.name as DeepPartial<CategoryEntity>);
+    categoriesService.update(post);
     expect(categoriesRepository.save).toBeCalledWith(
       categoriesRepository.create(post),
     );

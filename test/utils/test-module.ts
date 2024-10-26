@@ -5,6 +5,7 @@ import {
   ValidationPipe,
   Type,
   Provider,
+  CanActivate,
 } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmConfigService } from '@/database/typeorm-config.service';
@@ -15,26 +16,31 @@ import appConfig from '@/config/app.config';
 import { getDataSourceToken } from '@nestjs/typeorm';
 import { RoleSeedModule } from '@/database/seeds/role/role-seed.module';
 import { StatusSeedModule } from '@/database/seeds/status/status-seed.module';
+import authConfig from '@/config/auth.config';
+import { AuthGuard } from '@nestjs/passport';
 
 interface CreateTestModule {
   imports?: Type<any>[];
   controllers?: Type<any>[];
   providers?: Provider[];
+  mockAuthGuard?: boolean;
 }
 
 export async function createTestModule({
   imports,
   controllers,
   providers,
+  mockAuthGuard = true,
 }: CreateTestModule): Promise<{
   app: INestApplication;
   connection: DataSource;
 }> {
+  const mockedAuthGuard: CanActivate = { canActivate: jest.fn(() => true) };
   const moduleFixture = await Test.createTestingModule({
     imports: [
       ConfigModule.forRoot({
         isGlobal: true,
-        load: [databaseConfig, appConfig],
+        load: [databaseConfig, appConfig, authConfig],
         envFilePath: ['.env.test'],
       }),
       TypeOrmModule.forRootAsync({
@@ -49,7 +55,10 @@ export async function createTestModule({
     ],
     controllers: controllers,
     providers: providers,
-  }).compile();
+  })
+    .overrideGuard(mockAuthGuard ? AuthGuard('jwt') : null)
+    .useValue(mockAuthGuard ? mockedAuthGuard : null)
+    .compile();
   const app = moduleFixture.createNestApplication();
   imports.forEach((module) => {
     useContainer(app.select(module), { fallbackOnErrors: true });

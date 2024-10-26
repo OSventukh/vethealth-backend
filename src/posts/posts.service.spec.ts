@@ -1,14 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PostsService } from './posts.service';
 import { PostEntity } from './entities/post.entity';
-import { DeepPartial, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { createMock } from '@golevelup/ts-jest';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UserEntity } from '@/users/entities/user.entity';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
-import { PostOrderQueryDto } from './dto/order-post.dto';
-import { PostWhereQueryDto } from './dto/find-post.dto';
+import { PostQueryDto } from './dto/post-query.dto';
+import { postOrder } from './utils/post-order';
 
 describe('PostsService', () => {
   let postsService: PostsService;
@@ -38,7 +38,6 @@ describe('PostsService', () => {
     const createPostDto: CreatePostDto = {
       title: 'Test title',
       content: 'Test content',
-      excerpt: 'Test exerpt',
       author: new UserEntity(),
       status: new PostStatusEntity(),
     };
@@ -52,20 +51,40 @@ describe('PostsService', () => {
   });
 
   it('should call postsRepository.findAndCount() method with options', () => {
-    const page = 1;
-    const size = 5;
-    postsService.findManyWithPagination(
-      { page, size },
-      new PostWhereQueryDto(),
-      new PostOrderQueryDto().orderObject(),
-    );
+    const queryDto = new PostQueryDto();
+    const {
+      title,
+      author,
+      topic,
+      category,
+      include,
+      status,
+      page,
+      size,
+      orderBy,
+      sort,
+    } = queryDto;
+    postsService.findManyWithPagination(queryDto);
     expect(postsRepository.findAndCount).toBeCalledWith({
+      where: {
+        title,
+        status: {
+          name: status,
+        },
+        author: {
+          firstname: author,
+        },
+        topics: {
+          slug: topic,
+        },
+        categories: {
+          slug: category,
+        },
+      },
       skip: (page - 1) * size,
       take: size,
-      where: {},
-      order: {
-        createdAt: 'ASC',
-      },
+      order: postOrder(orderBy, sort),
+      relations: include,
     });
   });
 
@@ -74,7 +93,7 @@ describe('PostsService', () => {
       id: '1',
       title: 'Test title',
     } as PostEntity;
-    postsService.update(post.id, post.title as DeepPartial<PostEntity>);
+    postsService.update(post);
     expect(postsRepository.save).toBeCalledWith(postsRepository.create(post));
   });
 

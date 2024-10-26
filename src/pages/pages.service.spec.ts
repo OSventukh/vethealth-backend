@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PagesService } from './pages.service';
-import { Repository, DeepPartial } from 'typeorm';
+import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { createMock } from '@golevelup/ts-jest';
 import { PageEntity } from './entities/page.entity';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
-import { PageOrderQueryDto } from './dto/order-page.dto';
-import { PageWhereQueryDto } from './dto/find-page.dto';
 import { CreatePageDto } from './dto/create-page.dto';
+import { PageQueryDto } from './dto/page-query.dto';
+import { postOrder } from './utils/page-order';
 
 describe('PagesService', () => {
   let module: TestingModule;
@@ -57,20 +57,22 @@ describe('PagesService', () => {
   });
 
   it('should call pagesRepository.findAdnCount() mehtod with options', () => {
-    const page = 1;
-    const size = 5;
-    pagesService.findManyWithPagination(
-      { page, size },
-      new PageWhereQueryDto(),
-      new PageOrderQueryDto().orderObject(),
-    );
+    const { title, slug, status, include, page, size, orderBy, sort } =
+      new PageQueryDto();
+
+    pagesService.findManyWithPagination(new PageQueryDto());
     expect(pagesRepository.findAndCount).toBeCalledWith({
+      where: {
+        title,
+        slug,
+        status: {
+          name: status,
+        },
+      },
       skip: (page - 1) * size,
       take: size,
-      where: {},
-      order: {
-        createdAt: 'ASC',
-      },
+      order: postOrder(orderBy, sort),
+      relations: include,
     });
   });
 
@@ -80,7 +82,7 @@ describe('PagesService', () => {
       title: 'Test page',
     } as PageEntity;
 
-    pagesService.update(page.id, page.title as DeepPartial<PageEntity>);
+    pagesService.update(page);
     expect(pagesRepository.save).toBeCalledWith(pagesRepository.create(page));
   });
 

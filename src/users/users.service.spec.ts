@@ -5,8 +5,8 @@ import { UsersService } from './users.service';
 import { createMock } from '@golevelup/ts-jest';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Repository } from 'typeorm';
-import { DeepPartial } from 'typeorm';
-import { UserStatusEnum } from '@/statuses/user-statuses.enum';
+import { UserQueryDto } from './dto/user-query.dto';
+import { userOrder } from './utils/user-order';
 
 describe('UsersService', () => {
   let usersService: UsersService;
@@ -39,12 +39,7 @@ describe('UsersService', () => {
     usersService.create({
       ...createUserDto,
     });
-    expect(usersRepository.create).toBeCalledWith({
-      ...createUserDto,
-      status: {
-        id: UserStatusEnum.Pending,
-      },
-    });
+    expect(usersRepository.create).toBeCalledWith(createUserDto);
   });
 
   it('should call usersRepository.findOne() method with object that have where field and passed value', () => {
@@ -53,31 +48,34 @@ describe('UsersService', () => {
   });
 
   it('should call usersRepository.findAndCount() method with options', () => {
-    const page = 1;
-    const size = 5;
-    const order = 'createdAt';
-    const sort = 'ASC';
-
-    usersService.findManyWithPagination({ page, size, sort, order });
+    const queryDto = new UserQueryDto();
+    const {
+      firstname,
+      lastname,
+      role,
+      status,
+      page,
+      size,
+      include,
+      orderBy,
+      sort,
+    } = queryDto;
+    usersService.findManyWithPagination(queryDto);
     expect(usersRepository.findAndCount).toBeCalledWith({
       where: {
-        firstname: undefined,
-        lastname: undefined,
+        firstname,
+        lastname,
         role: {
-          name: undefined,
+          name: role,
         },
         status: {
-          name: undefined,
+          name: status,
         },
       },
       skip: (page - 1) * size,
       take: size,
-      relations: {
-        topics: undefined,
-      },
-      order: {
-        [order]: sort,
-      },
+      relations: include,
+      order: userOrder(orderBy, sort),
     });
   });
 
@@ -87,7 +85,7 @@ describe('UsersService', () => {
       firstname: 'Test',
     } as UserEntity;
 
-    usersService.update(user.id, user.firstname as DeepPartial<UserEntity>);
+    usersService.update(user);
 
     expect(usersRepository.save).toBeCalledWith(usersRepository.create(user));
   });

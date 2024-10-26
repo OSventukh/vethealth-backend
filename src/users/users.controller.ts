@@ -11,6 +11,7 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,6 +21,8 @@ import { UserEntity } from './entities/user.entity';
 import { UsersService } from './users.service';
 import { DeleteUserGuard } from './guards/delete-user.guard';
 import { UpdateUserGuard } from './guards/update-user.guard';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesSerializerInterceptor } from '@/auth/interceptors/roles-serializer.interceptor';
 
 @ApiTags('Users')
 @Controller('users')
@@ -27,39 +30,44 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
-  createUser(@Body() createUserDto: CreateUserDto): Promise<UserEntity> {
+  create(@Body() createUserDto: CreateUserDto): Promise<UserEntity> {
     return this.usersService.create(createUserDto);
   }
 
   @Get(':id')
+  @UseInterceptors(RolesSerializerInterceptor)
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
-  getOneUser(@Param('id') id: string): Promise<UserEntity | null> {
-    return this.usersService.findOne({ id });
+  getOne(
+    @Param('id') id: string,
+    @Query() queryDto: UserQueryDto,
+  ): Promise<UserEntity | null> {
+    return this.usersService.findOne({ id }, queryDto.include);
   }
 
   @Get()
+  @UseInterceptors(RolesSerializerInterceptor)
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
-  getAllUsers(
+  getMany(
     @Query() queryDto: UserQueryDto,
   ): Promise<PaginationType<UserEntity>> {
     return this.usersService.findManyWithPagination(queryDto);
   }
 
-  @UseGuards(UpdateUserGuard)
-  @Patch(':id')
+  @UseGuards(AuthGuard('jwt'), UpdateUserGuard)
+  @Patch()
   @HttpCode(HttpStatus.OK)
-  updateUser(
-    @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto,
-  ): Promise<UserEntity> {
-    return this.usersService.update(id, updateUserDto);
+  update(@Body() updateUserDto: UpdateUserDto): Promise<UserEntity> {
+    return this.usersService.update(updateUserDto);
   }
 
-  @UseGuards(DeleteUserGuard)
+  @UseGuards(AuthGuard('jwt'), DeleteUserGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteUser(@Param('id') id: string): Promise<void> {
+  delete(@Param('id') id: string): Promise<void> {
     return this.usersService.softDelete(id);
   }
 }

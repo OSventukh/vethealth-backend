@@ -5,6 +5,9 @@ import { IsValidColumn } from '@/utils/validators/is-valid-column.validator';
 import { IsValidIncludes } from '@/utils/validators/is-valid-includes.validator';
 import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
+import { FindOptionsOrderValue, FindOptionsRelations } from 'typeorm';
+import { UserEntity } from '../entities/user.entity';
+import { includeStringToObjectTransform } from '@/utils/transformers/include-transform';
 
 export class UserQueryDto extends PaginationQueryDto {
   @ApiProperty({ required: false })
@@ -28,10 +31,11 @@ export class UserQueryDto extends PaginationQueryDto {
   status?: string;
 
   @ApiProperty({ required: false })
+  @Transform(includeStringToObjectTransform)
   @Validate(IsValidIncludes, ['topics'], {
     message: ERROR_MESSAGE.INCLUDE_IS_NOT_VALID,
   })
-  include?: string;
+  include?: FindOptionsRelations<UserEntity>;
 
   @ApiProperty({ required: false })
   @Validate(IsValidColumn, ['UserEntity'], {
@@ -42,10 +46,10 @@ export class UserQueryDto extends PaginationQueryDto {
     { message: ERROR_MESSAGE.COLUMN_IS_NOT_VALID },
   )
   @IsString()
-  readonly order? = 'createdAt';
+  readonly orderBy?: keyof UserEntity = 'createdAt';
 
   @ApiProperty({ required: false })
   @IsIn(['DESC', 'ASC'])
   @Transform(({ value }) => value?.toUpperCase())
-  readonly sort? = 'ASC';
+  readonly sort?: FindOptionsOrderValue = 'ASC';
 }

@@ -12,7 +12,8 @@ import { IsExist } from '@/utils/validators/is-exist.validator';
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
 import { RoleEntity } from '@/roles/entities/role.entity';
 import { TopicEntity } from '@/topics/entities/topic.entity';
-import { IsNotSuperAdmin } from '../utils/validators/is-not-admin.validator';
+import { IsNotSuperAdmin } from '@/utils/validators/is-not-admin.validator';
+import { UserStatusEntity } from '@/statuses/entities/user-status.entity';
 
 export class CreateUserDto {
   @ApiProperty()
@@ -20,7 +21,6 @@ export class CreateUserDto {
   firstname: string;
 
   @ApiProperty()
-  @IsNotEmpty()
   @IsOptional()
   lastname?: string | null;
 
@@ -42,6 +42,8 @@ export class CreateUserDto {
     message: ERROR_MESSAGE.SUPERADMIN_IS_NOT_ALLOWED,
   })
   role: RoleEntity;
+
+  status: UserStatusEntity;
 
   @ApiProperty({ example: [{ id: '55de06e1-0384-4f6f-b118-eb3dd529af1e' }] })
   @IsOptional()

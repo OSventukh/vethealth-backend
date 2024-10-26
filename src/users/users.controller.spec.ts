@@ -4,7 +4,7 @@ import { UsersService } from './users.service';
 import { createMock } from '@golevelup/ts-jest';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
+import { UserQueryDto } from './dto/user-query.dto';
 
 describe('UsersController', () => {
   let usersController: UsersController;
@@ -34,37 +34,42 @@ describe('UsersController', () => {
       email: 'test@test.com',
       firstname: 'Test',
     } as CreateUserDto;
-    usersController.createUser(createUserDto);
+    usersController.create(createUserDto);
     expect(usersService.create).toBeCalledWith(createUserDto);
   });
 
   it('should call a usersService.findOne() with provided id', () => {
     const userId = '1';
-    usersController.getOneUser(userId);
-    expect(usersService.findOne).toBeCalledWith({ id: userId });
+    const queryDto = new UserQueryDto();
+
+    usersController.getOne(userId, queryDto);
+    expect(usersService.findOne).toBeCalledWith(
+      { id: userId },
+      queryDto.include,
+    );
   });
 
   it('should call a usersService.findManyWithPagination() method with provided page and size', () => {
-    const paginationQuery: PaginationQueryDto = {
+    const queryDto: UserQueryDto = {
       page: 1,
-      size: 5,
+      size: 10,
     };
-    usersController.getAllUsers(paginationQuery);
-    expect(usersService.findManyWithPagination).toBeCalledWith(paginationQuery);
+    usersController.getMany(queryDto);
+    expect(usersService.findManyWithPagination).toBeCalledWith(queryDto);
   });
 
   it('should call a usersService.update() method with provided id and payload object', () => {
-    const userId = '1';
     const payload: UpdateUserDto = {
       firstname: 'Test',
+      id: 'testId',
     };
-    usersController.updateUser(userId, payload);
-    expect(usersService.update).toBeCalledWith(userId, payload);
+    usersController.update(payload);
+    expect(usersService.update).toBeCalledWith(payload);
   });
 
   it('should call a usersService.softDelete() method with provided id', () => {
     const userId = '1';
-    usersController.deleteUser(userId);
+    usersController.delete(userId);
     expect(usersService.softDelete).toBeCalledWith(userId);
   });
 });

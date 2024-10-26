@@ -31,8 +31,33 @@ export type FileConfig = {
   maxFileSize: number;
 };
 
+export type AuthConfig = {
+  secret: string;
+  expires: string;
+  refreshSecret: string;
+  refreshExpires: string;
+  adminEmail: string;
+  adminPassword: string;
+  adminName: string;
+};
+
+export type MailConfig = {
+  port: number;
+  host?: string;
+  user?: string;
+  password?: string;
+  defaultEmail?: string;
+  defaultName?: string;
+  ignoreTLS: boolean;
+  secure: boolean;
+  requireTLS: boolean;
+  rejectUnauthorized: boolean;
+};
+
 export type AllConfigType = {
   app: AppConfig;
+  auth: AuthConfig;
   database: DatabaseConfig;
   file: FileConfig;
+  mail: MailConfig;
 };

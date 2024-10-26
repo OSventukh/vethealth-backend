@@ -3,13 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   Repository,
   DeepPartial,
-  FindOptionsOrder,
   FindOptionsWhere,
+  FindOptionsRelations,
 } from 'typeorm';
 import { PageEntity } from './entities/page.entity';
 import { CreatePageDto } from './dto/create-page.dto';
-import { PaginationOptions } from '@/utils/types/pagination-options.type';
 import { PaginationType } from '@/utils/types/pagination.type';
+import { PageQueryDto } from './dto/page-query.dto';
+import { postOrder } from './utils/page-order';
 
 @Injectable()
 export class PagesService {
@@ -22,8 +23,14 @@ export class PagesService {
     return this.pagesRepository.save(page);
   }
 
-  async findOne(fields: FindOptionsWhere<PageEntity>): Promise<PageEntity> {
-    const page = await this.pagesRepository.findOne({ where: fields });
+  async findOne(
+    fields: FindOptionsWhere<PageEntity>,
+    include?: FindOptionsRelations<PageEntity>,
+  ): Promise<PageEntity> {
+    const page = await this.pagesRepository.findOne({
+      where: fields,
+      relations: include,
+    });
     if (!page) {
       throw new NotFoundException();
     }
@@ -31,31 +38,33 @@ export class PagesService {
   }
 
   async findManyWithPagination(
-    paginationOptions: PaginationOptions,
-    fields: FindOptionsWhere<PageEntity>,
-    order: FindOptionsOrder<PageEntity>,
+    queryDto: PageQueryDto,
   ): Promise<PaginationType<PageEntity>> {
+    const { title, slug, status, page, size, include, orderBy, sort } =
+      queryDto;
     const [items, count] = await this.pagesRepository.findAndCount({
-      where: fields,
-      skip: (paginationOptions.page - 1) * paginationOptions.size,
-      take: paginationOptions.size,
-      order: order,
+      where: {
+        title,
+        slug,
+        status: {
+          name: status,
+        },
+      },
+      skip: (page - 1) * size,
+      take: size,
+      order: postOrder(orderBy, sort),
+      relations: include,
     });
     return {
       items,
       count,
-      currentPage: paginationOptions.page,
-      totalPages: Math.ceil(count / paginationOptions.size),
+      currentPage: page,
+      totalPages: Math.ceil(count / size),
     };
   }
 
-  update(
-    id: PageEntity['id'],
-    payload: DeepPartial<PageEntity>,
-  ): Promise<PageEntity> {
-    return this.pagesRepository.save(
-      this.pagesRepository.create({ id, ...payload }),
-    );
+  update(payload: DeepPartial<PageEntity>): Promise<PageEntity> {
+    return this.pagesRepository.save(this.pagesRepository.create(payload));
   }
 
   async softDelete(id: PageEntity['id']): Promise<void> {

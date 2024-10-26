@@ -6,7 +6,7 @@ import { UserEntity } from './entities/user.entity';
 import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
 import { IsExist } from '@/utils/validators/is-exist.validator';
 import { IsValidIncludes } from '@/utils/validators/is-valid-includes.validator';
-import { IsNotSuperAdmin } from './utils/validators/is-not-admin.validator';
+import { IsNotSuperAdmin } from '../utils/validators/is-not-admin.validator';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserEntity])],
@@ -18,5 +18,6 @@ import { IsNotSuperAdmin } from './utils/validators/is-not-admin.validator';
     IsValidIncludes,
     IsNotSuperAdmin,
   ],
+  exports: [UsersService],
 })
 export class UsersModule {}

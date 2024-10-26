@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, FindOptionsRelations, Repository, Like } from 'typeorm';
 import { PostEntity } from './entities/post.entity';
 import { PaginationType } from 'src/utils/types/pagination.type';
-import { PaginationOptions } from 'src/utils/types/pagination-options.type';
 import { CreatePostDto } from './dto/create-post.dto';
-import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere } from 'typeorm';
+import { PostQueryDto } from './dto/post-query.dto';
+import { postOrder } from './utils/post-order';
+import { PostStatusEnum } from '@/statuses/post-status.enum';
 
 @Injectable()
 export class PostsService {
@@ -19,42 +21,64 @@ export class PostsService {
     return this.postsRepository.save(post);
   }
 
-  async findOne(fields: FindOptionsWhere<PostEntity>): Promise<PostEntity> {
-    const post = await this.postsRepository.findOne({ where: fields });
+  async findOne(
+    fields: FindOptionsWhere<PostEntity>,
+    include?: FindOptionsRelations<PostEntity>,
+  ): Promise<PostEntity> {
+    const post = await this.postsRepository.findOne({
+      where: fields,
+      relations: include,
+    });
     if (!post) {
       throw new NotFoundException();
     }
     return post;
   }
   async findManyWithPagination(
-    paginationOptions: PaginationOptions,
-    fields: FindOptionsWhere<PostEntity>,
-    order: FindOptionsOrder<PostEntity>,
+    queryDto: PostQueryDto,
   ): Promise<PaginationType<PostEntity>> {
+    const {
+      title,
+      author,
+      topic,
+      category,
+      status,
+      include,
+      page,
+      size,
+      orderBy,
+      sort,
+    } = queryDto;
     const [items, count] = await this.postsRepository.findAndCount({
-      where: { ...fields },
-      skip: (paginationOptions.page - 1) * paginationOptions.size,
-      take: paginationOptions.size,
-      order: {
-        ...order,
+      where: {
+        title: title && Like(`%${title}%`),
+        status: status === 'all' ? undefined : { name: status || 'Published' },
+        author: {
+          firstname: author,
+        },
+        topics: {
+          slug: topic,
+        },
+        categories: {
+          slug: category,
+        },
       },
+      skip: (page - 1) * size,
+      take: size,
+      order: postOrder(orderBy, sort),
+      relations: include,
     });
 
     return {
       items,
       count,
-      currentPage: paginationOptions.page,
-      totalPages: Math.ceil(count / paginationOptions.size),
+      currentPage: page,
+      totalPages: Math.ceil(count / size),
     };
   }
 
-  update(
-    id: PostEntity['id'],
-    payload: DeepPartial<PostEntity>,
-  ): Promise<PostEntity> {
-    return this.postsRepository.save(
-      this.postsRepository.create({ id, ...payload }),
-    );
+  update(payload: DeepPartial<PostEntity>): Promise<PostEntity> {
+    return this.postsRepository.save(this.postsRepository.create(payload));
   }
 
   async softDelete(id: PostEntity['id']): Promise<void> {

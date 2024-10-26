@@ -4,9 +4,7 @@ import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { CategoryOrderQueryDto } from './dto/order-category.dto';
-import { CategoryWhereQueryDto } from './dto/find-category.dto';
-import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
+import { CategoryQueryDto } from './dto/category-query.dto';
 
 describe('CategoriesController', () => {
   let categoriesController: CategoriesController;
@@ -41,30 +39,22 @@ describe('CategoriesController', () => {
   });
 
   it('should call a categoriesService.findManyWithPafination() method with provided page and size', () => {
-    const paginationQuery: PaginationQueryDto = {
+    const queryDto: CategoryQueryDto = {
       page: 1,
-      size: 5,
+      size: 10,
     };
 
-    categoriesController.getMany(
-      paginationQuery,
-      new CategoryOrderQueryDto(),
-      new CategoryWhereQueryDto(),
-    );
-    expect(categoriesService.findManyWithPagination).toBeCalledWith(
-      paginationQuery,
-      new CategoryWhereQueryDto(),
-      new CategoryOrderQueryDto().orderObject(),
-    );
+    categoriesController.getMany(queryDto);
+    expect(categoriesService.findManyWithPagination).toBeCalledWith(queryDto);
   });
 
   it('should call a categoriesService.update() method with provided id and payload object', () => {
-    const categoryId = '1';
     const payload: UpdateCategoryDto = {
-      title: 'Test Title',
+      name: 'Test Title',
+      id: 'testId',
     };
-    categoriesController.update(categoryId, payload);
-    expect(categoriesService.update).toBeCalledWith(categoryId, payload);
+    categoriesController.update(payload);
+    expect(categoriesService.update).toBeCalledWith(payload);
   });
 
   it('should call a postsSerice.softDelete() method with provided id', () => {

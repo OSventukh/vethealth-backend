@@ -1,11 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, FindOptionsWhere, Repository } from 'typeorm';
+import {
+  DeepPartial,
+  FindOptionsRelations,
+  FindOptionsWhere,
+  Repository,
+} from 'typeorm';
 import { PaginationType } from '@/utils/types/pagination.type';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { UserEntity } from './entities/user.entity';
-import { UserStatusEnum } from '@/statuses/user-statuses.enum';
+import { userOrder } from './utils/user-order';
 
 @Injectable()
 export class UsersService {
@@ -16,23 +21,18 @@ export class UsersService {
 
   create(createUserDto: CreateUserDto): Promise<UserEntity> {
     return this.usersRepository.save(
-      this.usersRepository.create({
-        ...createUserDto,
-        status: { id: UserStatusEnum.Pending },
-      }),
+      this.usersRepository.create(createUserDto),
     );
   }
 
   async findOne(
     fields: FindOptionsWhere<UserEntity>,
+    include?: FindOptionsRelations<UserEntity>,
   ): Promise<UserEntity | null> {
-    const user = await this.usersRepository.findOne({ where: fields });
-
-    if (!user) {
-      throw new NotFoundException();
-    }
-
-    return user;
+    return this.usersRepository.findOne({
+      where: fields,
+      relations: include,
+    });
   }
 
   async findManyWithPagination(
@@ -43,13 +43,12 @@ export class UsersService {
       lastname,
       role,
       status,
-      order,
+      orderBy,
       sort,
       include,
       page,
       size,
     } = queryDto;
-
     const [items, count] = await this.usersRepository.findAndCount({
       where: {
         firstname,
@@ -63,12 +62,8 @@ export class UsersService {
       },
       skip: (page - 1) * size,
       take: size,
-      order: {
-        [order]: sort,
-      },
-      relations: {
-        topics: include?.includes('topics'),
-      },
+      order: userOrder(orderBy, sort),
+      relations: include,
     });
 
     return {
@@ -79,16 +74,8 @@ export class UsersService {
     };
   }
 
-  async update(
-    id: UserEntity['id'],
-    payload: DeepPartial<UserEntity>,
-  ): Promise<UserEntity> {
-    return this.usersRepository.save(
-      this.usersRepository.create({
-        id,
-        ...payload,
-      }),
-    );
+  async update(payload: DeepPartial<UserEntity>): Promise<UserEntity> {
+    return this.usersRepository.save(this.usersRepository.create(payload));
   }
 
   async softDelete(id: UserEntity['id']): Promise<void> {

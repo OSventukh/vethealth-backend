@@ -5,12 +5,16 @@ import { ConfigService } from '@nestjs/config';
 import { useContainer } from 'class-validator';
 import { AppModule } from './app.module';
 import { AllConfigType } from './config/config.type';
+import { I18nValidationExceptionFilter, I18nValidationPipe } from 'nestjs-i18n';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const configService = app.get(ConfigService<AllConfigType>);
-
+  app.enableCors({
+    origin: configService.getOrThrow('app.frontendDomain', { infer: true }),
+    credentials: true,
+  });
   const config = new DocumentBuilder()
     .setTitle('VetHealth API')
     .setDescription('VetHealth API Docs')
@@ -20,7 +24,15 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+    new I18nValidationPipe(),
+  );
+  app.useGlobalFilters(new I18nValidationExceptionFilter());
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   await app.listen(configService.getOrThrow('app.port', { infer: true }));
 }

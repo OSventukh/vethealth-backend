@@ -4,11 +4,9 @@ import { PostsService } from './posts.service';
 import { createMock } from '@golevelup/ts-jest';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { PaginationQueryDto } from '@/utils/dto/pagination.dto';
-import { PostWhereQueryDto } from './dto/find-post.dto';
-import { PostOrderQueryDto } from './dto/order-post.dto';
 import { UserEntity } from '@/users/entities/user.entity';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
+import { PostQueryDto } from './dto/post-query.dto';
 
 describe('PostsController', () => {
   let postsController: PostsController;
@@ -37,7 +35,6 @@ describe('PostsController', () => {
     const createPostDto: CreatePostDto = {
       title: 'Test title',
       content: 'Test Content',
-      excerpt: 'Test excerpt',
       author: new UserEntity(),
       status: new PostStatusEntity(),
     };
@@ -47,35 +44,31 @@ describe('PostsController', () => {
 
   it('should call a postsService.findOne() method with provided id', () => {
     const postId = '1';
-    postsController.getOne(postId);
-    expect(postsService.findOne).toBeCalledWith({ id: postId });
+    const queryDto = new PostQueryDto();
+    postsController.getOne(postId, queryDto);
+    expect(postsService.findOne).toBeCalledWith(
+      { id: postId },
+      queryDto.include,
+    );
   });
 
   it('should call a postsService.findManyWithPafination() method with provided page and size', () => {
-    const paginationQuery: PaginationQueryDto = {
+    const queryDto: PostQueryDto = {
       page: 1,
-      size: 5,
+      size: 10,
     };
 
-    postsController.getMany(
-      paginationQuery,
-      new PostOrderQueryDto(),
-      new PostWhereQueryDto(),
-    );
-    expect(postsService.findManyWithPagination).toBeCalledWith(
-      paginationQuery,
-      new PostWhereQueryDto(),
-      new PostOrderQueryDto().orderObject(),
-    );
+    postsController.getMany(queryDto);
+    expect(postsService.findManyWithPagination).toBeCalledWith(queryDto);
   });
 
   it('should call a postsService.update() method with provided id and payload object', () => {
-    const postId = '1';
     const payload: UpdatePostDto = {
       title: 'Test Title',
+      id: 'testId',
     };
-    postsController.update(postId, payload);
-    expect(postsService.update).toBeCalledWith(postId, payload);
+    postsController.update(payload);
+    expect(postsService.update).toBeCalledWith(payload);
   });
 
   it('should call a postsSerice.softDelete() method with provided id', () => {

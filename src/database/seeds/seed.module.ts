@@ -5,16 +5,19 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { TypeOrmConfigService } from '../typeorm-config.service';
 import databaseConfig from '@/config/database.config';
 import appConfig from '@/config/app.config';
+import authConfig from '@/config/auth.config';
 import { RoleSeedModule } from './role/role-seed.module';
 import { StatusSeedModule } from './status/status-seed.module';
+import { UserSeedModule } from './user/user-seed.module';
 
 @Module({
   imports: [
     RoleSeedModule,
     StatusSeedModule,
+    UserSeedModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, appConfig],
+      load: [databaseConfig, appConfig, authConfig],
       envFilePath: ['.env'],
     }),
     TypeOrmModule.forRootAsync({

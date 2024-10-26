@@ -1,16 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Repository, DeepPartial } from 'typeorm';
+import { IsNull, Like, Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { createMock } from '@golevelup/ts-jest';
 import { TopicsService } from './topics.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { TopicEntity } from './entities/topic.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
-import { TopicOrderQueryDto } from './dto/order-topic.dto';
-import { TopicWhereQueryDto } from './dto/find-topic.dto';
 import { TopicContentTypeEnum } from './topic.enum';
 import { FileEntity } from '@/files/entities/file.entity';
 import { PostEntity } from '@/posts/entities/post.entity';
+import { TopicQueryDto } from './dto/topic-query.dto';
+import { topicOrder } from './utils/topic-order';
 
 describe('TopicsService', () => {
   let module: TestingModule;
@@ -57,27 +57,35 @@ describe('TopicsService', () => {
   });
 
   it('should call topicsRepository.findOne() mehtod with object that have where field and passed value', () => {
-    topicsService.findOne(TopicEntity['id']);
+    const queryDto = new TopicQueryDto();
+    const { include, status } = queryDto;
+
+    topicsService.findOne(TopicEntity['id'], new TopicQueryDto());
     expect(topicsRepository.findOne).toBeCalledWith({
-      where: PostEntity['id'],
+      where: { ...PostEntity['id'], status: { name: status } },
+      relations: include,
     });
   });
 
   it('should call topicsRepository.findAdnCount() mehtod with options', () => {
-    const page = 1;
-    const size = 5;
-    topicsService.findManyWithPagination(
-      { page, size },
-      new TopicWhereQueryDto(),
-      new TopicOrderQueryDto().orderObject(),
-    );
+    const queryDto = new TopicQueryDto();
+    const { page, size, include, orderBy, sort, slug, title, status } =
+      queryDto;
+
+    topicsService.findManyWithPagination(queryDto);
     expect(topicsRepository.findAndCount).toBeCalledWith({
       skip: (page - 1) * size,
       take: size,
-      where: {},
-      order: {
-        createdAt: 'ASC',
+      where: {
+        slug,
+        title: title && Like(`%${title}%`),
+        parent: IsNull(),
+        status: {
+          name: status,
+        },
       },
+      order: topicOrder(orderBy, sort),
+      relations: include,
     });
   });
 
@@ -87,7 +95,7 @@ describe('TopicsService', () => {
       title: 'Test topic',
     } as TopicEntity;
 
-    topicsService.update(topic.id, topic.title as DeepPartial<TopicEntity>);
+    topicsService.update(topic);
     expect(topicsRepository.save).toBeCalledWith(
       topicsRepository.create(topic),
     );

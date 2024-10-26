@@ -1,0 +1,32 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    platform: ${PLATFORM}
+    container_name: nest-app
+    environment:
+      - PORT=${APP_PORT}
+    ports:
+      - '5000:5000'
+    depends_on:
+      - db
+    volumes:
+      - ./src:/app/src
+      - uploads:/app/uploads
+
+  db:
+    image: mysql:latest
+    platform: ${PLATFORM}
+    restart: always
+    container_name: nest-db
+    environment:
+      MYSQL_DATABASE: vethealth
+      MYSQL_PASSWORD: dsdasdasda
+      MYSQL_ROOT_PASSWORD: dsdasdasda
+    volumes:
+      - ./data:/var/lib/mysql
+    ports:
+      - 3306:3306
+volumes:
+  uploads:
