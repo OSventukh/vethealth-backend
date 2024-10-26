@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     platform: ${PLATFORM}
-    container_name: nest-app
+    container_name: nest-app-${NODE_ENV}
     environment:
       - PORT=${APP_PORT}
     ports:
@@ -19,7 +19,7 @@ services:
     image: mysql:latest
     platform: ${PLATFORM}
     restart: always
-    container_name: nest-db
+    container_name: nest-db-${NODE_ENV}
     environment:
       MYSQL_DATABASE: ${DATABASE_NAME}
       MYSQL_PASSWORD: ${DATABASE_PASSWORD}
