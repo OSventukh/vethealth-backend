@@ -21,9 +21,9 @@ services:
     restart: always
     container_name: nest-db
     environment:
-      MYSQL_DATABASE: vethealth
-      MYSQL_PASSWORD: dsdasdasda
-      MYSQL_ROOT_PASSWORD: dsdasdasda
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD}
     volumes:
       - ./data:/var/lib/mysql
     ports:
