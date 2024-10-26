@@ -27,6 +27,6 @@ services:
     volumes:
       - ./data:/var/lib/mysql
     ports:
-      - ${DATABASE_PORT}:3306
+      - ${DATABASE_INNER_PORT}:3306
 volumes:
   uploads:
