@@ -32,7 +32,7 @@ describe('UsersService', () => {
     expect(usersService).toBeDefined();
   });
 
-  it('should call usersRepository.create() method with createUserDto object', () => {
+  it('should call usersRepository.create() method with createUserDto object and default status', () => {
     const createUserDto: CreateUserDto = {
       firstname: 'Test',
     } as CreateUserDto;
