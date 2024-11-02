@@ -20,6 +20,7 @@ export class FileEntity {
   @Column()
   path: string;
 
+  // todo: change to return relative path
   @AfterInsert()
   @AfterLoad()
   updatePath() {
