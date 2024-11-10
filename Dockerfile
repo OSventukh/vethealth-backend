@@ -4,17 +4,10 @@ WORKDIR /app
 
 COPY package*.json ./
 
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
-
-RUN if [ "$NODE_ENV" = "development" ]; \
-  then npm install; \
-  else npm ci --only=production; \
-  fi
+RUN npm install
 
 COPY . .
 
-CMD if [ "$NODE_ENV" = "development" ]; \
-  then npm run start:dev; \
-  else npm run start; \
-  fi
+RUN npm run build
+
+CMD [ "npm", "run", "start:dev" ]
