@@ -9,6 +9,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Allow } from 'class-validator';
 import appConfig from '@/config/app.config';
 import { AppConfig } from '@/config/config.type';
+import { Expose } from 'class-transformer';
 
 @Entity({ name: 'files' })
 export class FileEntity {
@@ -20,12 +21,15 @@ export class FileEntity {
   @Column()
   path: string;
 
-  // todo: change to return relative path
+  @Expose()
+  relativePath: string;
+  
   @AfterInsert()
   @AfterLoad()
   updatePath() {
     if (this.path.indexOf('/') === 0) {
       this.path = (appConfig() as AppConfig).backendDomain + this.path;
+      this.relativePath = this.path;
     }
   }
 }

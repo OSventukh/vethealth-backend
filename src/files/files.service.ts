@@ -3,10 +3,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FileEntity } from './entities/file.entity';
 import { Repository } from 'typeorm';
 import { Fields } from './constants/fields.enum';
+import appConfig from '@/config/app.config';
+import { AppConfig } from '@/config/config.type';
 
+type FileResponse = {
+  id: string;
+  host: string;
+  path: string;
+  relativePath: string;
+
+}
 type ImageResponse =
   | {
-      [key in Fields]: FileEntity;
+      [key in Fields]: FileResponse;
     }
   | object;
 
@@ -34,12 +43,13 @@ export class FilesService {
     const imageResponse: ImageResponse = {};
 
     for (const key in files) {
-      const uploadedFile = await this.fileRepository.save(
+
+      const fileRepository = await this.fileRepository.save(
         this.fileRepository.create({
           path: '/' + files[key][0].path.replace(/\\/g, '/'),
         }),
       );
-      imageResponse[key] = uploadedFile;
+      imageResponse[key] = fileRepository;
     }
     return imageResponse;
   }
