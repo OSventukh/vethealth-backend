@@ -4,9 +4,50 @@ services:
       context: .
       dockerfile: Dockerfile
     platform: ${PLATFORM}
-    container_name: nest-app-${NODE_ENV}
+    container_name: nest-app
     environment:
-      - PORT=${APP_PORT}
+      - NODE_ENV
+      - APP_NAME
+      - APP_PORT
+      - APP_FALLBACK_LANGUAGE
+      - APP_HEADER_LANGUAGE
+      - FRONTEND_DOMAIN
+      - BACKEND_DOMAIN
+      - PLATFORM
+
+      - ADMIN_NAME
+      - ADMIN_PASSWORD
+      - ADMIN_EMAIL
+      - AUTH_JWT_SECRET
+      - AUTH_JWT_TOKEN_EXPIRES_IN
+      - AUTH_REFRESH_SECRET
+      - AUTH_REFRESH_TOKEN_EXPIRES_IN
+
+      - DATABASE_TYPE
+      - DATABASE_HOST
+      - DATABASE_PORT
+      - DATABASE_USERNAME
+      - DATABASE_PASSWORD
+      - DATABASE_NAME
+      - DATABASE_SYNCHRONIZE
+      - DATABASE_MAX_CONNECTIONS
+      - DATABASE_SSL_ENABLED
+      - DATABASE_REJECT_UNAUTHORIZED
+      - DATABASE_CA
+      - DATABASE_KEY
+      - DATABASE_CERT
+
+      - MAIL_HOST
+      - MAIL_PORT
+      - MAIL_USER
+      - MAIL_PASSWORD
+      - MAIL_IGNORE_TLS
+      - MAIL_SECURE
+      - MAIL_REQUIRE_TLS
+      - MAIL_DEFAULT_EMAIL
+      - MAIL_DEFAULT_NAME
+      - MAIL_CLIENT_PORT
+      - REJECT_UNAUTHORIZED
     ports:
       - '${APP_PORT}:5000'
     volumes:
