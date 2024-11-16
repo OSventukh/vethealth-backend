@@ -49,7 +49,7 @@ services:
       - MAIL_CLIENT_PORT
       - REJECT_UNAUTHORIZED
     ports:
-      - '${APP_PORT}:5000'
+      - '${APP_PORT}:${APP_PORT}'
     volumes:
       - ./src:/app/src
       - uploads:/app/uploads
