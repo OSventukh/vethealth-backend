@@ -197,10 +197,11 @@ export class AuthService {
       id,
       password,
     });
-
+    
     await this.mailService.changePassword({
       to: user.email,
     });
+
   }
 
   async refreshTokens(
