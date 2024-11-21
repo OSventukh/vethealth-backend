@@ -38,7 +38,6 @@ export class MailService {
       })}/auth/confirmation?hash=${mailData.data.hash} ${emailConfirmTitle}`,
       templatePath: path.join(
         __dirname,
-        'mail',
         'mail-templates',
         'activation.hbs',
       ),
@@ -82,7 +81,6 @@ export class MailService {
       })}/auth/confirmation?hash=${mailData.data.hash} ${resetPasswordTitle}`,
       templatePath: path.join(
         __dirname,
-        'mail',
         'mail-templates',
         'reset-password.hbs',
       ),
