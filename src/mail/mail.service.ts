@@ -37,9 +37,7 @@ export class MailService {
         infer: true,
       })}/auth/confirmation?hash=${mailData.data.hash} ${emailConfirmTitle}`,
       templatePath: path.join(
-        this.configService.getOrThrow('app.workingDirectory', {
-          infer: true,
-        }),
+        __dirname,
         'mail',
         'mail-templates',
         'activation.hbs',
@@ -83,9 +81,7 @@ export class MailService {
         infer: true,
       })}/auth/confirmation?hash=${mailData.data.hash} ${resetPasswordTitle}`,
       templatePath: path.join(
-        this.configService.getOrThrow('app.workingDirectory', {
-          infer: true,
-        }),
+        __dirname,
         'mail',
         'mail-templates',
         'reset-password.hbs',
@@ -127,10 +123,7 @@ export class MailService {
       to: mailData.to,
       subject: changePasswordTitle,
       templatePath: path.join(
-        this.configService.getOrThrow('app.workingDirectory', {
-          infer: true,
-        }),
-        'mail',
+        __dirname,
         'mail-templates',
         'change-password.hbs',
       ),
