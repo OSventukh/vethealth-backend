@@ -25,6 +25,8 @@ export class MailerService {
           infer: true,
         }),
       },
+      debug: true,
+      logger: true,
     });
   }
   async sendMail({
