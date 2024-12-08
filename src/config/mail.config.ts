@@ -52,7 +52,7 @@ export default registerAs<MailConfig>('mail', () => {
   validateConfig(process.env, EnvironmentVariablesValidator);
 
   return {
-    port: process.env.MAIL_PORT ? parseInt(process.env.MAIL_PORT, 10) : 587,
+    port: process.env.MAIL_PORT ? parseInt(process.env.MAIL_PORT, 10) : 465,
     host: process.env.MAIL_HOST,
     user: process.env.MAIL_USER,
     password: process.env.MAIL_PASSWORD,
