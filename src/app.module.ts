@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule, minutes } from '@nestjs/throttler';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -17,7 +18,6 @@ import mailConfig from './config/mail.config';
 import { ConfirmModule } from './modules/confirm/confirm.module';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
 import { FilesModule } from './modules/files/files.module';
-import { HomeModule } from './home/home.module';
 import { MailModule } from './mail/mail.module';
 import { MailerModule } from './mailer/mailer.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -28,7 +28,6 @@ import { SessionModule } from './modules/session/session.module';
 import { TopicsModule } from './modules/topics/topics.module';
 import { UsersModule } from './modules/users/users.module';
 import { SearchModule } from './modules/search/search.module';
-import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -77,7 +76,6 @@ import { APP_GUARD } from '@nestjs/core';
     CategoriesModule,
     PagesModule,
     AuthModule,
-    HomeModule,
     FilesModule,
     ReviewsModule,
     NotificationsModule,
