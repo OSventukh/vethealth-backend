@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 
 import { Repository } from 'typeorm';
-import { UserEntity } from '@/users/entities/user.entity';
+import { UserEntity } from '@/modules/users/entities/user.entity';
 import { RoleEnum } from '@/roles/roles.enum';
 import { UserStatusEnum } from '@/statuses/user-statuses.enum';
 import { AllConfigType } from '@/config/config.type';

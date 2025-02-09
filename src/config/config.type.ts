@@ -1,3 +1,5 @@
+import { StringValue } from "ms";
+
 export type AppConfig = {
   nodeEnv: string;
   name: string;
@@ -33,9 +35,9 @@ export type FileConfig = {
 
 export type AuthConfig = {
   secret: string;
-  expires: string;
+  expires: StringValue;
   refreshSecret: string;
-  refreshExpires: string;
+  refreshExpires: StringValue;
   adminEmail: string;
   adminPassword: string;
   adminName: string;

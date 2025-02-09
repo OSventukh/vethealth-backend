@@ -3,15 +3,15 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { DataSource } from 'typeorm';
 
-import { UsersModule } from '@/users/users.module';
-import { CreateUserDto } from '@/users/dto/create-user.dto';
-import { UpdateUserDto } from '@/users/dto/update-user.dto';
-import { UsersService } from '@/users/users.service';
+import { UsersModule } from '@/modules/users/users.module';
+import { CreateUserDto } from '@/modules/users/dto/create-user.dto';
+import { UpdateUserDto } from '@/modules/users/dto/update-user.dto';
+import { UsersService } from '@/modules/users/users.service';
 import { RoleEnum } from '@/roles/roles.enum';
 import { RoleSeedService } from '@/database/seeds/role/role-seed.service';
 import { UserStatusSeedService } from '@/database/seeds/status/user-status-seed.service';
 import { IsValidColumn } from '@/utils/validators/is-valid-column.validator';
-import { AuthModule } from '@/auth/auth.module';
+import { AuthModule } from '@/modules/auth/auth.module';
 
 describe('UsersController (e2e)', () => {
   let app: INestApplication;

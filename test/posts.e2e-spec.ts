@@ -1,13 +1,13 @@
 import { createTestModule } from './utils/test-module';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { PostsModule } from '@/posts/posts.module';
+import { PostsModule } from '@/modules/posts/posts.module';
 
 import { DataSource } from 'typeorm';
-import { CreatePostDto } from '@/posts/dto/create-post.dto';
-import { UpdatePostDto } from '@/posts/dto/update-post.dto';
-import { PostsService } from '@/posts/posts.service';
-import { UserEntity } from '@/users/entities/user.entity';
+import { CreatePostDto } from '@/modules/posts/dto/create-post.dto';
+import { UpdatePostDto } from '@/modules/posts/dto/update-post.dto';
+import { PostsService } from '@/modules/posts/posts.service';
+import { UserEntity } from '@/modules/users/entities/user.entity';
 import { PostStatusSeedService } from '@/database/seeds/status/post-status-seed.service';
 import { StatusSeedModule } from '@/database/seeds/status/status-seed.module';
 
