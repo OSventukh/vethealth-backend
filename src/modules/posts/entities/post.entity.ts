@@ -4,6 +4,7 @@ import {
   Column,
   ManyToOne,
   ManyToMany,
+  OneToOne,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
@@ -14,11 +15,12 @@ import {
   BeforeUpdate,
 } from 'typeorm';
 import { Exclude, Expose, Transform } from 'class-transformer';
-import { UserEntity } from '@/modules/users/entities/user.entity';
-import { TopicEntity } from '@/modules/topics/entities/topic.entity';
-import { CategoryEntity } from '@/modules/categories/entities/category.entity';
+import { UserEntity } from '@/users/entities/user.entity';
+import { TopicEntity } from '@/topics/entities/topic.entity';
+import { CategoryEntity } from '@/categories/entities/category.entity';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
-import { FileEntity } from '@/modules/files/entities/file.entity';
+import { FileEntity } from '@/files/entities/file.entity';
+import { MetadataEntity } from '@/metadata/entities/metadata.entity';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 import { RoleEnum } from '@/roles/roles.enum';
 
@@ -45,6 +47,11 @@ export class PostEntity {
   featuredImageUrl?: string;
 
   featuredImage?: string;
+
+  // SEO relationship
+  @OneToOne(() => MetadataEntity, { nullable: true, eager: true, cascade: true })
+  @JoinColumn({ name: 'metadata_id' })
+  metadata?: MetadataEntity;
 
   @CreateDateColumn()
   createdAt: Date;

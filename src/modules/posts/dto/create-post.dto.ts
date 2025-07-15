@@ -1,21 +1,24 @@
 import {
+  IsNotEmpty,
   IsString,
   IsOptional,
-  Validate,
   IsArray,
-  IsNotEmpty,
+  Validate,
+  IsBoolean,
+  IsObject,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
-import { FileEntity } from '@/modules/files/entities/file.entity';
-import { CategoryEntity } from '@/modules/categories/entities/category.entity';
 import { Transform, Type } from 'class-transformer';
-import { TopicEntity } from '@/modules/topics/entities/topic.entity';
-import { UserEntity } from '@/modules/users/entities/user.entity';
+import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
+import { FileEntity } from '@/files/entities/file.entity';
+import { UserEntity } from '@/users/entities/user.entity';
+import { CategoryEntity } from '@/categories/entities/category.entity';
+import { TopicEntity } from '@/topics/entities/topic.entity';
 import { IsExist } from '@/utils/validators/is-exist.validator';
-import { ERROR_MESSAGE } from '@/utils/constants/errors';
 import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
+import { ERROR_MESSAGE } from '@/utils/constants/errors';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
+import { CreateMetadataDto } from '@/metadata/dto/create-metadata.dto';
 
 export class CreatePostDto {
   @ApiProperty()
@@ -61,6 +64,12 @@ export class CreatePostDto {
   @ApiProperty()
   @IsOptional()
   featuredImageUrl?: string;
+
+  // SEO data
+  @ApiProperty({ type: () => CreateMetadataDto, required: false })
+  @Type(() => CreateMetadataDto)
+  @IsOptional()
+  metadata?: CreateMetadataDto;
 
   @ApiProperty()
   @Type(() => CategoryEntity)
