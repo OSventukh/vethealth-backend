@@ -5,20 +5,16 @@ import {
   ManyToMany,
   OneToMany,
   ManyToOne,
-  OneToOne,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
   JoinTable,
-  JoinColumn,
   BeforeInsert,
   BeforeUpdate,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { PostEntity } from '@/posts/entities/post.entity';
-import { TopicEntity } from '@/topics/entities/topic.entity';
-import { FileEntity } from '@/files/entities/file.entity';
-import { MetadataEntity } from '@/metadata/entities/metadata.entity';
+import { PostEntity } from '@/modules/posts/entities/post.entity';
+import { TopicEntity } from '@/modules/topics/entities/topic.entity';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 import { Expose } from 'class-transformer';
 import { RoleEnum } from '@/roles/roles.enum';
@@ -34,11 +30,6 @@ export class CategoryEntity {
 
   @Column()
   slug: string;
-
-  // SEO relationship
-  @OneToOne(() => MetadataEntity, { nullable: true, eager: true, cascade: true })
-  @JoinColumn({ name: 'metadata_id' })
-  metadata?: MetadataEntity;
 
   @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin] })
   @CreateDateColumn()

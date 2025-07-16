@@ -5,7 +5,6 @@ import {
   IsArray,
   IsObject,
   IsEnum,
-  IsBoolean,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { FileEntity } from '@/modules/files/entities/file.entity';
@@ -17,9 +16,8 @@ import { TopicEntity } from '../entities/topic.entity';
 import { IsExist } from '@/utils/validators/is-exist.validator';
 import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
-import { CreateMetadataDto } from '@/metadata/dto/create-metadata.dto';
 
 export class CreateTopicDto {
   @ApiProperty()
@@ -49,12 +47,6 @@ export class CreateTopicDto {
   @IsString()
   @IsOptional()
   description?: string;
-
-  // SEO data
-  @ApiProperty({ type: () => CreateMetadataDto, required: false })
-  @Type(() => CreateMetadataDto)
-  @IsOptional()
-  metadata?: CreateMetadataDto;
 
   @ApiProperty({
     enum: TopicContentTypeEnum,

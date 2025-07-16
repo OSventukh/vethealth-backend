@@ -16,13 +16,12 @@ import {
 } from 'typeorm';
 import { TopicContentTypeEnum } from '../topic.enum';
 
-import { PostEntity } from '@/posts/entities/post.entity';
-import { CategoryEntity } from '@/categories/entities/category.entity';
-import { PageEntity } from '@/pages/entities/page.entity';
-import { UserEntity } from '@/users/entities/user.entity';
+import { PostEntity } from '@/modules/posts/entities/post.entity';
+import { CategoryEntity } from '@/modules/categories/entities/category.entity';
+import { PageEntity } from '@/modules/pages/entities/page.entity';
+import { UserEntity } from '@/modules/users/entities/user.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
-import { FileEntity } from '@/files/entities/file.entity';
-import { MetadataEntity } from '@/metadata/entities/metadata.entity';
+import { FileEntity } from '@/modules/files/entities/file.entity';
 import { Expose } from 'class-transformer';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 import { RoleEnum } from '@/roles/roles.enum';
@@ -54,11 +53,6 @@ export class TopicEntity {
     enum: TopicContentTypeEnum,
   })
   contentType: TopicContentTypeEnum;
-
-  // SEO relationship
-  @OneToOne(() => MetadataEntity, { nullable: true, eager: true, cascade: true })
-  @JoinColumn({ name: 'metadata_id' })
-  metadata?: MetadataEntity;
 
   @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin] })
   @CreateDateColumn()

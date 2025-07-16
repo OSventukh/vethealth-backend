@@ -3,17 +3,13 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  OneToOne,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
   BeforeInsert,
   BeforeUpdate,
-  JoinColumn,
 } from 'typeorm';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
-import { FileEntity } from '@/files/entities/file.entity';
-import { MetadataEntity } from '@/metadata/entities/metadata.entity';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 import { Expose, Transform } from 'class-transformer';
 import { RoleEnum } from '@/roles/roles.enum';
@@ -31,11 +27,6 @@ export class PageEntity {
 
   @Column()
   slug: string;
-
-  // SEO relationship
-  @OneToOne(() => MetadataEntity, { nullable: true, eager: true, cascade: true })
-  @JoinColumn({ name: 'metadata_id' })
-  metadata?: MetadataEntity;
 
   @ManyToOne(() => PostStatusEntity, { eager: true })
   @Transform(({ obj }: { obj: PageEntity }) => obj?.status?.name)
