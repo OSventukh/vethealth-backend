@@ -23,13 +23,13 @@ export class SearchService {
       ],
       skip: (page - 1) * size,
       take: size,
-      relations: ['topics']
+      relations: ['topics'],
     });
 
-    const filteredItems = items.filter(item => {
+    const filteredItems = items.filter((item) => {
       const content = JSON.parse(item.content);
       const textContent = this.extractTextFromJson(content);
-      return textContent.includes(query);
+      return textContent.toLowerCase().includes(query.toLowerCase());
     });
 
     return {
@@ -44,14 +44,13 @@ export class SearchService {
     let text = '';
 
     const traverse = (node: any) => {
-      
       if (Array.isArray(node)) {
-        node.forEach(child => traverse(child));
+        node.forEach((child) => traverse(child));
       } else if (typeof node === 'object' && node !== null) {
         if (node.type === 'text' && node.text) {
           text += node.text + ' ';
         }
-        Object.values(node).forEach(value => traverse(value));
+        Object.values(node).forEach((value) => traverse(value));
       }
     };
 
