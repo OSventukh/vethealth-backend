@@ -21,6 +21,7 @@ import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
 import { FileEntity } from '@/modules/files/entities/file.entity';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 import { RoleEnum } from '@/roles/roles.enum';
+import { MetadataEntity } from '@/modules/metadata/entities/metadata.entity';
 
 @Entity({ name: 'posts' })
 export class PostEntity {
@@ -70,6 +71,9 @@ export class PostEntity {
   @Transform(({ obj }: { obj: PostEntity }) => obj?.author?.firstname)
   @JoinColumn({ name: 'userId' })
   author: UserEntity;
+
+  @ManyToOne(() => MetadataEntity, { cascade: true })
+  metadata: MetadataEntity;
 
   @AfterInsert()
   @AfterLoad()

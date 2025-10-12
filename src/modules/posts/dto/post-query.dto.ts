@@ -44,7 +44,7 @@ export class PostQueryDto extends PaginationQueryDto {
 
   @ApiProperty({ required: false })
   @Transform(includeStringToObjectTransform)
-  @Validate(IsValidIncludes, ['topics', 'categories', 'author'], {
+  @Validate(IsValidIncludes, ['topics', 'categories', 'author', 'metadata'], {
     message: ERROR_MESSAGE.INCLUDE_IS_NOT_VALID,
   })
   include?: FindOptionsRelations<PostEntity>;

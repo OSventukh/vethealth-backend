@@ -28,6 +28,7 @@ import { SessionModule } from './modules/session/session.module';
 import { TopicsModule } from './modules/topics/topics.module';
 import { UsersModule } from './modules/users/users.module';
 import { SearchModule } from './modules/search/search.module';
+import { MetadataModule } from './modules/metadata/metadata.module';
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { SearchModule } from './modules/search/search.module';
     MailerModule,
     MailModule,
     SearchModule,
+    MetadataModule,
   ],
   controllers: [],
   providers: [

@@ -16,6 +16,7 @@ import { IsExist } from '@/utils/validators/is-exist.validator';
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
 import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
+import { MetadataEntity } from '@/modules/metadata/entities/metadata.entity';
 
 export class CreatePostDto {
   @ApiProperty()
@@ -81,4 +82,10 @@ export class CreatePostDto {
   })
   @IsOptional()
   topics?: TopicEntity[] | null;
+
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @Type(() => MetadataEntity)
+  metadata: MetadataEntity;
 }
