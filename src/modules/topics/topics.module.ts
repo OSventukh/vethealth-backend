@@ -7,8 +7,9 @@ import { IsExist } from '@/utils/validators/is-exist.validator';
 import { IsValidColumn } from '@/utils/validators/is-valid-column.validator';
 import { IsValidIncludes } from '@/utils/validators/is-valid-includes.validator';
 import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
+import { MetadataModule } from '../metadata/metadata.module';
 @Module({
-  imports: [TypeOrmModule.forFeature([TopicEntity])],
+  imports: [TypeOrmModule.forFeature([TopicEntity]), MetadataModule],
   controllers: [TopicsController],
   providers: [
     TopicsService,

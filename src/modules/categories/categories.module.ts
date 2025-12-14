@@ -7,9 +7,10 @@ import { IsExist } from '@/utils/validators/is-exist.validator';
 import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
 import { IsValidColumn } from '@/utils/validators/is-valid-column.validator';
 import { IsValidIncludes } from '@/utils/validators/is-valid-includes.validator';
+import { MetadataModule } from '../metadata/metadata.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CategoryEntity])],
+  imports: [TypeOrmModule.forFeature([CategoryEntity]), MetadataModule],
   controllers: [CategoriesController],
   providers: [
     CategoriesService,

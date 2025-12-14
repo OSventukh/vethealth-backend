@@ -6,9 +6,10 @@ import { PagesService } from './pages.service';
 import { IsExist } from '@/utils/validators/is-exist.validator';
 import { IsValidIncludes } from '@/utils/validators/is-valid-includes.validator';
 import { IsValidColumn } from '@/utils/validators/is-valid-column.validator';
+import { MetadataModule } from '../metadata/metadata.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PageEntity])],
+  imports: [TypeOrmModule.forFeature([PageEntity]), MetadataModule],
   controllers: [PagesController],
   providers: [PagesService, IsExist, IsValidIncludes, IsValidColumn],
 })

@@ -4,11 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  Index,
 } from 'typeorm';
 
 @Entity({ name: 'metadata' })
-@Index(['entityType', 'entityId'], { unique: true }) // Ensure one metadata record per entity
 export class MetadataEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

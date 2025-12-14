@@ -2,6 +2,7 @@ import {
   IsString,
   IsOptional,
   IsBoolean,
+  IsUrl,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -63,7 +64,7 @@ export class CreateMetadataDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsString()
+  @IsUrl()
   canonicalUrl?: string;
 
   @ApiProperty({ required: false, default: true })

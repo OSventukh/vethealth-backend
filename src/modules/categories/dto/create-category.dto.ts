@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsArray, Validate } from 'class-validator';
+import { IsString, IsOptional, IsArray, Validate, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { CategoryEntity } from '@/modules/categories/entities/category.entity';
 import { TopicEntity } from '@/modules/topics/entities/topic.entity';
@@ -7,7 +7,8 @@ import { IsExist } from '@/utils/validators/is-exist.validator';
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
+import { CreateMetadataDto } from '@/modules/metadata/dto/create-metadata.dto';
 
 export class CreateCategoryDto {
   @ApiProperty()
@@ -60,4 +61,10 @@ export class CreateCategoryDto {
   @IsArray()
   @IsOptional()
   children?: CategoryEntity[] | null;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateMetadataDto)
+  metadata?: CreateMetadataDto;
 }

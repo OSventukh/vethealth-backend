@@ -4,6 +4,7 @@ import {
   Validate,
   IsArray,
   IsNotEmpty,
+  ValidateNested,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
@@ -17,6 +18,7 @@ import { ERROR_MESSAGE } from '@/utils/constants/errors';
 import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 import { MetadataEntity } from '@/modules/metadata/entities/metadata.entity';
+import { CreateMetadataDto } from '@/modules/metadata/dto/create-metadata.dto';
 
 export class CreatePostDto {
   @ApiProperty()
@@ -83,9 +85,9 @@ export class CreatePostDto {
   @IsOptional()
   topics?: TopicEntity[] | null;
 
-
   @ApiProperty({ required: false })
   @IsOptional()
-  @Type(() => MetadataEntity)
-  metadata: MetadataEntity;
+  @ValidateNested()
+  @Type(() => CreateMetadataDto)
+  metadata?: CreateMetadataDto;
 }

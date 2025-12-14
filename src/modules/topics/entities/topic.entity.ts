@@ -22,6 +22,7 @@ import { PageEntity } from '@/modules/pages/entities/page.entity';
 import { UserEntity } from '@/modules/users/entities/user.entity';
 import { TopicStatusEntity } from '@/statuses/entities/topic-status.entity';
 import { FileEntity } from '@/modules/files/entities/file.entity';
+import { MetadataEntity } from '@/modules/metadata/entities/metadata.entity';
 import { Expose } from 'class-transformer';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 import { RoleEnum } from '@/roles/roles.enum';
@@ -43,6 +44,10 @@ export class TopicEntity {
 
   @ManyToOne(() => TopicStatusEntity, { eager: true })
   status: TopicStatusEntity;
+
+  @ManyToOne(() => MetadataEntity, { cascade: true, nullable: true })
+  @JoinColumn({ name: 'metadataId' })
+  metadata?: MetadataEntity;
 
   @Column({ unique: true })
   slug: string;

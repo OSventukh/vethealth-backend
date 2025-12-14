@@ -11,10 +11,12 @@ import {
   JoinTable,
   BeforeInsert,
   BeforeUpdate,
+  JoinColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { PostEntity } from '@/modules/posts/entities/post.entity';
 import { TopicEntity } from '@/modules/topics/entities/topic.entity';
+import { MetadataEntity } from '@/modules/metadata/entities/metadata.entity';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 import { Expose } from 'class-transformer';
 import { RoleEnum } from '@/roles/roles.enum';
@@ -56,6 +58,10 @@ export class CategoryEntity {
   @ManyToMany(() => TopicEntity)
   @JoinTable({ name: 'topic_category_relation' })
   topics?: TopicEntity[] | null;
+
+  @ManyToOne(() => MetadataEntity, { cascade: true, nullable: true })
+  @JoinColumn({ name: 'metadataId' })
+  metadata?: MetadataEntity;
 
   @BeforeInsert()
   @BeforeUpdate()

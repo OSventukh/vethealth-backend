@@ -11,6 +11,7 @@ import { CategoryEntity } from '@/modules/categories/entities/category.entity';
 import { TopicEntity } from '@/modules/topics/entities/topic.entity';
 import { UserEntity } from '@/modules/users/entities/user.entity';
 import { UsersService } from '@/modules/users/users.service';
+import { MetadataModule } from '../metadata/metadata.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UsersService } from '@/modules/users/users.service';
       TopicEntity,
       UserEntity,
     ]),
+    MetadataModule,
   ],
   controllers: [PostsController],
   providers: [

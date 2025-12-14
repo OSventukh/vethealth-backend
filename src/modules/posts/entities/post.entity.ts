@@ -72,7 +72,8 @@ export class PostEntity {
   @JoinColumn({ name: 'userId' })
   author: UserEntity;
 
-  @ManyToOne(() => MetadataEntity, { cascade: true })
+  @ManyToOne(() => MetadataEntity, { cascade: true, nullable: true })
+  @JoinColumn({ name: 'metadataId' })
   metadata: MetadataEntity;
 
   @AfterInsert()

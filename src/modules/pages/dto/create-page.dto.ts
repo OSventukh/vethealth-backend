@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsOptional, IsString, Validate } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Validate,
+  ValidateNested,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
@@ -6,6 +12,7 @@ import { IsExist } from '@/utils/validators/is-exist.validator';
 import { ERROR_MESSAGE } from '@/utils/constants/errors';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
+import { CreateMetadataDto } from '@/modules/metadata/dto/create-metadata.dto';
 
 export class CreatePageDto {
   @ApiProperty()
@@ -35,4 +42,10 @@ export class CreatePageDto {
     message: ERROR_MESSAGE.STATUS_IS_NOT_VALID,
   })
   status: PostStatusEntity;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateMetadataDto)
+  metadata?: CreateMetadataDto;
 }

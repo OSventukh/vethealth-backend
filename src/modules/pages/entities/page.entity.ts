@@ -8,7 +8,9 @@ import {
   DeleteDateColumn,
   BeforeInsert,
   BeforeUpdate,
+  JoinColumn,
 } from 'typeorm';
+import { MetadataEntity } from '@/modules/metadata/entities/metadata.entity';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
 import { stringToSlugTransform } from '@/utils/transformers/slug-transform';
 import { Expose, Transform } from 'class-transformer';
@@ -31,6 +33,10 @@ export class PageEntity {
   @ManyToOne(() => PostStatusEntity, { eager: true })
   @Transform(({ obj }: { obj: PageEntity }) => obj?.status?.name)
   status: PostStatusEntity;
+
+  @ManyToOne(() => MetadataEntity, { cascade: true, nullable: true })
+  @JoinColumn({ name: 'metadataId' })
+  metadata?: MetadataEntity;
 
   @Expose({ groups: [RoleEnum.SuperAdmin, RoleEnum.Admin] })
   @CreateDateColumn()
