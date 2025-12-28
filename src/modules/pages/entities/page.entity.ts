@@ -34,7 +34,11 @@ export class PageEntity {
   @Transform(({ obj }: { obj: PageEntity }) => obj?.status?.name)
   status: PostStatusEntity;
 
-  @ManyToOne(() => MetadataEntity, { cascade: true, nullable: true })
+  @ManyToOne(() => MetadataEntity, {
+    cascade: true,
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'metadataId' })
   metadata?: MetadataEntity;
 

@@ -72,7 +72,11 @@ export class PostEntity {
   @JoinColumn({ name: 'userId' })
   author: UserEntity;
 
-  @ManyToOne(() => MetadataEntity, { cascade: true, nullable: true })
+  @ManyToOne(() => MetadataEntity, {
+    cascade: true,
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'metadataId' })
   metadata: MetadataEntity;
 

@@ -59,7 +59,11 @@ export class CategoryEntity {
   @JoinTable({ name: 'topic_category_relation' })
   topics?: TopicEntity[] | null;
 
-  @ManyToOne(() => MetadataEntity, { cascade: true, nullable: true })
+  @ManyToOne(() => MetadataEntity, {
+    cascade: true,
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'metadataId' })
   metadata?: MetadataEntity;
 

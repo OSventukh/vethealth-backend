@@ -45,7 +45,11 @@ export class TopicEntity {
   @ManyToOne(() => TopicStatusEntity, { eager: true })
   status: TopicStatusEntity;
 
-  @ManyToOne(() => MetadataEntity, { cascade: true, nullable: true })
+  @ManyToOne(() => MetadataEntity, {
+    cascade: true,
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'metadataId' })
   metadata?: MetadataEntity;
 
