@@ -10,7 +10,7 @@ function parseArgs(argv) {
   const args = {
     execute: false,
     uploadsDir: path.resolve(process.cwd(), 'uploads'),
-    envFile: path.resolve(process.cwd(), '.env'),
+    dotenvFile: path.resolve(process.cwd(), '.env'),
     prefix: 'uploads',
     sample: 20,
     referer: '',
@@ -27,8 +27,8 @@ function parseArgs(argv) {
       i += 1;
       continue;
     }
-    if (token === '--env-file') {
-      args.envFile = path.resolve(argv[i + 1]);
+    if (token === '--dotenv-file' || token === '--env-file') {
+      args.dotenvFile = path.resolve(argv[i + 1]);
       i += 1;
       continue;
     }
@@ -62,12 +62,12 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  console.log(`Usage:\n  node scripts/migrate-uploads-to-r2-node.js [options]\n\nOptions:\n  --execute                 Run real upload (default is dry-run)\n  --uploads-dir <path>      Local uploads directory (default: ./uploads)\n  --env-file <path>         Path to env file (default: ./backend/.env)\n  --prefix <value>          Prefix inside bucket (default: uploads)\n  --sample <number>         Smoke test sample size (default: 20)\n  --referer <url>           Optional Referer for smoke checks\n  -h, --help                Show help\n\nExamples:\n  node scripts/migrate-uploads-to-r2-node.js\n  node scripts/migrate-uploads-to-r2-node.js --execute\n  node scripts/migrate-uploads-to-r2-node.js --execute --referer https://vethealth.com.ua/`);
+  console.log(`Usage:\n  node scripts/migrate-uploads-to-r2-node.js [options]\n\nOptions:\n  --execute                 Run real upload (default is dry-run)\n  --uploads-dir <path>      Local uploads directory (default: ./uploads)\n  --dotenv-file <path>      Path to env file (default: ./backend/.env, optional)\n  --prefix <value>          Prefix inside bucket (default: uploads)\n  --sample <number>         Smoke test sample size (default: 20)\n  --referer <url>           Optional Referer for smoke checks\n  -h, --help                Show help\n\nExamples:\n  node scripts/migrate-uploads-to-r2-node.js\n  node scripts/migrate-uploads-to-r2-node.js --execute\n  node scripts/migrate-uploads-to-r2-node.js --execute --referer https://vethealth.com.ua/`);
 }
 
-function loadEnvFile(envFilePath) {
+function loadEnvFileIfExists(envFilePath) {
   if (!fs.existsSync(envFilePath)) {
-    throw new Error(`Env file not found: ${envFilePath}`);
+    return false;
   }
 
   const raw = fs.readFileSync(envFilePath, 'utf8').replace(/\r/g, '');
@@ -101,7 +101,7 @@ function loadEnvFile(envFilePath) {
     }
   }
 
-  return values;
+  return Object.keys(values).length > 0;
 }
 
 async function listFilesRecursive(dir) {
@@ -222,7 +222,7 @@ async function uploadFiles({ s3Client, bucket, uploadsDir, files, prefix, execut
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  loadEnvFile(args.envFile);
+  const envLoadedFromFile = loadEnvFileIfExists(args.dotenvFile);
 
   const required = [
     'FILE_S3_ENDPOINT',
@@ -249,7 +249,7 @@ async function main() {
   }
 
   console.log('== Configuration ==');
-  console.log(`Env file: ${args.envFile}`);
+  console.log(`Env source: ${envLoadedFromFile ? `file (${args.dotenvFile}) + process.env` : 'process.env only (.env file not found)'}`);
   console.log(`Uploads dir: ${args.uploadsDir}`);
   console.log(`Files found: ${files.length}`);
   console.log(`Bucket: ${process.env.FILE_S3_BUCKET}`);
