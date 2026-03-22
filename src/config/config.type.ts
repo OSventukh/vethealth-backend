@@ -1,5 +1,12 @@
 import { StringValue } from "ms";
 
+export enum FileStorageDriver {
+  Local = 'local',
+  S3 = 's3',
+  R2 = 'r2',
+  Seaweed = 'seaweed',
+}
+
 export type AppConfig = {
   nodeEnv: string;
   name: string;
@@ -30,7 +37,17 @@ export type DatabaseConfig = {
 };
 
 export type FileConfig = {
+  storageDriver: FileStorageDriver;
   maxFileSize: number;
+  s3Endpoint?: string;
+  s3PublicUrl?: string;
+  s3AccessKey?: string;
+  s3SecretKey?: string;
+  s3Bucket?: string;
+  s3Region?: string;
+  s3ForcePathStyle: boolean;
+  cdnBaseUrl?: string;
+  cdnIncludeBucketInPath: boolean;
 };
 
 export type AuthConfig = {

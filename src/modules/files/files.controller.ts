@@ -5,9 +5,16 @@ import {
   UploadedFiles,
   UseGuards,
   UseInterceptors,
+  Body,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import {
   FileFieldsInterceptor,
@@ -15,6 +22,7 @@ import {
 } from '@nestjs/platform-express';
 import { FilesService } from './files.service';
 import { Fields } from './constants/fields.enum';
+import { UploadPresignedDto } from './dto/upload-presigned.dto';
 
 @ApiTags('Files')
 @Controller('files')
@@ -53,5 +61,28 @@ export class FilesController {
     },
   ) {
     return this.filesService.uploadFile(files);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Post('upload-presigned')
+  @ApiCreatedResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            path: { type: 'string' },
+            relativePath: { type: 'string' },
+          },
+        },
+        uploadSignedUrl: { type: 'string' },
+      },
+    },
+  })
+  async createPresignedUpload(@Body() input: UploadPresignedDto) {
+    return this.filesService.createPresignedUpload(input);
   }
 }

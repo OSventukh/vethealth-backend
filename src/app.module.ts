@@ -14,6 +14,7 @@ import appConfig from './config/app.config';
 import authConfig from './config/auth.config';
 import { AllConfigType } from './config/config.type';
 import databaseConfig from './config/database.config';
+import fileConfig from './config/file.config';
 import mailConfig from './config/mail.config';
 import { ConfirmModule } from './modules/confirm/confirm.module';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
@@ -41,7 +42,7 @@ import { MetadataModule } from './modules/metadata/metadata.module';
     }),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, appConfig, authConfig, mailConfig],
+      load: [databaseConfig, appConfig, authConfig, fileConfig, mailConfig],
       envFilePath: ['.env'],
     }),
     TypeOrmModule.forRootAsync({

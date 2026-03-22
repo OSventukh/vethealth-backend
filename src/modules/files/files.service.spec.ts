@@ -1,14 +1,23 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
 import { FileEntity } from './entities/file.entity';
 import { createMock } from '@golevelup/ts-jest';
 import { FilesService } from './files.service';
+import { AllConfigType, FileStorageDriver } from '@/config/config.type';
+import { FileStorageFactory } from './storage/file-storage.factory';
 
 describe('FilesService', () => {
   let module: TestingModule;
   let filesService: FilesService;
   let filesRepositry: Repository<FileEntity>;
+  const configServiceMock = {
+    getOrThrow: jest.fn().mockReturnValue(FileStorageDriver.Local),
+  } as unknown as ConfigService<AllConfigType>;
+  const fileStorageFactoryMock = {
+    getStorage: jest.fn(),
+  } as unknown as FileStorageFactory;
   const FILE_REPOSITORY_TOKEN = getRepositoryToken(FileEntity);
 
   beforeEach(async () => {
@@ -18,6 +27,14 @@ describe('FilesService', () => {
         {
           provide: FILE_REPOSITORY_TOKEN,
           useValue: createMock<Repository<FileEntity>>(),
+        },
+        {
+          provide: ConfigService,
+          useValue: configServiceMock,
+        },
+        {
+          provide: FileStorageFactory,
+          useValue: fileStorageFactoryMock,
         },
       ],
     }).compile();
@@ -34,7 +51,7 @@ describe('FilesService', () => {
     expect(filesService).toBeDefined();
   });
 
-  it('should call a fileRepository.create() method with object that have path property and file path value', () => {
+  it('should call a fileRepository.create() method with object that have path property and file path value', async () => {
     const file: Express.Multer.File = {
       fieldname: 'file',
       originalname: 'test.jpg',
@@ -45,7 +62,7 @@ describe('FilesService', () => {
       path: 'path-to-file',
     } as Express.Multer.File;
 
-    filesService.uploadFile({
+    await filesService.uploadFile({
       post: [file],
       topic: [file],
       'post-featured': [file],

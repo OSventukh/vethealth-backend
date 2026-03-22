@@ -12,6 +12,9 @@ import { AllConfigType } from '@/config/config.type';
 import slugify from 'slugify';
 import { directories } from './constants/directory.constant';
 import { Fields } from './constants/fields.enum';
+import { FileStorageFactory } from './storage/file-storage.factory';
+import { LocalFileStorageService } from './storage/local-file-storage.service';
+import { S3CompatibleFileStorageService } from './storage/s3-compatible-file-storage.service';
 
 @Module({
   imports: [
@@ -73,6 +76,11 @@ import { Fields } from './constants/fields.enum';
     }),
   ],
   controllers: [FilesController],
-  providers: [FilesService],
+  providers: [
+    FilesService,
+    FileStorageFactory,
+    LocalFileStorageService,
+    S3CompatibleFileStorageService,
+  ],
 })
 export class FilesModule {}

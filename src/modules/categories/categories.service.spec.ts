@@ -42,9 +42,12 @@ describe('CategoriesService', () => {
   });
 
   it('should call categoriesRepository.findOne() method with object that have where field and passed value', () => {
-    categoriesService.findOne(CategoryEntity['id']);
+    const queryDto = new CategoryQueryDto();
+
+    categoriesService.findOne(CategoryEntity['id'], queryDto);
     expect(categoriesRepository.findOne).toBeCalledWith({
-      where: CategoryEntity['id'],
+      where: { ...CategoryEntity['id'], topics: { slug: queryDto.topic } },
+      relations: queryDto.include,
     });
   });
 
@@ -54,7 +57,11 @@ describe('CategoriesService', () => {
     expect(categoriesRepository.findAndCount).toBeCalledWith({
       skip: (page - 1) * size,
       take: size,
-      where: { name: name && Like(`%${name}%`), parent: IsNull() },
+      where: {
+        name: name && Like(`%${name}%`),
+        parent: IsNull(),
+        topics: { slug: undefined },
+      },
       order: {
         [orderBy]: sort,
       },
