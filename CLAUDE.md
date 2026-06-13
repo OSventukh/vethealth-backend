@@ -13,7 +13,7 @@ This project uses **pnpm** (the README's second "## Test" block showing `npm run
 both work, but prefer pnpm). Husky + lint-staged run on commit.
 
 ```bash
-docker compose --profile dev up -d   # Postgres + Mailpit only (app runs natively on host)
+docker compose --profile dev up -d   # MySQL + Mailpit only (app runs natively on host)
 pnpm migration:run                   # apply migrations — run before first start
 pnpm start:dev                       # NestJS watch mode → http://localhost:5000 (Swagger at /api)
 pnpm seed:run                        # seed roles/statuses + admin user from ADMIN_* env
@@ -45,6 +45,21 @@ pnpm migration:revert
 Note: `migration:generate`/`run`/`revert` pass `--dataSource=src/database/data-source.ts` (the
 CLI DataSource that reads `process.env`); `migration:create` does not need it. Entities are
 glob-discovered (`**/*.entity.ts`) and `DATABASE_SYNCHRONIZE` must stay `false`.
+
+**Fresh dev DB gotcha:** the first migration (`*-Baseline.ts`) is **empty** — the base schema was
+originally created via synchronize, and the committed migrations only carry the increments after
+that point (they `ALTER` tables that no migration creates). So `pnpm migration:run` against an
+**empty** MySQL will fail (it `ALTER`s not-yet-existing tables). To bootstrap a fresh local DB,
+materialise the schema from entities instead of running migrations:
+```bash
+docker compose --profile dev up -d                                          # start mysql:8 + mailpit
+pnpm exec env-cmd ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js \
+  schema:sync -d src/database/data-source.ts                                 # create schema from entities
+pnpm seed:run                                                               # roles/statuses + ADMIN_* user
+```
+This does **not** populate the `migrations` table, so don't run `migration:run` on a
+schema:sync'd dev DB. The alternative (for a prod-identical dev) is to import a `mysqldump` of prod
+(including its `migrations` table).
 
 ## Backend-specific notes
 
