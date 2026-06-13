@@ -64,7 +64,11 @@ Coolify runs `docker compose up` without activating any profile, so the `app` se
 COMPOSE_PROFILES=prod
 ```
 
-Docker Compose reads `COMPOSE_PROFILES` automatically and will start `app` while leaving `db`/`mail` out (Coolify is expected to provide its own managed Postgres).
+Docker Compose reads `COMPOSE_PROFILES` automatically and will start `app` while leaving `db`/`mail` out (the database is a **separate Coolify project** running MySQL, kept apart so it can be backed up independently; `app` connects to it via the `DATABASE_*` env vars).
+
+If you see `Error: no service selected` during deploy, this variable is missing — Coolify ran
+`docker compose up` with no active profile, so Compose matched zero services. Add
+`COMPOSE_PROFILES=prod` to the resource's environment variables and redeploy.
 
 ## Test
 
