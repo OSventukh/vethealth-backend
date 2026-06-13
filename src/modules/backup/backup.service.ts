@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import path from 'path';
-import fs from 'fs';
+import path from 'node:path';
+import fs from 'node:fs';
 import archiver from 'archiver';
 import unzipper from 'unzipper';
 

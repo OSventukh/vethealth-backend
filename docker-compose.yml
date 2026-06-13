@@ -13,10 +13,21 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  mail:
+    image: axllent/mailpit:latest
+    profiles:
+      - dev
+    container_name: mailpit-dev
+    ports:
+      - '${MAIL_PORT:-1025}:1025'
+      - '${MAIL_CLIENT_PORT:-8025}:8025'
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
+    profiles:
+      - prod
     platform: ${PLATFORM}
     container_name: nest-app
     environment:

@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { JwtService } from '@nestjs/jwt';
 import ms from 'ms';
 
@@ -197,11 +197,10 @@ export class AuthService {
       id,
       password,
     });
-    
+
     await this.mailService.changePassword({
       to: user.email,
     });
-
   }
 
   async refreshTokens(
@@ -242,7 +241,7 @@ export class AuthService {
     const tokenExpires = Date.now() + ms(tokenExpiresIn);
 
     const [token, refreshToken] = await Promise.all([
-      await this.jwtService.signAsync(
+      this.jwtService.signAsync(
         {
           id: data.id,
           role: data.role,
@@ -253,7 +252,7 @@ export class AuthService {
           expiresIn: tokenExpiresIn,
         },
       ),
-      await this.jwtService.signAsync(
+      this.jwtService.signAsync(
         {
           sessionId: data.sessionId,
         },

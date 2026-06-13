@@ -17,41 +17,51 @@ class EnvironmentVariablesValidator {
   FILE_STORAGE_DRIVER: FileStorageDriver;
 
   @ValidateIf((envValues: EnvironmentVariablesValidator) =>
-    [FileStorageDriver.S3, FileStorageDriver.R2, FileStorageDriver.Seaweed].includes(
-      envValues.FILE_STORAGE_DRIVER,
-    ),
+    [
+      FileStorageDriver.S3,
+      FileStorageDriver.R2,
+      FileStorageDriver.Seaweed,
+    ].includes(envValues.FILE_STORAGE_DRIVER),
   )
   @IsString()
   FILE_S3_ENDPOINT: string;
 
   @ValidateIf((envValues: EnvironmentVariablesValidator) =>
-    [FileStorageDriver.S3, FileStorageDriver.R2, FileStorageDriver.Seaweed].includes(
-      envValues.FILE_STORAGE_DRIVER,
-    ),
+    [
+      FileStorageDriver.S3,
+      FileStorageDriver.R2,
+      FileStorageDriver.Seaweed,
+    ].includes(envValues.FILE_STORAGE_DRIVER),
   )
   @IsString()
   FILE_S3_ACCESS_KEY: string;
 
   @ValidateIf((envValues: EnvironmentVariablesValidator) =>
-    [FileStorageDriver.S3, FileStorageDriver.R2, FileStorageDriver.Seaweed].includes(
-      envValues.FILE_STORAGE_DRIVER,
-    ),
+    [
+      FileStorageDriver.S3,
+      FileStorageDriver.R2,
+      FileStorageDriver.Seaweed,
+    ].includes(envValues.FILE_STORAGE_DRIVER),
   )
   @IsString()
   FILE_S3_SECRET_KEY: string;
 
   @ValidateIf((envValues: EnvironmentVariablesValidator) =>
-    [FileStorageDriver.S3, FileStorageDriver.R2, FileStorageDriver.Seaweed].includes(
-      envValues.FILE_STORAGE_DRIVER,
-    ),
+    [
+      FileStorageDriver.S3,
+      FileStorageDriver.R2,
+      FileStorageDriver.Seaweed,
+    ].includes(envValues.FILE_STORAGE_DRIVER),
   )
   @IsString()
   FILE_S3_BUCKET: string;
 
   @ValidateIf((envValues: EnvironmentVariablesValidator) =>
-    [FileStorageDriver.S3, FileStorageDriver.R2, FileStorageDriver.Seaweed].includes(
-      envValues.FILE_STORAGE_DRIVER,
-    ),
+    [
+      FileStorageDriver.S3,
+      FileStorageDriver.R2,
+      FileStorageDriver.Seaweed,
+    ].includes(envValues.FILE_STORAGE_DRIVER),
   )
   @IsString()
   FILE_S3_REGION: string;
@@ -88,9 +98,11 @@ export default registerAs<FileConfig>('file', () => {
   const cdnBaseUrl = process.env.FILE_CDN_BASE_URL;
 
   if (
-    [FileStorageDriver.S3, FileStorageDriver.R2, FileStorageDriver.Seaweed].includes(
-      storageDriver,
-    ) &&
+    [
+      FileStorageDriver.S3,
+      FileStorageDriver.R2,
+      FileStorageDriver.Seaweed,
+    ].includes(storageDriver) &&
     !s3PublicUrl &&
     !cdnBaseUrl
   ) {

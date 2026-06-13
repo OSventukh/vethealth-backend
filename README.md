@@ -29,20 +29,54 @@
 ## Installation
 
 ```bash
-$ npm install
+$ pnpm install
+$ cp .env.example .env
 ```
 
-## Running the app
+## Local development
+
+The `docker-compose.yml` exposes two profiles:
+
+- **`dev`** — runs only `postgres` and `mailpit` so you can run the NestJS app natively on the host (fast HMR, debugger, no rebuilds).
+- **`prod`** — runs the `app` container (built from `Dockerfile`) for production deployments.
 
 ```bash
-# development
-$ npm run start
+# 1. start Postgres + Mailpit
+$ docker compose --profile dev up -d
 
-# watch mode
-$ npm run start:dev
+# 2. run migrations
+$ pnpm migration:run
 
-# production mode
-$ npm run start:prod
+# 3. start NestJS in watch mode
+$ pnpm start:dev
+```
+
+- API: http://localhost:5000
+- Mailpit UI: http://localhost:8025
+
+Make sure your local `.env` points the app at the host-exposed services (`DATABASE_HOST=localhost`, `MAIL_HOST=localhost`).
+
+## Deployment (Coolify)
+
+Coolify runs `docker compose up` without activating any profile, so the `app` service (which has `profiles: [prod]`) needs the `prod` profile enabled explicitly. In the Coolify dashboard for this resource, add the following environment variable:
+
+```
+COMPOSE_PROFILES=prod
+```
+
+Docker Compose reads `COMPOSE_PROFILES` automatically and will start `app` while leaving `db`/`mail` out (Coolify is expected to provide its own managed Postgres).
+
+## Test
+
+```bash
+# unit tests
+$ pnpm test
+
+# e2e tests
+$ pnpm test:e2e
+
+# test coverage
+$ pnpm test:cov
 ```
 
 ## Test

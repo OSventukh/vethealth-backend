@@ -6,8 +6,8 @@ import { Fields } from './constants/fields.enum';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType, FileStorageDriver } from '@/config/config.type';
 import { FileStorageFactory } from './storage/file-storage.factory';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import slugify from 'slugify';
 import { UploadPresignedDto } from './dto/upload-presigned.dto';
 
@@ -107,9 +107,10 @@ export class FilesService {
 
     this.assertFileType(input.fileName);
 
-    const maxFileSize = this.configService.get('file.maxFileSize', {
-      infer: true,
-    }) || 0;
+    const maxFileSize =
+      this.configService.get('file.maxFileSize', {
+        infer: true,
+      }) || 0;
 
     if (input.fileSize > maxFileSize) {
       throw new HttpException(

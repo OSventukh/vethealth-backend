@@ -1,7 +1,6 @@
 import {
   Controller,
   Post,
-  UploadedFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -16,10 +15,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
-import {
-  FileFieldsInterceptor,
-  FileInterceptor,
-} from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { FilesService } from './files.service';
 import { Fields } from './constants/fields.enum';
 import { UploadPresignedDto } from './dto/upload-presigned.dto';

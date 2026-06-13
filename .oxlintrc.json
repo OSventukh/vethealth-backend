@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "rules": {
+    "no-console": "error",
+    "no-await-in-loop": "off",
+    "typescript/no-explicit-any": "off",
+    "typescript/consistent-type-imports": "off",
+    "typescript/parameter-properties": "off",
+    "new-cap": "off",
+    "typescript/no-extraneous-class": ["error", { "allowWithDecorator": true }]
+  },
+  "ignorePatterns": ["src/database/migrations", "dist", "node_modules"]
+}

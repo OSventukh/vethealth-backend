@@ -7,7 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource, DataSourceOptions } from 'typeorm';
 
 import { CookieResolver, HeaderResolver, I18nModule } from 'nestjs-i18n';
-import path from 'path';
+import path from 'node:path';
 import { AuthModule } from './modules/auth/auth.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import appConfig from './config/app.config';
@@ -70,7 +70,7 @@ import { MetadataModule } from './modules/metadata/metadata.module';
         name: 'api',
         ttl: minutes(1),
         limit: 500,
-      }
+      },
     ]),
     UsersModule,
     PostsModule,

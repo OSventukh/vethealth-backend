@@ -11,7 +11,7 @@ import { ValidationArguments } from 'class-validator/types/validation/Validation
 export class IsNotSuperAdmin implements ValidatorConstraintInterface {
   async validate(
     value: { id: string | number },
-    validationArguments: ValidationArguments,
+    _validationArguments: ValidationArguments,
   ) {
     if (value?.id?.toString() === RoleEnum.SuperAdmin) {
       return false;

@@ -7,9 +7,6 @@ import { PostEntity } from '@/modules/posts/entities/post.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([PostEntity])],
   controllers: [SearchController],
-  providers: [
-    SearchService,
-    
-  ],
+  providers: [SearchService],
 })
 export class SearchModule {}

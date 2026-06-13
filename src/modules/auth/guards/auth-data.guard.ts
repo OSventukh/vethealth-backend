@@ -3,11 +3,11 @@ import { AuthGuard } from '@nestjs/passport';
 
 export class AuthDataGuard extends AuthGuard('jwt') {
   handleRequest<TUser = any>(
-    err: any,
+    _err: any,
     user: any,
-    info: any,
-    context: ExecutionContext,
-    status?: any,
+    _info: any,
+    _context: ExecutionContext,
+    _status?: any,
   ): TUser {
     return user;
   }

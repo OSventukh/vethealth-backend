@@ -1,4 +1,4 @@
 {
-  "**/*.ts": ["prettier --write", "eslint"],
+  "**/*.ts": ["oxlint -c .oxlintrc.json --fix", "oxfmt"],
   "**/*.(ts)": "npm run type-check"
 }

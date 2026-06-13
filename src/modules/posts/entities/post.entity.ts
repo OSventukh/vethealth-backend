@@ -13,7 +13,7 @@ import {
   BeforeInsert,
   BeforeUpdate,
 } from 'typeorm';
-import { Exclude, Expose, Transform } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 import { UserEntity } from '@/modules/users/entities/user.entity';
 import { TopicEntity } from '@/modules/topics/entities/topic.entity';
 import { CategoryEntity } from '@/modules/categories/entities/category.entity';

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Res } from '@nestjs/common';
+import { Controller, Post, Query, Res } from '@nestjs/common';
 import { BackupService } from './backup.service';
 import { Response } from 'express';
 
@@ -11,7 +11,7 @@ export class BackupController {
     try {
       const backupFile = await this.backupService.createFilesBackup();
       res.download(backupFile);
-    } catch (error) {
+    } catch {
       res.status(500).send('Failed to create backup');
     }
   }
@@ -21,7 +21,7 @@ export class BackupController {
     try {
       await this.backupService.restoreFilesBackup(file);
       res.send('Backup restored successfully');
-    } catch (error) {
+    } catch {
       res.status(500).send('Failed to restore backup');
     }
   }

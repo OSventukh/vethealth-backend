@@ -35,7 +35,7 @@ export class ChildrenInterceptor implements NestInterceptor {
           where: { id: topic.id, parent: Not(IsNull()) },
           relations: ['parent'],
         });
-        return entity && entity.parent ? { id: entity.parent.id } : null;
+        return entity?.parent ? { id: entity.parent.id } : null;
       }),
     );
 
@@ -45,7 +45,7 @@ export class ChildrenInterceptor implements NestInterceptor {
           where: { id: category.id, parent: Not(IsNull()) },
           relations: ['parent'],
         });
-        return entity && entity.parent ? { id: entity.parent.id } : null;
+        return entity?.parent ? { id: entity.parent.id } : null;
       }),
     );
 

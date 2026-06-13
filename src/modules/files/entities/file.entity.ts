@@ -24,7 +24,7 @@ export class FileEntity {
 
   @Expose()
   relativePath: string;
-  
+
   @AfterInsert()
   @AfterLoad()
   updatePath() {
@@ -42,17 +42,16 @@ export class FileEntity {
     const storageConfig = fileConfig() as FileConfig;
     if (storageConfig.storageDriver !== FileStorageDriver.Local) {
       const publicUrl =
-        storageConfig.cdnBaseUrl ||
-        storageConfig.s3PublicUrl ||
-        '';
+        storageConfig.cdnBaseUrl || storageConfig.s3PublicUrl || '';
       const normalizedPath = this.path.replace(/^\/+/, '');
       const useBucketInPath = storageConfig.cdnIncludeBucketInPath;
       const bucket = storageConfig.s3Bucket;
 
       this.relativePath = normalizedPath;
-      this.path = useBucketInPath && bucket
-        ? `${publicUrl.replace(/\/$/, '')}/${bucket}/${normalizedPath}`
-        : `${publicUrl.replace(/\/$/, '')}/${normalizedPath}`;
+      this.path =
+        useBucketInPath && bucket
+          ? `${publicUrl.replace(/\/$/, '')}/${bucket}/${normalizedPath}`
+          : `${publicUrl.replace(/\/$/, '')}/${normalizedPath}`;
     }
   }
 }

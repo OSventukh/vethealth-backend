@@ -9,7 +9,7 @@ import { CreatePostDto } from '../dto/create-post.dto';
 
 @Injectable()
 export class FeaturedImagePipe implements PipeTransform {
-  transform(value: CreatePostDto, metadata: ArgumentMetadata) {
+  transform(value: CreatePostDto, _metadata: ArgumentMetadata) {
     if (value.featuredImageFile?.id && value.featuredImageUrl) {
       throw new BadRequestException(ERROR_MESSAGE.FEATURED_IMAGE_NOT_VALID);
     }

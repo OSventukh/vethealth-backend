@@ -1,8 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MailerService } from './mailer.service';
 import { ConfigService } from '@nestjs/config';
-import { createMock } from '@golevelup/ts-jest';
-import { AllConfigType } from '@/config/config.type';
 
 describe('MailerService', () => {
   let service: MailerService;

@@ -1,4 +1,4 @@
-import * as path from 'path';
+import * as path from 'node:path';
 
 const UPLOADS = 'uploads';
 const IMAGES = 'images';

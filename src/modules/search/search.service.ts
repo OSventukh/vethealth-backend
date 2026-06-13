@@ -16,7 +16,7 @@ export class SearchService {
     queryDto: SearchQueryDto,
   ): Promise<PaginationType<PostEntity>> {
     const { query, page, size } = queryDto;
-    const [items, count] = await this.postsRepository.findAndCount({
+    const [items, _count] = await this.postsRepository.findAndCount({
       where: [
         { title: query && Like(`%${query}%`), status: { name: 'Published' } },
         { content: query && Like(`%${query}%`), status: { name: 'Published' } },
@@ -45,12 +45,16 @@ export class SearchService {
 
     const traverse = (node: any) => {
       if (Array.isArray(node)) {
-        node.forEach((child) => traverse(child));
+        node.forEach((child) => {
+          traverse(child);
+        });
       } else if (typeof node === 'object' && node !== null) {
         if (node.type === 'text' && node.text) {
-          text += node.text + ' ';
+          text += `${node.text} `;
         }
-        Object.values(node).forEach((value) => traverse(value));
+        Object.values(node).forEach((value) => {
+          traverse(value);
+        });
       }
     };
 

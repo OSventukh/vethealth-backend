@@ -1,5 +1,5 @@
-import * as path from 'path';
-import * as fs from 'fs/promises';
+import * as path from 'node:path';
+import * as fs from 'node:fs/promises';
 import { Module, HttpException, HttpStatus } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterModule } from '@nestjs/platform-express';
@@ -24,7 +24,7 @@ import { S3CompatibleFileStorageService } from './storage/s3-compatible-file-sto
       inject: [ConfigService],
       useFactory: (configService: ConfigService<AllConfigType>) => {
         return {
-          fileFilter: (request, file, callback) => {
+          fileFilter: (_request, file, callback) => {
             if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
               return callback(
                 new HttpException(
@@ -43,7 +43,7 @@ import { S3CompatibleFileStorageService } from './storage/s3-compatible-file-sto
             callback(null, true);
           },
           storage: diskStorage({
-            destination: async (req, file, cb) => {
+            destination: async (_req, file, cb) => {
               const dir = directories[file.fieldname];
               try {
                 await fs.mkdir(dir, {
@@ -55,7 +55,7 @@ import { S3CompatibleFileStorageService } from './storage/s3-compatible-file-sto
                 cb(error, null);
               }
             },
-            filename: (req, file, cb) => {
+            filename: (_req, file, cb) => {
               let fileName: string;
               if (file.fieldname === Fields.Topic) {
                 fileName = slugify(file.originalname, { lower: true });

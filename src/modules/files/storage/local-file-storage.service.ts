@@ -14,7 +14,9 @@ export class LocalFileStorageService implements FileStorage {
   constructor(private readonly configService: ConfigService<AllConfigType>) {}
 
   async upload(_: FileStorageUploadInput): Promise<FileStorageUploadResult> {
-    throw new Error('Local storage upload is not implemented in this migration step.');
+    throw new Error(
+      'Local storage upload is not implemented in this migration step.',
+    );
   }
 
   async createPresignedUpload(
@@ -24,7 +26,9 @@ export class LocalFileStorageService implements FileStorage {
   }
 
   async delete(_: string): Promise<void> {
-    throw new Error('Local storage delete is not implemented in this migration step.');
+    throw new Error(
+      'Local storage delete is not implemented in this migration step.',
+    );
   }
 
   getPublicUrl(key: string): string {

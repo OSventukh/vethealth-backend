@@ -28,6 +28,6 @@ export class IsValidIncludes implements ValidatorConstraintInterface {
       values = Object.keys(value);
     }
 
-    return values.every((value) => validValues.includes(value));
+    return values.every((item) => validValues.includes(item));
   }
 }

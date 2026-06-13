@@ -26,8 +26,8 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         this.configService.get('app.nodeEnv', { infer: true }) !==
           'production' &&
         this.configService.get('app.nodeEnv', { infer: true }) !== 'test',
-      entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-      migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
+      entities: [`${__dirname}/../**/*.entity{.ts,.js}`],
+      migrations: [`${__dirname}/migrations/**/*{.ts,.js}`],
       cli: {
         entitiesDir: 'src',
         migrationsDir: 'src/database/migrations',

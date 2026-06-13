@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { I18nContext } from 'nestjs-i18n';
@@ -36,11 +36,7 @@ export class MailService {
       text: `${this.configService.get('app.frontendDomain', {
         infer: true,
       })}/auth/confirmation?hash=${mailData.data.hash} ${emailConfirmTitle}`,
-      templatePath: path.join(
-        __dirname,
-        'mail-templates',
-        'activation.hbs',
-      ),
+      templatePath: path.join(__dirname, 'mail-templates', 'activation.hbs'),
       context: {
         title: emailConfirmTitle,
         url: `${this.configService.get('app.frontendDomain', {

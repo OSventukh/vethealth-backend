@@ -1,4 +1,4 @@
-import { StringValue } from "ms";
+import { StringValue } from 'ms';
 
 export enum FileStorageDriver {
   Local = 'local',

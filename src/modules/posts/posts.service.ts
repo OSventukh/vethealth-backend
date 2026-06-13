@@ -7,7 +7,6 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { FindOptionsWhere } from 'typeorm';
 import { PostQueryDto } from './dto/post-query.dto';
 import { postOrder } from './utils/post-order';
-import { PostStatusEnum } from '@/statuses/post-status.enum';
 
 @Injectable()
 export class PostsService {

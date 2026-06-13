@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsArray, Validate, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsArray,
+  Validate,
+  ValidateNested,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { CategoryEntity } from '@/modules/categories/entities/category.entity';
 import { TopicEntity } from '@/modules/topics/entities/topic.entity';

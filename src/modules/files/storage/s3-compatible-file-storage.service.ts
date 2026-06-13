@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '@/config/config.type';
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {
   FileStoragePresignedInput,
@@ -13,29 +17,36 @@ import {
 
 @Injectable()
 export class S3CompatibleFileStorageService implements FileStorage {
-  private readonly s3Client: S3Client;
+  private s3ClientInstance: S3Client | null = null;
 
-  constructor(private readonly configService: ConfigService<AllConfigType>) {
-    this.s3Client = new S3Client({
-      region: this.configService.getOrThrow('file.s3Region', { infer: true }),
-      endpoint: this.configService.getOrThrow('file.s3Endpoint', {
-        infer: true,
-      }),
-      forcePathStyle: this.configService.get('file.s3ForcePathStyle', {
-        infer: true,
-      }),
-      credentials: {
-        accessKeyId: this.configService.getOrThrow('file.s3AccessKey', {
+  constructor(private readonly configService: ConfigService<AllConfigType>) {}
+
+  private get s3Client(): S3Client {
+    if (!this.s3ClientInstance) {
+      this.s3ClientInstance = new S3Client({
+        region: this.configService.getOrThrow('file.s3Region', { infer: true }),
+        endpoint: this.configService.getOrThrow('file.s3Endpoint', {
           infer: true,
         }),
-        secretAccessKey: this.configService.getOrThrow('file.s3SecretKey', {
+        forcePathStyle: this.configService.get('file.s3ForcePathStyle', {
           infer: true,
         }),
-      },
-    });
+        credentials: {
+          accessKeyId: this.configService.getOrThrow('file.s3AccessKey', {
+            infer: true,
+          }),
+          secretAccessKey: this.configService.getOrThrow('file.s3SecretKey', {
+            infer: true,
+          }),
+        },
+      });
+    }
+    return this.s3ClientInstance;
   }
 
-  async upload(input: FileStorageUploadInput): Promise<FileStorageUploadResult> {
+  async upload(
+    input: FileStorageUploadInput,
+  ): Promise<FileStorageUploadResult> {
     const bucket = this.configService.getOrThrow('file.s3Bucket', {
       infer: true,
     });
@@ -92,9 +103,12 @@ export class S3CompatibleFileStorageService implements FileStorage {
     const publicUrl =
       this.configService.get('file.cdnBaseUrl', { infer: true }) ||
       this.configService.getOrThrow('file.s3PublicUrl', { infer: true });
-    const includeBucket = this.configService.get('file.cdnIncludeBucketInPath', {
-      infer: true,
-    });
+    const includeBucket = this.configService.get(
+      'file.cdnIncludeBucketInPath',
+      {
+        infer: true,
+      },
+    );
     const bucket = this.configService.get('file.s3Bucket', { infer: true });
     const normalizedKey = key.replace(/^\/+/, '');
 
