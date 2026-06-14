@@ -9,7 +9,9 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 ENV_FILE="${PROJECT_ROOT}/.env"
 UPLOADS_DIR="${PROJECT_ROOT}/uploads"
-R2_PREFIX="uploads"
+# Empty by default: the backend stores R2 keys WITHOUT a leading "uploads/" segment
+# (files.service.ts strips /^uploads\//), so keys must look like "images/topics/cat.svg".
+R2_PREFIX=""
 DRY_RUN=true
 SMOKE_SAMPLE=20
 SMOKE_REFERER="${SMOKE_REFERER:-}"
@@ -23,7 +25,7 @@ Usage:
 Options:
   --execute                 Run real sync (without this, script runs dry-run only)
   --uploads-dir <path>      Local uploads directory (default: ./uploads)
-  --prefix <value>          Prefix inside bucket (default: uploads)
+  --prefix <value>          Prefix inside bucket (default: none — matches backend key scheme)
   --env-file <path>         Path to env file (default: ./backend/.env)
   --sample <number>         Smoke test sample size (default: 20)
   --referer <url>           Optional Referer header for smoke checks
@@ -164,17 +166,27 @@ OBJECT_COUNT=$(aws s3 ls "$SYNC_DEST/" --recursive --endpoint-url "$FILE_S3_ENDP
 set -e
 echo "Objects under s3://${FILE_S3_BUCKET}/${R2_PREFIX}: ${OBJECT_COUNT:-0}"
 
+# Join an optional prefix with a key without producing a leading or double slash.
+join_prefix() {
+  local key="$1"
+  if [[ -n "$R2_PREFIX" ]]; then
+    printf '%s/%s\n' "${R2_PREFIX%/}" "$key"
+  else
+    printf '%s\n' "$key"
+  fi
+}
+
 normalize_key_from_db_path() {
   local db_path="$1"
   local key="${db_path#/}"
   key="${key#uploads/}"
-  printf '%s/%s\n' "$R2_PREFIX" "$key"
+  join_prefix "$key"
 }
 
 normalize_key_from_local_file() {
   local file_path="$1"
   local rel_path="${file_path#${UPLOADS_DIR_ABS}/}"
-  printf '%s/%s\n' "$R2_PREFIX" "$rel_path"
+  join_prefix "$rel_path"
 }
 
 curl_status() {

@@ -11,7 +11,10 @@ function parseArgs(argv) {
     execute: false,
     uploadsDir: path.resolve(process.cwd(), 'uploads'),
     dotenvFile: path.resolve(process.cwd(), '.env'),
-    prefix: 'uploads',
+    // No prefix: the backend stores R2 keys WITHOUT a leading "uploads/" segment
+    // (files.service.ts strips /^uploads\//), so object keys must match e.g.
+    // "images/topics/cat.svg". Pass --prefix only if the backend scheme changes.
+    prefix: '',
     sample: 20,
     referer: '',
   };
@@ -62,7 +65,7 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  console.log(`Usage:\n  node scripts/migrate-uploads-to-r2-node.js [options]\n\nOptions:\n  --execute                 Run real upload (default is dry-run)\n  --uploads-dir <path>      Local uploads directory (default: ./uploads)\n  --dotenv-file <path>      Path to env file (default: ./backend/.env, optional)\n  --prefix <value>          Prefix inside bucket (default: uploads)\n  --sample <number>         Smoke test sample size (default: 20)\n  --referer <url>           Optional Referer for smoke checks\n  -h, --help                Show help\n\nExamples:\n  node scripts/migrate-uploads-to-r2-node.js\n  node scripts/migrate-uploads-to-r2-node.js --execute\n  node scripts/migrate-uploads-to-r2-node.js --execute --referer https://vethealth.com.ua/`);
+  console.log(`Usage:\n  node scripts/migrate-uploads-to-r2-node.js [options]\n\nOptions:\n  --execute                 Run real upload (default is dry-run)\n  --uploads-dir <path>      Local uploads directory (default: ./uploads)\n  --dotenv-file <path>      Path to env file (default: ./backend/.env, optional)\n  --prefix <value>          Prefix inside bucket (default: none — matches backend key scheme)\n  --sample <number>         Smoke test sample size (default: 20)\n  --referer <url>           Optional Referer for smoke checks\n  -h, --help                Show help\n\nExamples:\n  node scripts/migrate-uploads-to-r2-node.js\n  node scripts/migrate-uploads-to-r2-node.js --execute\n  node scripts/migrate-uploads-to-r2-node.js --execute --referer https://vethealth.com.ua/`);
 }
 
 function loadEnvFileIfExists(envFilePath) {
