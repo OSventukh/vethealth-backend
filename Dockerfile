@@ -21,5 +21,7 @@ ENV NODE_ENV=production
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
+# one-off ops scripts (R2 upload migration) — plain JS, run via `npm run migrate:r2:prod`
+COPY --from=builder /app/scripts ./scripts
 
 CMD ["node", "dist/main"]
