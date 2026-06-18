@@ -1,6 +1,7 @@
 export const ERROR_MESSAGE = {
   EMAIL_ALREADY_EXIST: 'emailAlreadyExist',
   EMAIL_NOT_EXIST: 'emailNotExist',
+  EMAIL_SEND_FAILED: 'emailSendFailed',
   IMAGE_IS_NOT_VALID: 'imageIsNotValid',
   TOPIC_IS_NOT_VALID: 'topicIsNotValid',
   POST_IS_NOT_VALID: 'postIsNotValid',

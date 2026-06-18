@@ -1,6 +1,8 @@
 import { UsersService } from '@/modules/users/users.service';
 import {
   Injectable,
+  Logger,
+  ServiceUnavailableException,
   UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -30,6 +32,8 @@ import { AuthChangePasswordDto } from './dto/auth-change-password.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
@@ -98,10 +102,18 @@ export class AuthService {
       expiresIn: new Date(Date.now() + ms('1d')),
     });
 
-    await this.mailService.userSignUp({
-      to: createUserDto.email,
-      data: { hash },
-    });
+    try {
+      await this.mailService.userSignUp({
+        to: createUserDto.email,
+        data: { hash },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to send sign-up confirmation email to ${createUserDto.email}`,
+        error instanceof Error ? error.stack : error,
+      );
+      throw new ServiceUnavailableException(ERROR_MESSAGE.EMAIL_SEND_FAILED);
+    }
 
     return {
       id: user.id,
@@ -175,12 +187,20 @@ export class AuthService {
       expiresIn: new Date(Date.now() + ms('1d')),
     });
 
-    await this.mailService.forgotPassword({
-      to: email,
-      data: {
-        hash,
-      },
-    });
+    try {
+      await this.mailService.forgotPassword({
+        to: email,
+        data: {
+          hash,
+        },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to send password reset email to ${email}`,
+        error instanceof Error ? error.stack : error,
+      );
+      throw new ServiceUnavailableException(ERROR_MESSAGE.EMAIL_SEND_FAILED);
+    }
   }
 
   async changePassword(
@@ -198,9 +218,18 @@ export class AuthService {
       password,
     });
 
-    await this.mailService.changePassword({
-      to: user.email,
-    });
+    // Password is already persisted above; the email is only a notification,
+    // so a send failure must not fail the request — log and continue.
+    try {
+      await this.mailService.changePassword({
+        to: user.email,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to send password-change notification email to ${user.email}`,
+        error instanceof Error ? error.stack : error,
+      );
+    }
   }
 
   async refreshTokens(
