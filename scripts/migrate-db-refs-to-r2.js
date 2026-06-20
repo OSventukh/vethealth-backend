@@ -44,6 +44,7 @@ const mysql = require('mysql2/promise');
 function parseArgs(argv) {
   const args = {
     execute: false,
+    inspect: false,
     dotenvFile: path.resolve(process.cwd(), '.env'),
     publicUrl: '',
     sample: 10,
@@ -53,6 +54,10 @@ function parseArgs(argv) {
     const token = argv[i];
     if (token === '--execute') {
       args.execute = true;
+      continue;
+    }
+    if (token === '--inspect') {
+      args.inspect = true;
       continue;
     }
     if (token === '--dotenv-file' || token === '--env-file') {
@@ -86,7 +91,7 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(
-    `Usage:\n  node scripts/migrate-db-refs-to-r2.js [options]\n\nOptions:\n  --execute                 Apply the UPDATEs (default is dry-run)\n  --env-file <path>         Path to env file (default: ./.env)\n  --public-url <url>        Public base for R2 objects (default: derived from\n                            FILE_CDN_BASE_URL / FILE_S3_PUBLIC_URL + bucket)\n  --sample <number>         How many before/after samples to print per table (default: 10)\n  -h, --help                Show help\n\nExamples:\n  node scripts/migrate-db-refs-to-r2.js                 # dry-run\n  node scripts/migrate-db-refs-to-r2.js --execute`,
+    `Usage:\n  node scripts/migrate-db-refs-to-r2.js [options]\n\nOptions:\n  --inspect                 Read-only: print row counts and the actual stored\n                            reference forms (run this first if the migration\n                            reports 0 rows to confirm the real format)\n  --execute                 Apply the UPDATEs (default is dry-run)\n  --env-file <path>         Path to env file (default: ./.env)\n  --public-url <url>        Public base for R2 objects (default: derived from\n                            FILE_CDN_BASE_URL / FILE_S3_PUBLIC_URL + bucket)\n  --sample <number>         How many before/after samples to print per table (default: 10)\n  -h, --help                Show help\n\nExamples:\n  node scripts/migrate-db-refs-to-r2.js                 # dry-run\n  node scripts/migrate-db-refs-to-r2.js --execute`,
   );
 }
 
@@ -268,9 +273,68 @@ async function migrateUrlField(conn, args, { table, column, isJson }) {
   return changes.length;
 }
 
+// Read-only diagnostic: print row counts and the actual stored forms of file
+// references, so we can SEE how images are referenced before trusting any filter.
+async function inspect(conn) {
+  const tokenRe = /https?:\/\/[^\s"'<>\\)]+|\/uploads\/[^\s"'<>\\)]*|"src"\s*:\s*"[^"]*"/gi;
+
+  async function count(table) {
+    const [[row]] = await conn.query(`SELECT COUNT(*) AS c FROM \`${table}\``);
+    return row.c;
+  }
+
+  console.log(`\n[files] ${await count('files')} rows — sample path values:`);
+  const [files] = await conn.query('SELECT path FROM files LIMIT 15');
+  for (const row of files) {
+    console.log(`  ${JSON.stringify(row.path)}`);
+  }
+
+  for (const { table, column, isJson } of [
+    { table: 'posts', column: 'content' },
+    { table: 'posts', column: 'featuredImageUrl' },
+    { table: 'pages', column: 'content' },
+    { table: 'metadata', column: 'ogImage' },
+    { table: 'metadata', column: 'structuredData', isJson: true },
+  ]) {
+    const selectExpr = isJson ? `CAST(\`${column}\` AS CHAR)` : `\`${column}\``;
+    const [rows] = await conn.query(
+      `SELECT ${selectExpr} AS value FROM \`${table}\` WHERE \`${column}\` IS NOT NULL LIMIT 5`,
+    );
+    console.log(`\n[${table}.${column}] ${await count(table)} rows total — reference tokens in first ${rows.length} non-null:`);
+    const tokens = new Set();
+    for (const row of rows) {
+      for (const m of String(row.value).match(tokenRe) || []) {
+        tokens.add(m);
+      }
+    }
+    if (tokens.size === 0) {
+      console.log('  (no http / uploads / "src" tokens found)');
+    }
+    for (const t of [...tokens].slice(0, 20)) {
+      console.log(`  ${t}`);
+    }
+  }
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const envLoaded = loadEnvFileIfExists(args.dotenvFile);
+
+  if (args.inspect) {
+    const dbConfig = buildDbConfig();
+    console.log('== Inspect ==');
+    console.log(
+      `Env source: ${envLoaded ? `file (${args.dotenvFile})` : 'process.env only (.env not found)'}`,
+    );
+    console.log(`Database: ${dbConfig.user}@${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`);
+    const conn = await mysql.createConnection({ ...dbConfig, multipleStatements: false });
+    try {
+      await inspect(conn);
+    } finally {
+      await conn.end();
+    }
+    return;
+  }
 
   args.publicBase = args.publicUrl || derivePublicBase();
   if (!args.publicBase) {
