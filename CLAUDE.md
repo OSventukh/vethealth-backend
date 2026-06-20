@@ -81,7 +81,11 @@ schema:sync'd dev DB. The alternative (for a prod-identical dev) is to import a 
   for files backup & restore. One-off `scripts/migrate-uploads-to-r2*` move existing local uploads
   to R2/S3 (physical files only). **Then** run `scripts/migrate-db-refs-to-r2.js` to rewrite the DB
   references so R2 is used end-to-end: it strips `/uploads/` from `files.path` (→ bare R2 key, which
-  `FileEntity.updatePath()` turns into a public URL) and rewrites embedded `…/uploads/…` URLs in
-  `posts.content`/`featuredImageUrl`, `pages.content`, and `metadata.{ogImage,twitterImage,canonicalUrl,
-  structuredData}` to the R2 public base. Dry-run by default; `--execute` applies; idempotent.
+  `FileEntity.updatePath()` turns into a public URL) and rewrites embedded upload URLs in
+  `posts.content` (the Lexical editor stores `relativePath`, which in local mode resolves to an
+  **absolute** `<backendDomain>/uploads/…` URL inside the JSON), `posts.featuredImageUrl`,
+  `pages.content`, and `metadata.{ogImage,twitterImage,canonicalUrl,structuredData}` to the R2 public
+  base. URL rewriting is **domain-agnostic** (regex matches any `<scheme>://<host>/uploads/…`, so a
+  stale authoring domain still migrates) and leaves non-`/uploads/` external URLs alone. Dry-run by
+  default (prints per-URL before→after diffs); `--execute` applies; idempotent.
 - **`.env.example`** is a generic placeholder template — keep it that way; real values go in `.env`.

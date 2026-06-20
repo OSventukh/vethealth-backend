@@ -18,18 +18,24 @@
 //                                  "/uploads/images/topics/cat.svg" -> "images/topics/cat.svg").
 //                                  The FileEntity.updatePath() hook then builds
 //                                  the public URL from the R2 key automatically.
-//   2. posts.content             — embedded <img> URLs in the Lexical rich text
-//   3. posts.featuredImageUrl    — stored featured-image URL
+//   2. posts.content             — image URLs embedded in the Lexical JSON. In local
+//                                  mode the editor stored "relativePath", which the
+//                                  backend resolves to an ABSOLUTE url
+//                                  "<backendDomain>/uploads/...". So content holds
+//                                  full URLs, not bare paths — we rewrite them here.
+//   3. posts.featuredImageUrl    — stored featured-image URL (also absolute "/uploads/...")
 //   4. pages.content             — embedded URLs in page rich text
 //   5. metadata.ogImage          — Open Graph image URL
 //   6. metadata.twitterImage     — Twitter card image URL
 //   7. metadata.canonicalUrl     — only if it points at /uploads/
 //   8. metadata.structuredData   — JSON-LD blob (URL substrings swapped in-place)
 //
-// For the text/URL fields it replaces both the absolute form
-// "<old-base>/uploads/..." and the relative form "/uploads/..." with
-// "<public-base>/...". The absolute form is replaced first (innermost REPLACE)
-// so the relative pass cannot corrupt an already-absolute URL.
+// URL rewriting is DOMAIN-AGNOSTIC: any "<scheme>://<host>/uploads/..." is
+// rewritten to "<public-base>/...", regardless of which backend domain is baked
+// into the stored value (it may differ from the current BACKEND_DOMAIN if content
+// was authored against another environment). Any leftover relative "/uploads/..."
+// is rewritten too. External image URLs that don't contain "/uploads/" are left
+// untouched.
 
 const fs = require('fs');
 const path = require('path');
@@ -40,7 +46,6 @@ function parseArgs(argv) {
     execute: false,
     dotenvFile: path.resolve(process.cwd(), '.env'),
     publicUrl: '',
-    oldBases: [],
     sample: 10,
   };
 
@@ -57,11 +62,6 @@ function parseArgs(argv) {
     }
     if (token === '--public-url') {
       args.publicUrl = argv[i + 1].replace(/\/+$/, '');
-      i += 1;
-      continue;
-    }
-    if (token === '--old-base') {
-      args.oldBases.push(argv[i + 1].replace(/\/+$/, ''));
       i += 1;
       continue;
     }
@@ -86,7 +86,7 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(
-    `Usage:\n  node scripts/migrate-db-refs-to-r2.js [options]\n\nOptions:\n  --execute                 Apply the UPDATEs (default is dry-run)\n  --env-file <path>         Path to env file (default: ./.env)\n  --public-url <url>        Public base for R2 objects (default: derived from\n                            FILE_CDN_BASE_URL / FILE_S3_PUBLIC_URL + bucket)\n  --old-base <url>          Old absolute base to strip before /uploads/ (repeatable;\n                            default: BACKEND_DOMAIN). Use when prod content embeds a\n                            different domain than BACKEND_DOMAIN.\n  --sample <number>         How many before/after samples to print per table (default: 10)\n  -h, --help                Show help\n\nExamples:\n  node scripts/migrate-db-refs-to-r2.js                          # dry-run\n  node scripts/migrate-db-refs-to-r2.js --execute\n  node scripts/migrate-db-refs-to-r2.js --old-base https://api.vethealth.com.ua --execute`,
+    `Usage:\n  node scripts/migrate-db-refs-to-r2.js [options]\n\nOptions:\n  --execute                 Apply the UPDATEs (default is dry-run)\n  --env-file <path>         Path to env file (default: ./.env)\n  --public-url <url>        Public base for R2 objects (default: derived from\n                            FILE_CDN_BASE_URL / FILE_S3_PUBLIC_URL + bucket)\n  --sample <number>         How many before/after samples to print per table (default: 10)\n  -h, --help                Show help\n\nExamples:\n  node scripts/migrate-db-refs-to-r2.js                 # dry-run\n  node scripts/migrate-db-refs-to-r2.js --execute`,
   );
 }
 
@@ -166,86 +166,106 @@ function buildDbConfig() {
   };
 }
 
-// Build a nested REPLACE() SQL expression that rewrites every absolute
-// "<oldBase>/uploads/" first, then any leftover relative "/uploads/".
-// Absolute bases are nested innermost so the relative pass runs last and
-// cannot break an already-rewritten absolute URL.
-function buildReplaceExpr(column, oldBases, publicBase) {
-  let expr = column;
-  for (const base of oldBases) {
-    expr = `REPLACE(${expr}, ${mysql.escape(`${base}/uploads/`)}, ${mysql.escape(`${publicBase}/`)})`;
-  }
-  // Outermost: relative "/uploads/" -> "<publicBase>/".
-  expr = `REPLACE(${expr}, '/uploads/', ${mysql.escape(`${publicBase}/`)})`;
-  return expr;
+// Matches an absolute upload URL "<scheme>://<host[:port]>/uploads/" — host is
+// everything up to the next slash, so any backend domain is handled.
+const ABSOLUTE_UPLOADS_RE = /[a-z][a-z0-9+.-]*:\/\/[^/"'\\\s]+\/uploads\//gi;
+// Matches a leftover relative "/uploads/" (after absolute ones are rewritten).
+const RELATIVE_UPLOADS_RE = /\/uploads\//g;
+// For extracting full URL tokens to display in dry-run diffs.
+const UPLOAD_TOKEN_RE = /(?:[a-z][a-z0-9+.-]*:\/\/[^/"'\\\s]+)?\/uploads\/[^"'\\\s)]+/gi;
+
+function rewriteUrls(value, publicBase) {
+  return value
+    .replace(ABSOLUTE_UPLOADS_RE, `${publicBase}/`)
+    .replace(RELATIVE_UPLOADS_RE, `${publicBase}/`);
 }
 
-// A row needs URL rewriting if it still contains "/uploads/" anywhere.
-const URL_FILTER = (column) => `${column} LIKE '%/uploads/%'`;
-
-async function migrateUrlField(conn, args, { table, idColumn, column }) {
-  const replaceExpr = buildReplaceExpr(column, args.oldBases, args.publicBase);
-  const where = `${column} IS NOT NULL AND ${URL_FILTER(column)}`;
-
-  const [rows] = await conn.query(
-    `SELECT ${idColumn} AS id, ${column} AS value, ${replaceExpr} AS next
-       FROM \`${table}\`
-      WHERE ${where}`,
-  );
-
-  console.log(`\n[${table}.${column}] rows to update: ${rows.length}`);
-  for (const row of rows.slice(0, args.sample)) {
-    const before = String(row.value);
-    const after = String(row.next);
-    console.log(`  id=${row.id}`);
-    console.log(`    - ${truncate(before)}`);
-    console.log(`    + ${truncate(after)}`);
-  }
-  if (rows.length > args.sample) {
-    console.log(`  ... and ${rows.length - args.sample} more`);
-  }
-
-  if (args.execute && rows.length > 0) {
-    const [result] = await conn.query(
-      `UPDATE \`${table}\` SET ${column} = ${replaceExpr} WHERE ${where}`,
-    );
-    console.log(`  -> updated ${result.affectedRows} row(s)`);
-  }
-
-  return rows.length;
+// "/uploads/images/x.svg" or "uploads/images/x.svg" -> "images/x.svg".
+function stripUploadsPrefix(value) {
+  return value.replace(/^\/?uploads\//, '');
 }
 
 async function migrateFilesPath(conn, args) {
-  // "/uploads/images/x.svg" or "uploads/images/x.svg" -> "images/x.svg".
-  const stripExpr = `REGEXP_REPLACE(path, '^/?uploads/', '')`;
-  const where = `path REGEXP '^/?uploads/'`;
-
   const [rows] = await conn.query(
-    `SELECT id, path AS value, ${stripExpr} AS next FROM files WHERE ${where}`,
+    `SELECT id, path AS value FROM files WHERE path REGEXP '^/?uploads/'`,
   );
 
-  console.log(`\n[files.path] rows to update: ${rows.length}`);
-  for (const row of rows.slice(0, args.sample)) {
-    console.log(`  id=${row.id}`);
-    console.log(`    - ${row.value}`);
-    console.log(`    + ${row.next}`);
+  const changes = rows
+    .map((row) => ({ id: row.id, before: String(row.value), after: stripUploadsPrefix(String(row.value)) }))
+    .filter((c) => c.before !== c.after);
+
+  console.log(`\n[files.path] rows to update: ${changes.length}`);
+  for (const change of changes.slice(0, args.sample)) {
+    console.log(`  id=${change.id}`);
+    console.log(`    - ${change.before}`);
+    console.log(`    + ${change.after}`);
   }
-  if (rows.length > args.sample) {
-    console.log(`  ... and ${rows.length - args.sample} more`);
+  if (changes.length > args.sample) {
+    console.log(`  ... and ${changes.length - args.sample} more`);
   }
 
-  if (args.execute && rows.length > 0) {
-    const [result] = await conn.query(
-      `UPDATE files SET path = ${stripExpr} WHERE ${where}`,
-    );
-    console.log(`  -> updated ${result.affectedRows} row(s)`);
+  if (args.execute) {
+    for (const change of changes) {
+      await conn.query(`UPDATE files SET path = ? WHERE id = ?`, [change.after, change.id]);
+    }
+    if (changes.length > 0) {
+      console.log(`  -> updated ${changes.length} row(s)`);
+    }
   }
 
-  return rows.length;
+  return changes.length;
 }
 
-function truncate(value, max = 160) {
-  return value.length > max ? `${value.slice(0, max)}…` : value;
+async function migrateUrlField(conn, args, { table, column, isJson }) {
+  // JSON columns are auto-parsed by mysql2 into JS objects; CAST to CHAR to get
+  // the raw text so we can regex it (and write a valid-JSON string back).
+  const selectExpr = isJson ? `CAST(\`${column}\` AS CHAR)` : `\`${column}\``;
+  const [rows] = await conn.query(
+    `SELECT id, ${selectExpr} AS value FROM \`${table}\`
+      WHERE \`${column}\` IS NOT NULL AND \`${column}\` LIKE '%/uploads/%'`,
+  );
+
+  const changes = [];
+  for (const row of rows) {
+    const before = String(row.value);
+    const after = rewriteUrls(before, args.publicBase);
+    if (before !== after) {
+      changes.push({ id: row.id, before, after });
+    }
+  }
+
+  console.log(`\n[${table}.${column}] rows to update: ${changes.length}`);
+  for (const change of changes.slice(0, args.sample)) {
+    console.log(`  id=${change.id}`);
+    // Show the per-URL diff — the embedded image URLs are what matter, and the
+    // surrounding Lexical JSON / HTML is too large to print in full.
+    const beforeUrls = change.before.match(UPLOAD_TOKEN_RE) || [];
+    const uniqueBefore = [...new Set(beforeUrls)];
+    for (const url of uniqueBefore.slice(0, 5)) {
+      console.log(`    - ${url}`);
+      console.log(`    + ${rewriteUrls(url, args.publicBase)}`);
+    }
+    if (uniqueBefore.length > 5) {
+      console.log(`    ... and ${uniqueBefore.length - 5} more URL(s) in this row`);
+    }
+  }
+  if (changes.length > args.sample) {
+    console.log(`  ... and ${changes.length - args.sample} more row(s)`);
+  }
+
+  if (args.execute) {
+    for (const change of changes) {
+      await conn.query(`UPDATE \`${table}\` SET \`${column}\` = ? WHERE id = ?`, [
+        change.after,
+        change.id,
+      ]);
+    }
+    if (changes.length > 0) {
+      console.log(`  -> updated ${changes.length} row(s)`);
+    }
+  }
+
+  return changes.length;
 }
 
 async function main() {
@@ -259,13 +279,6 @@ async function main() {
     );
   }
 
-  if (args.oldBases.length === 0) {
-    const backendDomain = (process.env.BACKEND_DOMAIN || '').replace(/\/+$/, '');
-    if (backendDomain) {
-      args.oldBases.push(backendDomain);
-    }
-  }
-
   const dbConfig = buildDbConfig();
 
   console.log('== Configuration ==');
@@ -274,26 +287,22 @@ async function main() {
   );
   console.log(`Database: ${dbConfig.user}@${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`);
   console.log(`Public base: ${args.publicBase}`);
-  console.log(`Old absolute bases: ${args.oldBases.length ? args.oldBases.join(', ') : '(none)'}`);
   console.log(`Mode: ${args.execute ? 'EXECUTE' : 'DRY-RUN'}`);
 
-  const conn = await mysql.createConnection({
-    ...dbConfig,
-    multipleStatements: false,
-  });
+  const conn = await mysql.createConnection({ ...dbConfig, multipleStatements: false });
 
   let total = 0;
   try {
     total += await migrateFilesPath(conn, args);
 
     const urlFields = [
-      { table: 'posts', idColumn: 'id', column: 'content' },
-      { table: 'posts', idColumn: 'id', column: 'featuredImageUrl' },
-      { table: 'pages', idColumn: 'id', column: 'content' },
-      { table: 'metadata', idColumn: 'id', column: 'ogImage' },
-      { table: 'metadata', idColumn: 'id', column: 'twitterImage' },
-      { table: 'metadata', idColumn: 'id', column: 'canonicalUrl' },
-      { table: 'metadata', idColumn: 'id', column: 'structuredData' },
+      { table: 'posts', column: 'content' },
+      { table: 'posts', column: 'featuredImageUrl' },
+      { table: 'pages', column: 'content' },
+      { table: 'metadata', column: 'ogImage' },
+      { table: 'metadata', column: 'twitterImage' },
+      { table: 'metadata', column: 'canonicalUrl' },
+      { table: 'metadata', column: 'structuredData', isJson: true },
     ];
 
     for (const field of urlFields) {
