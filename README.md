@@ -70,6 +70,45 @@ If you see `Error: no service selected` during deploy, this variable is missing 
 `docker compose up` with no active profile, so Compose matched zero services. Add
 `COMPOSE_PROFILES=prod` to the resource's environment variables and redeploy.
 
+## Migrating file storage to R2 / S3
+
+Two one-off scripts in `scripts/` move an environment that was using **local** `uploads/`
+storage onto an S3-compatible bucket (Cloudflare R2, S3, SeaWeed). They are independent of the
+running app, read config from `.env` (or the process env), are **dry-run by default**, and are
+**idempotent** (safe to re-run). Run them in this order:
+
+```bash
+# 1. Copy the physical files from ./uploads to the bucket
+node scripts/migrate-uploads-to-r2-node.js              # dry-run — preview
+node scripts/migrate-uploads-to-r2-node.js --execute    # real upload + smoke-checks 200s
+
+# 2. Rewrite the DB references so they point at the bucket
+node scripts/migrate-db-refs-to-r2.js --inspect          # read-only: show the actual stored forms
+node scripts/migrate-db-refs-to-r2.js                    # dry-run — per-reference before/after diff
+node scripts/migrate-db-refs-to-r2.js --execute          # apply
+```
+
+**Order matters:** upload the files first — otherwise the rewritten URLs point at objects that
+don't exist in the bucket yet.
+
+What the DB-refs script touches: it strips a leading `/uploads/` from `files.path` (→ bare R2
+key, which `FileEntity.updatePath()` resolves to a public URL), and rewrites embedded image
+references in `posts.content` (Lexical JSON), `posts.featuredImageUrl`, `pages.content` and
+`metadata.{ogImage,twitterImage,structuredData}`. It works by extracting this app's canonical
+object key (`images/topics/…`, `images/posts/featured/…`, `images/posts/content/…`) from whatever
+prefix precedes it — a stale backend domain, an old `/uploads/` path, a leading slash, or even a
+doubled domain from a previous botched run — and rebuilding it as `<public-base>/<key>`. The
+`images/(posts|topics)/` anchor means external image hosts (e.g. `images.unsplash.com`) and
+internal site links are left untouched.
+
+Before running on production: take a DB dump (the rewrite is per-row `UPDATE` with no
+transaction), run `--inspect` to confirm the real reference format, and verify the printed
+`Public base` is the intended bucket/CDN. To replicate onto another environment afterwards,
+`aws s3 sync` the bucket across, then run the DB-refs script there with that env's config.
+
+Both scripts also accept `--help`. Required env: `DATABASE_*` (or `DATABASE_URL`), the
+`FILE_S3_*` credentials, and one of `FILE_S3_PUBLIC_URL` / `FILE_CDN_BASE_URL`.
+
 ## Test
 
 ```bash
