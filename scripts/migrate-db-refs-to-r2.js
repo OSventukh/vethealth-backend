@@ -2,40 +2,35 @@
 
 /* eslint-disable no-console */
 
-// Rewrite database references to local uploads so they point at R2 / S3 storage.
+// Rewrite database references to uploaded images so they point at R2 / S3 storage.
 //
 // This is the DB counterpart to `migrate-uploads-to-r2-node.js` (which only
 // copies the physical files). Run the file-upload script FIRST, verify the
 // smoke checks pass, then run this one.
 //
-// Default behavior is a safe dry-run. Pass --execute to apply the UPDATEs.
-// The script is idempotent: once paths/URLs are rewritten, re-running finds
-// nothing left to change.
+// Run `--inspect` first (read-only) to see the actual stored reference forms.
+// Default behavior is a safe dry-run; pass --execute to apply the UPDATEs. The
+// script is idempotent: once references are rewritten, re-running finds nothing
+// to change.
 //
 // What it rewrites:
-//   1. files.path                — strips the leading "/" and "uploads/" segment
-//                                  so the row stores a bare R2 key (e.g.
-//                                  "/uploads/images/topics/cat.svg" -> "images/topics/cat.svg").
-//                                  The FileEntity.updatePath() hook then builds
-//                                  the public URL from the R2 key automatically.
-//   2. posts.content             — image URLs embedded in the Lexical JSON. In local
-//                                  mode the editor stored "relativePath", which the
-//                                  backend resolves to an ABSOLUTE url
-//                                  "<backendDomain>/uploads/...". So content holds
-//                                  full URLs, not bare paths — we rewrite them here.
-//   3. posts.featuredImageUrl    — stored featured-image URL (also absolute "/uploads/...")
-//   4. pages.content             — embedded URLs in page rich text
-//   5. metadata.ogImage          — Open Graph image URL
-//   6. metadata.twitterImage     — Twitter card image URL
-//   7. metadata.canonicalUrl     — only if it points at /uploads/
-//   8. metadata.structuredData   — JSON-LD blob (URL substrings swapped in-place)
+//   1. files.path  — strips a leading "/" and "uploads/" so the row stores a bare
+//                    R2 key ("/uploads/images/topics/cat.svg" -> "images/topics/cat.svg").
+//                    FileEntity.updatePath() then builds the public URL from the
+//                    key. (No-op if the column already holds bare keys.)
+//   2. text/URL columns that embed an image — posts.content (Lexical JSON),
+//      posts.featuredImageUrl, pages.content, metadata.{ogImage,twitterImage,
+//      structuredData}. Every reference to an uploaded image ends with one of this
+//      app's canonical R2 keys: "images/topics/…", "images/posts/featured/…" or
+//      "images/posts/content/…". We capture that key and rebuild it as
+//      "<public-base>/<key>", DISCARDING whatever prefix precedes it — a stale
+//      backend domain, an old "/uploads/" path, a leading slash, or even a DOUBLED
+//      domain left by a previous botched migration
+//      ("https://server…https://cdn…/images/…"). This is domain-agnostic and
+//      idempotent.
 //
-// URL rewriting is DOMAIN-AGNOSTIC: any "<scheme>://<host>/uploads/..." is
-// rewritten to "<public-base>/...", regardless of which backend domain is baked
-// into the stored value (it may differ from the current BACKEND_DOMAIN if content
-// was authored against another environment). Any leftover relative "/uploads/..."
-// is rewritten too. External image URLs that don't contain "/uploads/" are left
-// untouched.
+// Because the match is anchored on "images/(posts|topics)/", external image hosts
+// (e.g. images.unsplash.com/photo-…) and internal site links are left untouched.
 
 const fs = require('fs');
 const path = require('path');
@@ -171,18 +166,28 @@ function buildDbConfig() {
   };
 }
 
-// Matches an absolute upload URL "<scheme>://<host[:port]>/uploads/" — host is
-// everything up to the next slash, so any backend domain is handled.
-const ABSOLUTE_UPLOADS_RE = /[a-z][a-z0-9+.-]*:\/\/[^/"'\\\s]+\/uploads\//gi;
-// Matches a leftover relative "/uploads/" (after absolute ones are rewritten).
-const RELATIVE_UPLOADS_RE = /\/uploads\//g;
-// For extracting full URL tokens to display in dry-run diffs.
-const UPLOAD_TOKEN_RE = /(?:[a-z][a-z0-9+.-]*:\/\/[^/"'\\\s]+)?\/uploads\/[^"'\\\s)]+/gi;
+// The canonical R2 object keys this app produces are "images/topics/…",
+// "images/posts/featured/…" and "images/posts/content/…" (see files.service.ts
+// createStorageKey). Every image reference embedded in content ends with one of
+// these keys, possibly prefixed by junk: a stale backend domain, an old
+// "/uploads/" path, a leading slash, or even a DOUBLED domain left by a previous
+// botched migration (e.g. "https://server…https://cdn…/images/…").
+//
+// Rather than guess the prefix, we capture the key itself and rebuild it as
+// "<publicBase>/<key>". This collapses all of the above into the correct CDN URL
+// and is idempotent. The "images/(posts|topics)/" anchor is specific enough that
+// external URLs (e.g. images.unsplash.com/photo-…) and internal site links are
+// left untouched.
+const IMG_KEY_RE =
+  /(?:https?:\/\/[^"'\s\\)]*?)?\/?(images\/(?:posts|topics)\/[^"'\s\\)]+)/gi;
 
-function rewriteUrls(value, publicBase) {
-  return value
-    .replace(ABSOLUTE_UPLOADS_RE, `${publicBase}/`)
-    .replace(RELATIVE_UPLOADS_RE, `${publicBase}/`);
+function rewriteImageRefs(value, publicBase) {
+  return value.replace(IMG_KEY_RE, `${publicBase}/$1`);
+}
+
+// "/uploads/images/x.svg" or "uploads/images/x.svg" -> "images/x.svg".
+function stripUploadsPrefix(value) {
+  return value.replace(/^\/?uploads\//, '');
 }
 
 // "/uploads/images/x.svg" or "uploads/images/x.svg" -> "images/x.svg".
@@ -225,15 +230,17 @@ async function migrateUrlField(conn, args, { table, column, isJson }) {
   // JSON columns are auto-parsed by mysql2 into JS objects; CAST to CHAR to get
   // the raw text so we can regex it (and write a valid-JSON string back).
   const selectExpr = isJson ? `CAST(\`${column}\` AS CHAR)` : `\`${column}\``;
+  // Only rows that actually embed one of our R2 object keys — this skips
+  // external image hosts and internal site links entirely.
   const [rows] = await conn.query(
     `SELECT id, ${selectExpr} AS value FROM \`${table}\`
-      WHERE \`${column}\` IS NOT NULL AND \`${column}\` LIKE '%/uploads/%'`,
+      WHERE ${selectExpr} LIKE '%images/posts/%' OR ${selectExpr} LIKE '%images/topics/%'`,
   );
 
   const changes = [];
   for (const row of rows) {
     const before = String(row.value);
-    const after = rewriteUrls(before, args.publicBase);
+    const after = rewriteImageRefs(before, args.publicBase);
     if (before !== after) {
       changes.push({ id: row.id, before, after });
     }
@@ -242,13 +249,12 @@ async function migrateUrlField(conn, args, { table, column, isJson }) {
   console.log(`\n[${table}.${column}] rows to update: ${changes.length}`);
   for (const change of changes.slice(0, args.sample)) {
     console.log(`  id=${change.id}`);
-    // Show the per-URL diff — the embedded image URLs are what matter, and the
-    // surrounding Lexical JSON / HTML is too large to print in full.
-    const beforeUrls = change.before.match(UPLOAD_TOKEN_RE) || [];
-    const uniqueBefore = [...new Set(beforeUrls)];
+    // Show the per-reference diff — the embedded image URLs are what matter, and
+    // the surrounding Lexical JSON / HTML is too large to print in full.
+    const uniqueBefore = [...new Set(change.before.match(IMG_KEY_RE) || [])];
     for (const url of uniqueBefore.slice(0, 5)) {
       console.log(`    - ${url}`);
-      console.log(`    + ${rewriteUrls(url, args.publicBase)}`);
+      console.log(`    + ${rewriteImageRefs(url, args.publicBase)}`);
     }
     if (uniqueBefore.length > 5) {
       console.log(`    ... and ${uniqueBefore.length - 5} more URL(s) in this row`);
