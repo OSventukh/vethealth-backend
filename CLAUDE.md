@@ -79,5 +79,9 @@ schema:sync'd dev DB. The alternative (for a prod-identical dev) is to import a 
   of `FILE_S3_PUBLIC_URL` / `FILE_CDN_BASE_URL`.
 - **Backup module** (`src/modules/backup`) zips/unzips the uploads dir with `archiver`/`unzipper`
   for files backup & restore. One-off `scripts/migrate-uploads-to-r2*` move existing local uploads
-  to R2/S3.
+  to R2/S3 (physical files only). **Then** run `scripts/migrate-db-refs-to-r2.js` to rewrite the DB
+  references so R2 is used end-to-end: it strips `/uploads/` from `files.path` (→ bare R2 key, which
+  `FileEntity.updatePath()` turns into a public URL) and rewrites embedded `…/uploads/…` URLs in
+  `posts.content`/`featuredImageUrl`, `pages.content`, and `metadata.{ogImage,twitterImage,canonicalUrl,
+  structuredData}` to the R2 public base. Dry-run by default; `--execute` applies; idempotent.
 - **`.env.example`** is a generic placeholder template — keep it that way; real values go in `.env`.
