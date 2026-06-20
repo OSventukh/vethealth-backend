@@ -276,7 +276,11 @@ async function migrateUrlField(conn, args, { table, column, isJson }) {
 // Read-only diagnostic: print row counts and the actual stored forms of file
 // references, so we can SEE how images are referenced before trusting any filter.
 async function inspect(conn) {
-  const tokenRe = /https?:\/\/[^\s"'<>\\)]+|\/uploads\/[^\s"'<>\\)]*|"src"\s*:\s*"[^"]*"/gi;
+  // Catch every plausible image reference: Lexical "src" values, absolute URLs,
+  // and bare object keys like "images/posts/content/…​.png".
+  const tokenRe =
+    /"src"\s*:\s*"[^"]*"|https?:\/\/[^\s"'<>\\)]+|\/?(?:uploads\/)?images\/[^\s"'<>\\)]+/gi;
+  const IMG_EXT_RE = /\.(?:png|jpe?g|gif|webp|svg|avif|bmp)/i;
 
   async function count(table) {
     const [[row]] = await conn.query(`SELECT COUNT(*) AS c FROM \`${table}\``);
@@ -297,21 +301,42 @@ async function inspect(conn) {
     { table: 'metadata', column: 'structuredData', isJson: true },
   ]) {
     const selectExpr = isJson ? `CAST(\`${column}\` AS CHAR)` : `\`${column}\``;
+    // Scan ALL non-null rows (volumes are small), not just the first few.
     const [rows] = await conn.query(
-      `SELECT ${selectExpr} AS value FROM \`${table}\` WHERE \`${column}\` IS NOT NULL LIMIT 5`,
+      `SELECT id, ${selectExpr} AS value FROM \`${table}\` WHERE \`${column}\` IS NOT NULL`,
     );
-    console.log(`\n[${table}.${column}] ${await count(table)} rows total — reference tokens in first ${rows.length} non-null:`);
+    console.log(
+      `\n[${table}.${column}] ${await count(table)} rows total, ${rows.length} non-null — reference tokens:`,
+    );
+
     const tokens = new Set();
+    let firstImgExcerpt = null;
     for (const row of rows) {
-      for (const m of String(row.value).match(tokenRe) || []) {
+      const value = String(row.value);
+      for (const m of value.match(tokenRe) || []) {
         tokens.add(m);
       }
+      if (!firstImgExcerpt) {
+        const hit = value.search(IMG_EXT_RE);
+        if (hit !== -1) {
+          const start = Math.max(0, hit - 120);
+          firstImgExcerpt = { id: row.id, text: value.slice(start, hit + 60) };
+        }
+      }
     }
+
     if (tokens.size === 0) {
-      console.log('  (no http / uploads / "src" tokens found)');
+      console.log('  (no src / http / images-key tokens found)');
     }
-    for (const t of [...tokens].slice(0, 20)) {
+    for (const t of [...tokens].slice(0, 25)) {
       console.log(`  ${t}`);
+    }
+    if (tokens.size > 25) {
+      console.log(`  ... and ${tokens.size - 25} more distinct token(s)`);
+    }
+    if (firstImgExcerpt) {
+      console.log(`  raw excerpt around first image (id=${firstImgExcerpt.id}):`);
+      console.log(`    …${firstImgExcerpt.text}…`);
     }
   }
 }
