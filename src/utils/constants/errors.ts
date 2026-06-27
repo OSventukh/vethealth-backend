@@ -25,4 +25,5 @@ export const ERROR_MESSAGE = {
   PASSWORD_IS_NOT_MATCH:
     'The password must contain at least one uppercase letter, one lowercase letter, one number, and be between 8 and 20 characters long',
   PASSWORD_IS_NOT_EQUAL: 'passwordIsNotEqual',
+  OLD_PASSWORD_IS_NOT_MATCH: 'oldPasswordIsNotMatch',
 } as const;

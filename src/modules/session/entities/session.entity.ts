@@ -11,7 +11,7 @@ import {
 @Entity({ name: 'session' })
 export class SessionEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id: string;
 
   @ManyToOne(() => UserEntity, {
     eager: true,

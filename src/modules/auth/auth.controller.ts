@@ -73,10 +73,11 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @Patch('change-password')
   @HttpCode(HttpStatus.OK)
-  changePassword(@Body() changePasswordDto: AuthChangePasswordDto) {
-    return this.authService.changePassword(changePasswordDto);
+  changePassword(@Request() request, @Body() changePasswordDto: AuthChangePasswordDto) {
+    return this.authService.changePassword(request.user, changePasswordDto);
   }
 
   @ApiBearerAuth()

@@ -204,20 +204,31 @@ export class AuthService {
   }
 
   async changePassword(
+    authUser: Pick<JwtPayloadType, 'id' | 'sessionId'>,
     changePasswordDto: AuthChangePasswordDto,
   ): Promise<void> {
-    const { id, password } = changePasswordDto;
-    const user = await this.usersService.findOne({ id });
+    const { password } = changePasswordDto;
+    const user = await this.usersService.findOne({ id: authUser.id });
 
     if (!user) {
       throw new UnprocessableEntityException(ERROR_MESSAGE.USER_IS_NOT_EXIST);
     }
 
+    const isValid = await comparePassword(changePasswordDto.oldPassword, user.password);
+
+    if (!isValid) {
+      throw new UnprocessableEntityException(ERROR_MESSAGE.OLD_PASSWORD_IS_NOT_MATCH);
+    }
+    
     await this.usersService.update({
-      id,
+      id: authUser.id,
       password,
     });
 
+    await this.sessionService.softDelete({
+      user: { id: authUser.id },
+      excludeId: authUser.sessionId,
+    });
     // Password is already persisted above; the email is only a notification,
     // so a send failure must not fail the request — log and continue.
     try {
