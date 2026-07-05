@@ -40,7 +40,7 @@ export class PostsService {
     const isAdmin =
       user?.role?.id === RoleEnum.SuperAdmin ||
       user?.role?.id === RoleEnum.Admin;
-    const isOwner = user?.id === post.author.id;
+    const isOwner = !!user && user.id === post.author?.id;
 
     if (!isPublished && !isAdmin && !isOwner) {
       throw new NotFoundException();
@@ -142,7 +142,7 @@ export class PostsService {
     const isAdmin =
       user?.role?.id === RoleEnum.SuperAdmin ||
       user?.role?.id === RoleEnum.Admin;
-    const isOwner = user?.id === post.author.id;
+    const isOwner = !!user && user.id === post.author?.id;
 
     if (!isAdmin && !isOwner) {
       throw new ForbiddenException();

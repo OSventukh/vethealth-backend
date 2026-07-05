@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PostsService } from './posts.service';
 import { PostEntity } from './entities/post.entity';
@@ -65,6 +66,31 @@ describe('PostsService', () => {
       where: { id: '1' },
       relations: { author: true },
     });
+  });
+
+  // Regression: legacy posts have author = NULL — findOne must not crash on them
+  it('should return a published post without an author to an anonymous user', async () => {
+    const authorlessPost = {
+      id: '1',
+      status: { name: 'Published' },
+      author: null,
+    } as unknown as PostEntity;
+    jest.spyOn(postsRepository, 'findOne').mockResolvedValue(authorlessPost);
+    await expect(postsService.findOne({ id: '1' })).resolves.toBe(
+      authorlessPost,
+    );
+  });
+
+  it('should not treat an anonymous user as the owner of an authorless unpublished post', async () => {
+    const authorlessDraft = {
+      id: '1',
+      status: { name: 'Draft' },
+      author: null,
+    } as unknown as PostEntity;
+    jest.spyOn(postsRepository, 'findOne').mockResolvedValue(authorlessDraft);
+    await expect(postsService.findOne({ id: '1' })).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should call postsRepository.findAndCount() method with options', async () => {
