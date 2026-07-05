@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DeepPartial, FindOptionsRelations, Repository, Like } from "typeorm";
 import { RoleEnum } from "@/roles/roles.enum";
@@ -9,6 +9,8 @@ import { CreatePostDto } from "./dto/create-post.dto";
 import { FindOptionsWhere } from "typeorm";
 import { PostQueryDto } from "./dto/post-query.dto";
 import { postOrder } from "./utils/post-order";
+import { UpdatePostDto } from "./dto/update-post.dto";
+import { PostStatusEnum } from "@/statuses/post-status.enum";
 
 @Injectable()
 export class PostsService {
@@ -109,11 +111,43 @@ export class PostsService {
     };
   }
 
-  update(payload: DeepPartial<PostEntity>): Promise<PostEntity> {
+  async update(payload: UpdatePostDto, user?: JwtPayloadType): Promise<PostEntity> {
+    
+    const post = await this.assertCanMutate(payload.id, user);
+    const isAdmin = user?.role?.id === RoleEnum.SuperAdmin || user?.role?.id === RoleEnum.Admin;
+
+    const wantsToPublish = Number(payload.status?.id) === Number(PostStatusEnum.Published);
+    const alreadyPublished = post.status?.name === "Published";
+    if (wantsToPublish && !alreadyPublished && !isAdmin) {
+      throw new ForbiddenException();
+    }
     return this.postsRepository.save(this.postsRepository.create(payload));
   }
 
-  async softDelete(id: PostEntity["id"]): Promise<void> {
+  async softDelete(id: PostEntity["id"], user?: JwtPayloadType): Promise<void> {
+    await this.assertCanMutate(id, user);
     await this.postsRepository.softDelete(id);
+  }
+
+  private async assertCanMutate(postId: string, user?: JwtPayloadType) {
+    const post = await this.postsRepository.findOne({
+      where: { id: postId },
+      relations: { author: true },
+    });
+
+    if (!post) {
+      throw new NotFoundException();
+    }
+
+    const isAdmin =
+      user?.role?.id === RoleEnum.SuperAdmin ||
+      user?.role?.id === RoleEnum.Admin;
+    const isOwner = user?.id === post.author.id;
+
+    if (!isAdmin && !isOwner) {
+      throw new ForbiddenException();
+    }
+
+    return post;
   }
 }

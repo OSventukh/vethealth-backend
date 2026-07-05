@@ -73,13 +73,15 @@ describe('PostsController', () => {
       title: 'Test Title',
       id: 'testId',
     };
-    postsController.update(payload);
-    expect(postsService.update).toBeCalledWith(payload);
+    const request = { user: undefined };
+    postsController.update(request, payload);
+    expect(postsService.update).toBeCalledWith(payload, undefined);
   });
 
   it('should call a postsSerice.softDelete() method with provided id', () => {
     const postId = '1';
-    postsController.delete(postId);
-    expect(postsService.softDelete).toBeCalledWith(postId);
+    const request = { user: undefined };
+    postsController.delete(request, postId);
+    expect(postsService.softDelete).toBeCalledWith(postId, undefined);
   });
 });

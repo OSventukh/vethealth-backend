@@ -75,17 +75,15 @@ export class PostsController {
   }
 
   @Patch()
-  @UseGuards(AuthGuard("jwt"))
   @UseInterceptors(ChildrenInterceptor)
   @HttpCode(HttpStatus.OK)
-  update(@Body() updatePostDto: UpdatePostDto): Promise<PostEntity> {
-    return this.postsService.update(updatePostDto);
+  update(@Request() request, @Body() updatePostDto: UpdatePostDto): Promise<PostEntity> {
+    return this.postsService.update(updatePostDto, request.user);
   }
 
   @Delete(":id")
-  @UseGuards(AuthGuard("jwt"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@Param("id") id: string): Promise<void> {
-    return this.postsService.softDelete(id);
+  delete(@Request() request, @Param("id") id: string): Promise<void> {
+    return this.postsService.softDelete(id, request.user);
   }
 }

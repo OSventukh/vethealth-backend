@@ -9,25 +9,27 @@ import {
   Delete,
   Post,
   Query,
-  UseGuards,
   UseInterceptors,
-} from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { CategoriesService } from './categories.service';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
-import { CategoryEntity } from './entities/category.entity';
-import { PaginationType } from '@/utils/types/pagination.type';
-import { CategoryQueryDto } from './dto/category-query.dto';
-import { RolesSerializerInterceptor } from '@/modules/auth/interceptors/roles-serializer.interceptor';
-import { UpdateResult } from 'typeorm';
-import { Public } from '@/roles/decorators/public.decorator';
+} from "@nestjs/common";
+import { ApiTags } from "@nestjs/swagger";
+import { CategoriesService } from "./categories.service";
+import { CreateCategoryDto } from "./dto/create-category.dto";
+import { UpdateCategoryDto } from "./dto/update-category.dto";
+import { CategoryEntity } from "./entities/category.entity";
+import { PaginationType } from "@/utils/types/pagination.type";
+import { CategoryQueryDto } from "./dto/category-query.dto";
+import { RolesSerializerInterceptor } from "@/modules/auth/interceptors/roles-serializer.interceptor";
+import { UpdateResult } from "typeorm";
+import { Public } from "@/roles/decorators/public.decorator";
+import { RoleEnum } from "@/roles/roles.enum";
+import { Roles } from "@/roles/decorators/roles.decorator";
 
-@ApiTags('Categories')
-@Controller('categories')
+@ApiTags("Categories")
+@Controller("categories")
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
+
+  @Roles(RoleEnum.SuperAdmin, RoleEnum.Admin)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
@@ -37,16 +39,16 @@ export class CategoriesController {
   }
 
   @Public()
-  @Get(':id')
+  @Get(":id")
   @UseInterceptors(RolesSerializerInterceptor)
   @HttpCode(HttpStatus.OK)
   getOne(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Query() queryDto: CategoryQueryDto,
   ): Promise<CategoryEntity> {
     return this.categoriesService.findOne({ id }, queryDto);
   }
-  
+
   @Public()
   @Get()
   @UseInterceptors(RolesSerializerInterceptor)
@@ -60,6 +62,7 @@ export class CategoriesController {
     return this.categoriesService.findManyWithPagination(queryDto);
   }
 
+  @Roles(RoleEnum.SuperAdmin, RoleEnum.Admin)
   @Patch()
   @HttpCode(HttpStatus.OK)
   update(
@@ -68,9 +71,10 @@ export class CategoriesController {
     return this.categoriesService.update(updateCategoryDto);
   }
 
-  @Delete(':id')
+  @Roles(RoleEnum.SuperAdmin, RoleEnum.Admin)
+  @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@Param('id') id: string): Promise<UpdateResult> {
+  delete(@Param("id") id: string): Promise<UpdateResult> {
     return this.categoriesService.softDelete(id);
   }
 }
