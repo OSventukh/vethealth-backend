@@ -100,6 +100,7 @@ export class AuthController {
   refresh(@Request() request) {
     return this.authService.refreshTokens({
       sessionId: request.user.sessionId,
+      hash: request.user.hash,
     });
   }
 }

@@ -7,6 +7,8 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { UserEntity } from '@/modules/users/entities/user.entity';
 import { PostStatusEntity } from '@/statuses/entities/post-status.entity';
 import { PostQueryDto } from './dto/post-query.dto';
+import { CreatePostGuard } from './guards/create-post.guard';
+import { ChildrenInterceptor } from './dto/interceptors/children.interceptor';
 
 describe('PostsController', () => {
   let postsController: PostsController;
@@ -21,7 +23,16 @@ describe('PostsController', () => {
           useValue: createMock<PostsService>(),
         },
       ],
-    }).compile();
+    })
+      // CreatePostGuard depends on UsersService (not provided here); bypass it —
+      // these tests only assert controller→service delegation, not guard logic.
+      .overrideGuard(CreatePostGuard)
+      .useValue({ canActivate: () => true })
+      // ChildrenInterceptor depends on Topic/Category repositories (not provided);
+      // pass through — these tests don't exercise interceptor logic.
+      .overrideInterceptor(ChildrenInterceptor)
+      .useValue({ intercept: (_ctx, next) => next.handle() })
+      .compile();
 
     postsController = module.get<PostsController>(PostsController);
     postsService = module.get<PostsService>(PostsService);

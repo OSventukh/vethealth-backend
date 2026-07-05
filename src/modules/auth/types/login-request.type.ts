@@ -5,4 +5,5 @@ export type LoginRequestType = Readonly<{
   id: UserEntity['id'];
   role: UserEntity['role'];
   sessionId: SessionEntity['id'];
+  hash: string;
 }>;

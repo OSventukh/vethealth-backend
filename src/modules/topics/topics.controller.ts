@@ -13,7 +13,6 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
-import { AuthGuard } from "@nestjs/passport";
 
 import { CreateTopicDto } from "./dto/create-topic.dto";
 import { TopicEntity } from "./entities/topic.entity";
@@ -64,7 +63,7 @@ export class TopicsController {
     }
     return this.topicsService.findManyWithPagination(queryDto);
   }
-  
+
   @Roles(RoleEnum.SuperAdmin, RoleEnum.Admin)
   @Patch()
   @HttpCode(HttpStatus.OK)

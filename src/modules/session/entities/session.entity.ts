@@ -1,5 +1,6 @@
 import { UserEntity } from '@/modules/users/entities/user.entity';
 import {
+  Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
@@ -19,6 +20,9 @@ export class SessionEntity {
   @Index()
   user: UserEntity;
 
+  @Column()
+  hash: string;
+  
   @CreateDateColumn()
   createdAt: Date;
 

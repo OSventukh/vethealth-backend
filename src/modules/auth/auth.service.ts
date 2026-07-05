@@ -1,34 +1,34 @@
-import { UsersService } from '@/modules/users/users.service';
+import { UsersService } from "@/modules/users/users.service";
 import {
   Injectable,
   Logger,
   ServiceUnavailableException,
   UnauthorizedException,
   UnprocessableEntityException,
-} from '@nestjs/common';
-import crypto from 'node:crypto';
-import { JwtService } from '@nestjs/jwt';
-import ms from 'ms';
+} from "@nestjs/common";
+import crypto from "node:crypto";
+import { JwtService } from "@nestjs/jwt";
+import ms from "ms";
 
-import { AuthLoginDto } from './dto/auth-login.dto';
-import { comparePassword } from '@/utils/password-hash';
-import { UserStatusEnum } from '@/statuses/user-statuses.enum';
-import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
-import { UserStatusEntity } from '@/statuses/entities/user-status.entity';
-import { AuthRegisterDto } from './dto/auth-register.dto';
-import { AuthConfirmDto } from './dto/auth-confirm.dto';
-import { SessionService } from '@/modules/session/session.service';
-import { UserEntity } from '@/modules/users/entities/user.entity';
-import { ConfigService } from '@nestjs/config';
-import { AllConfigType } from '@/config/config.type';
-import type { JwtRefreshPayloadType } from './strategies/types/jwt-refresh-payload.type';
-import { LoginResponseType } from './types/login-response.type';
-import type { JwtPayloadType } from './strategies/types/jwt-payload.type';
-import { ERROR_MESSAGE } from '@/utils/constants/errors';
-import { ConfirmService } from '@/modules/confirm/confirm.service';
-import { MailService } from '@/mail/mail.service';
-import { LoginRequestType } from './types/login-request.type';
-import { AuthChangePasswordDto } from './dto/auth-change-password.dto';
+import { AuthLoginDto } from "./dto/auth-login.dto";
+import { comparePassword, DUMMY_PASSWORD_HASH } from "@/utils/password-hash";
+import { UserStatusEnum } from "@/statuses/user-statuses.enum";
+import { randomStringGenerator } from "@nestjs/common/utils/random-string-generator.util";
+import { UserStatusEntity } from "@/statuses/entities/user-status.entity";
+import { AuthRegisterDto } from "./dto/auth-register.dto";
+import { AuthConfirmDto } from "./dto/auth-confirm.dto";
+import { SessionService } from "@/modules/session/session.service";
+import { UserEntity } from "@/modules/users/entities/user.entity";
+import { ConfigService } from "@nestjs/config";
+import { AllConfigType } from "@/config/config.type";
+import type { JwtRefreshPayloadType } from "./strategies/types/jwt-refresh-payload.type";
+import { LoginResponseType } from "./types/login-response.type";
+import type { JwtPayloadType } from "./strategies/types/jwt-payload.type";
+import { ERROR_MESSAGE } from "@/utils/constants/errors";
+import { ConfirmService } from "@/modules/confirm/confirm.service";
+import { MailService } from "@/mail/mail.service";
+import { LoginRequestType } from "./types/login-request.type";
+import { AuthChangePasswordDto } from "./dto/auth-change-password.dto";
 
 @Injectable()
 export class AuthService {
@@ -45,30 +45,32 @@ export class AuthService {
 
   async validateLogin(authDto: AuthLoginDto): Promise<LoginResponseType> {
     const user = await this.usersService.findOne({ email: authDto.email });
-    if (!user) {
-      throw new UnprocessableEntityException();
-    }
 
-    if (user.status.id === UserStatusEnum.Pending) {
+    const passwordHash =
+      user && user.status.id !== UserStatusEnum.Pending
+        ? user.password
+        : DUMMY_PASSWORD_HASH;
+
+    const isValid = await comparePassword(authDto.password, passwordHash);
+
+    if (!user || user.status.id === UserStatusEnum.Pending || !isValid) {
       throw new UnprocessableEntityException(
-        ERROR_MESSAGE.USER_IS_NOT_CONFIRMED,
+        ERROR_MESSAGE.INCORRECT_EMAIL_OR_PASSWORD,
       );
     }
 
-    const isValid = await comparePassword(authDto.password, user.password);
-
-    if (!isValid) {
-      throw new UnprocessableEntityException();
-    }
+    const hash = this.generateHash();
 
     const session = await this.sessionService.create({
       user,
+      hash,
     });
 
     const { token, refreshToken, tokenExpires } = await this.getTokensData({
       id: user.id,
       role: user.role,
       sessionId: session.id,
+      hash,
     });
 
     return {
@@ -79,7 +81,7 @@ export class AuthService {
     };
   }
 
-  async logout(data: Pick<JwtRefreshPayloadType, 'sessionId'>) {
+  async logout(data: Pick<JwtRefreshPayloadType, "sessionId">) {
     return this.sessionService.softDelete({
       id: data.sessionId,
     });
@@ -87,9 +89,9 @@ export class AuthService {
 
   async register(createUserDto: AuthRegisterDto): Promise<UserEntity> {
     const hash = crypto
-      .createHash('sha256')
+      .createHash("sha256")
       .update(randomStringGenerator())
-      .digest('hex');
+      .digest("hex");
 
     const user = await this.usersService.create({
       ...createUserDto,
@@ -99,7 +101,7 @@ export class AuthService {
     await this.confirmService.create({
       hash,
       user,
-      expiresIn: new Date(Date.now() + ms('1d')),
+      expiresIn: new Date(Date.now() + ms("1d")),
     });
 
     try {
@@ -166,25 +168,25 @@ export class AuthService {
     });
 
     await this.confirmService.delete(confirm.id);
-    return { message: 'Email confirmed successfully' };
+    return { message: "Email confirmed successfully" };
   }
 
   async forgotPassword(email: string): Promise<void> {
     const user = await this.usersService.findOne({ email });
 
     if (!user) {
-      throw new UnprocessableEntityException(ERROR_MESSAGE.EMAIL_NOT_EXIST);
+      return;
     }
 
     const hash = crypto
-      .createHash('sha256')
+      .createHash("sha256")
       .update(randomStringGenerator())
-      .digest('hex');
+      .digest("hex");
 
     await this.confirmService.create({
       hash,
       user,
-      expiresIn: new Date(Date.now() + ms('1d')),
+      expiresIn: new Date(Date.now() + ms("1d")),
     });
 
     try {
@@ -204,7 +206,7 @@ export class AuthService {
   }
 
   async changePassword(
-    authUser: Pick<JwtPayloadType, 'id' | 'sessionId'>,
+    authUser: Pick<JwtPayloadType, "id" | "sessionId">,
     changePasswordDto: AuthChangePasswordDto,
   ): Promise<void> {
     const { password } = changePasswordDto;
@@ -214,12 +216,17 @@ export class AuthService {
       throw new UnprocessableEntityException(ERROR_MESSAGE.USER_IS_NOT_EXIST);
     }
 
-    const isValid = await comparePassword(changePasswordDto.oldPassword, user.password);
+    const isValid = await comparePassword(
+      changePasswordDto.oldPassword,
+      user.password,
+    );
 
     if (!isValid) {
-      throw new UnprocessableEntityException(ERROR_MESSAGE.OLD_PASSWORD_IS_NOT_MATCH);
+      throw new UnprocessableEntityException(
+        ERROR_MESSAGE.OLD_PASSWORD_IS_NOT_MATCH,
+      );
     }
-    
+
     await this.usersService.update({
       id: authUser.id,
       password,
@@ -244,8 +251,8 @@ export class AuthService {
   }
 
   async refreshTokens(
-    data: Pick<JwtRefreshPayloadType, 'sessionId'>,
-  ): Promise<Omit<LoginResponseType, 'user'>> {
+    data: Pick<JwtRefreshPayloadType, "sessionId" | "hash">,
+  ): Promise<Omit<LoginResponseType, "user">> {
     const session = await this.sessionService.findOne({
       id: data.sessionId,
     });
@@ -254,10 +261,19 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
+    if (session.hash !== data.hash) {
+      await this.sessionService.softDelete({ id: session.id });
+      throw new UnauthorizedException();
+    }
+
+    const newHash = this.generateHash();
+    await this.sessionService.update(session.id, { hash: newHash });
+
     const { token, refreshToken, tokenExpires } = await this.getTokensData({
       id: session.user.id,
       role: session.user.role,
       sessionId: session.id,
+      hash: newHash,
     });
 
     return {
@@ -274,7 +290,7 @@ export class AuthService {
   }
 
   private async getTokensData(data: LoginRequestType) {
-    const tokenExpiresIn = this.configService.getOrThrow('auth.expires', {
+    const tokenExpiresIn = this.configService.getOrThrow("auth.expires", {
       infer: true,
     });
 
@@ -288,19 +304,20 @@ export class AuthService {
           sessionId: data.sessionId,
         },
         {
-          secret: this.configService.getOrThrow('auth.secret', { infer: true }),
+          secret: this.configService.getOrThrow("auth.secret", { infer: true }),
           expiresIn: tokenExpiresIn,
         },
       ),
       this.jwtService.signAsync(
         {
           sessionId: data.sessionId,
+          hash: data.hash,
         },
         {
-          secret: this.configService.getOrThrow('auth.refreshSecret', {
+          secret: this.configService.getOrThrow("auth.refreshSecret", {
             infer: true,
           }),
-          expiresIn: this.configService.getOrThrow('auth.refreshExpires', {
+          expiresIn: this.configService.getOrThrow("auth.refreshExpires", {
             infer: true,
           }),
         },
@@ -312,5 +329,12 @@ export class AuthService {
       refreshToken,
       tokenExpires,
     };
+  }
+
+  private generateHash(): string {
+    return crypto
+      .createHash("sha256")
+      .update(randomStringGenerator())
+      .digest("hex");
   }
 }

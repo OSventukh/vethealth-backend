@@ -2,11 +2,9 @@ import {
   Controller,
   Post,
   UploadedFiles,
-  UseGuards,
   UseInterceptors,
   Body,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
   ApiBody,

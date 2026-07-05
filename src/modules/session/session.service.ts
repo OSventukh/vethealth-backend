@@ -31,6 +31,13 @@ export class SessionService {
     return this.sessionRepository.save(this.sessionRepository.create(data));
   }
 
+  async update(
+    id: SessionEntity['id'],
+    data: DeepPartial<SessionEntity>,
+  ): Promise<void> {
+    await this.sessionRepository.update(id, data);
+  }
+
   async softDelete({
     excludeId,
     ...criteria

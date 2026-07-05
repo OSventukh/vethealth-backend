@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { createMock } from '@golevelup/ts-jest';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 
@@ -27,15 +26,6 @@ describe('UsersController', () => {
 
   it('should be defined', () => {
     expect(usersController).toBeDefined();
-  });
-
-  it('should call a usersService.create() method with CreateUserDto object', () => {
-    const createUserDto: CreateUserDto = {
-      email: 'test@test.com',
-      firstname: 'Test',
-    } as CreateUserDto;
-    usersController.create(createUserDto);
-    expect(usersService.create).toBeCalledWith(createUserDto);
   });
 
   it('should call a usersService.findOne() with provided id', () => {

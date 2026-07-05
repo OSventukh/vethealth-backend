@@ -1,5 +1,8 @@
 import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto';
 
+export const DUMMY_PASSWORD_HASH =
+  "6647e67b1fac0cc0f1d3ff5481c9e0e0.d297166ebb2070ca44ab100278a91fbba173771e90047cf49879cee178729750";
+  
 const keyLength = 32;
 
 export const hashPassword = async (password: string): Promise<string> => {

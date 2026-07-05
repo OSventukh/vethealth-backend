@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DeepPartial, FindOptionsRelations, Repository, Like } from "typeorm";
+import { FindOptionsRelations, Repository, Like } from "typeorm";
 import { RoleEnum } from "@/roles/roles.enum";
 import type { JwtPayloadType } from "@/modules/auth/strategies/types/jwt-payload.type";
 import { PostEntity } from "./entities/post.entity";
