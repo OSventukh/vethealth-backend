@@ -25,19 +25,20 @@ import { GetTopicsGuard } from './guards/get-topics.guard';
 import { Roles } from '@/roles/decorators/roles.decorator';
 import { RoleEnum } from '@/roles/roles.enum';
 import { RolesSerializerInterceptor } from '@/modules/auth/interceptors/roles-serializer.interceptor';
+import { Public } from '@/roles/decorators/public.decorator';
 
 @ApiTags('Topics')
 @Controller('topics')
 export class TopicsController {
   constructor(private readonly topicsService: TopicsService) {}
   @Post()
-  @UseGuards(AuthGuard('jwt'))
   @Roles(RoleEnum.SuperAdmin, RoleEnum.Admin)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createTopicDto: CreateTopicDto): Promise<TopicEntity> {
     return this.topicsService.create(createTopicDto);
   }
-
+  
+  @Public()
   @Get(':id')
   @UseInterceptors(RolesSerializerInterceptor)
   @HttpCode(HttpStatus.OK)
@@ -48,6 +49,7 @@ export class TopicsController {
     return this.topicsService.findOne({ id }, queryDto);
   }
 
+  @Public()
   @Get()
   @UseInterceptors(RolesSerializerInterceptor)
   @UseGuards(GetTopicsGuard)
@@ -62,14 +64,12 @@ export class TopicsController {
   }
 
   @Patch()
-  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   update(@Body() updateTopicDto: UpdateTopicDto): Promise<TopicEntity> {
     return this.topicsService.update(updateTopicDto);
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id') id: string): Promise<void> {
     return this.topicsService.softDelete(id);

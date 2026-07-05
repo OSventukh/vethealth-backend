@@ -14,7 +14,6 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -23,13 +22,13 @@ import { PaginationType } from '@/utils/types/pagination.type';
 import { CategoryQueryDto } from './dto/category-query.dto';
 import { RolesSerializerInterceptor } from '@/modules/auth/interceptors/roles-serializer.interceptor';
 import { UpdateResult } from 'typeorm';
+import { Public } from '@/roles/decorators/public.decorator';
 
 @ApiTags('Categories')
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
   @Post()
-  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
   create(
     @Body() createCategoryDto: CreateCategoryDto,
@@ -37,6 +36,7 @@ export class CategoriesController {
     return this.categoriesService.create(createCategoryDto);
   }
 
+  @Public()
   @Get(':id')
   @UseInterceptors(RolesSerializerInterceptor)
   @HttpCode(HttpStatus.OK)
@@ -46,7 +46,8 @@ export class CategoriesController {
   ): Promise<CategoryEntity> {
     return this.categoriesService.findOne({ id }, queryDto);
   }
-
+  
+  @Public()
   @Get()
   @UseInterceptors(RolesSerializerInterceptor)
   @HttpCode(HttpStatus.OK)
@@ -60,7 +61,6 @@ export class CategoriesController {
   }
 
   @Patch()
-  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   update(
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -69,7 +69,6 @@ export class CategoriesController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id') id: string): Promise<UpdateResult> {
     return this.categoriesService.softDelete(id);

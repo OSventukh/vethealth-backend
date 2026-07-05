@@ -10,16 +10,18 @@ import { AllConfigType } from '@/config/config.type';
 export class MailerService {
   private readonly transporter: nodemailer.Transporter;
   constructor(private readonly configService: ConfigService<AllConfigType>) {
+    const user = configService.get('mail.user', { infer: true });
+    const pass = configService.get('mail.password', { infer: true });
     this.transporter = nodemailer.createTransport({
       host: configService.get('mail.host', { infer: true }),
       port: configService.get('mail.port', { infer: true }),
       ignoreTLS: configService.get('mail.ignoreTLS', { infer: true }),
       secure: configService.get('mail.secure', { infer: true }),
       requireTLS: configService.get('mail.requireTLS', { infer: true }),
-      auth: {
-        user: configService.get('mail.user', { infer: true }),
-        pass: configService.get('mail.password', { infer: true }),
-      },
+      // Only authenticate when credentials are configured. Mailpit advertises
+      // AUTH but doesn't require it; passing an empty auth object makes
+      // nodemailer attempt PLAIN login and fail with "Missing credentials".
+      auth: user ? { user, pass } : undefined,
       tls: {
         rejectUnauthorized: configService.get('mail.rejectUnauthorized', {
           infer: true,

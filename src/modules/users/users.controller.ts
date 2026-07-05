@@ -30,7 +30,6 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createUserDto: CreateUserDto): Promise<UserEntity> {
     return this.usersService.create(createUserDto);
@@ -38,7 +37,6 @@ export class UsersController {
 
   @Get(':id')
   @UseInterceptors(RolesSerializerInterceptor)
-  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   getOne(
     @Param('id') id: string,
@@ -49,7 +47,6 @@ export class UsersController {
 
   @Get()
   @UseInterceptors(RolesSerializerInterceptor)
-  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   getMany(
     @Query() queryDto: UserQueryDto,

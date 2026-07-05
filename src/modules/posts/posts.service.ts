@@ -1,12 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, FindOptionsRelations, Repository, Like } from 'typeorm';
-import { PostEntity } from './entities/post.entity';
-import { PaginationType } from 'src/utils/types/pagination.type';
-import { CreatePostDto } from './dto/create-post.dto';
-import { FindOptionsWhere } from 'typeorm';
-import { PostQueryDto } from './dto/post-query.dto';
-import { postOrder } from './utils/post-order';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { DeepPartial, FindOptionsRelations, Repository, Like } from "typeorm";
+import { RoleEnum } from "@/roles/roles.enum";
+import type { JwtPayloadType } from "@/modules/auth/strategies/types/jwt-payload.type";
+import { PostEntity } from "./entities/post.entity";
+import { PaginationType } from "src/utils/types/pagination.type";
+import { CreatePostDto } from "./dto/create-post.dto";
+import { FindOptionsWhere } from "typeorm";
+import { PostQueryDto } from "./dto/post-query.dto";
+import { postOrder } from "./utils/post-order";
 
 @Injectable()
 export class PostsService {
@@ -23,18 +25,30 @@ export class PostsService {
   async findOne(
     fields: FindOptionsWhere<PostEntity>,
     include?: FindOptionsRelations<PostEntity>,
+    user?: JwtPayloadType,
   ): Promise<PostEntity> {
     const post = await this.postsRepository.findOne({
       where: fields,
-      relations: include,
+      relations: { ...include, author: true },
     });
     if (!post) {
       throw new NotFoundException();
     }
+    const isPublished = post.status.name === "Published";
+    const isAdmin =
+      user?.role?.id === RoleEnum.SuperAdmin ||
+      user?.role?.id === RoleEnum.Admin;
+    const isOwner = user?.id === post.author.id;
+
+    if (!isPublished && !isAdmin && !isOwner) {
+      throw new NotFoundException();
+    }
+
     return post;
   }
   async findManyWithPagination(
     queryDto: PostQueryDto,
+    user?: JwtPayloadType,
   ): Promise<PaginationType<PostEntity>> {
     const {
       title,
@@ -48,20 +62,39 @@ export class PostsService {
       orderBy,
       sort,
     } = queryDto;
+
+    const common = {
+      title: title && Like(`%${title}%`),
+      author: { firstname: author },
+      topics: { slug: topic },
+      categories: { slug: category },
+    };
+
+    const isAdmin =
+      user?.role?.id === RoleEnum.SuperAdmin ||
+      user?.role?.id === RoleEnum.Admin;
+
+    let where: FindOptionsWhere<PostEntity> | FindOptionsWhere<PostEntity>[] =
+      {};
+
+    if (isAdmin) {
+      where = {
+        ...common,
+        status: status === "all" ? undefined : { name: status || "Published" },
+      };
+    } else if (user) {
+      where = [
+        { ...common, status: { name: "Published" } },
+        { ...common, author: { id: user.id } },
+      ];
+    } else {
+      where = {
+        ...common,
+        status: { name: "Published" },
+      };
+    }
     const [items, count] = await this.postsRepository.findAndCount({
-      where: {
-        title: title && Like(`%${title}%`),
-        status: status === 'all' ? undefined : { name: status || 'Published' },
-        author: {
-          firstname: author,
-        },
-        topics: {
-          slug: topic,
-        },
-        categories: {
-          slug: category,
-        },
-      },
+      where,
       skip: (page - 1) * size,
       take: size,
       order: postOrder(orderBy, sort),
@@ -80,7 +113,7 @@ export class PostsService {
     return this.postsRepository.save(this.postsRepository.create(payload));
   }
 
-  async softDelete(id: PostEntity['id']): Promise<void> {
+  async softDelete(id: PostEntity["id"]): Promise<void> {
     await this.postsRepository.softDelete(id);
   }
 }

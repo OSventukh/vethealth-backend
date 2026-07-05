@@ -26,7 +26,6 @@ export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
   @Post('upload')
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -60,7 +59,6 @@ export class FilesController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
   @Post('upload-presigned')
   @ApiCreatedResponse({
     schema: {

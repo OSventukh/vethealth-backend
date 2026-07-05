@@ -20,12 +20,16 @@ import { AuthConfirmDto } from './dto/auth-confirm.dto';
 import { AuthForgotPasswordDto } from './dto/auth-forgot-password.dto';
 import { AuthChangePasswordDto } from './dto/auth-change-password.dto';
 import { minutes, Throttle } from '@nestjs/throttler';
+import { Public } from '@/roles/decorators/public.decorator';
+import { RoleEnum } from '@/roles/roles.enum';
+import { Roles } from '@/roles/decorators/roles.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @ApiBearerAuth()
+  @Public()
   @Throttle({ default: { limit: 10, ttl: minutes(60) } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -34,7 +38,6 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   logout(@Request() request): Promise<void> {
@@ -42,13 +45,14 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(RoleEnum.SuperAdmin, RoleEnum.Admin)
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   register(@Body() registerDto: AuthRegisterDto) {
     return this.authService.register(registerDto);
   }
 
+  @Public()
   @ApiBearerAuth()
   @Get('confirm/:hash')
   @HttpCode(HttpStatus.OK)
@@ -56,6 +60,7 @@ export class AuthController {
     return this.authService.getPendingUser(hash);
   }
 
+  @Public()
   @ApiBearerAuth()
   @Throttle({ default: { limit: 10, ttl: minutes(60) } })
   @Post('confirm')
@@ -64,6 +69,7 @@ export class AuthController {
     return this.authService.confirm(confirmDto);
   }
 
+  @Public()
   @ApiBearerAuth()
   @Throttle({ default: { limit: 10, ttl: minutes(60) } })
   @Post('forgot-password')
@@ -73,7 +79,6 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
   @Patch('change-password')
   @HttpCode(HttpStatus.OK)
   changePassword(@Request() request, @Body() changePasswordDto: AuthChangePasswordDto) {
@@ -81,13 +86,13 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
   @Get('current-user')
   @HttpCode(HttpStatus.OK)
   currentUser(@Request() request) {
     return this.authService.getCurrentUser(request.user);
   }
 
+  @Public()
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt-refresh'))
   @Post('refresh')

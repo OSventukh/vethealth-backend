@@ -61,6 +61,22 @@ This does **not** populate the `migrations` table, so don't run `migration:run` 
 schema:sync'd dev DB. The alternative (for a prod-identical dev) is to import a `mysqldump` of prod
 (including its `migrations` table).
 
+## Auth/authz hardening (in progress, 2026-06/07)
+
+A security pass over auth/authz is underway; new code must follow the target model:
+- **Deny by default**: `AuthDataGuard` (`src/modules/auth/guards/auth-data.guard.ts`) now throws
+  `UnauthorizedException` when there's no valid JWT, unless the handler/class is marked
+  `@Public()` (`src/roles/decorators/public.decorator.ts`, checked via `Reflector`). Public read
+  endpoints get an explicit `@Public()`; don't leave endpoints implicitly open.
+- `PATCH /auth/change-password` requires auth + `oldPassword`, takes the user id from
+  `request.user` (never the body), and soft-deletes the user's *other* sessions.
+- **Target RBAC policy** (roles: SuperAdmin=1, Admin=2, Moder=3, Writer=4; "Admin+" = 1|2):
+  posts — create by any authed user, edit/delete by owner or Admin+; pages/categories/topics —
+  mutations Admin+ only, reads public (topics `POST` with `@Roles(1,2)` is the model to copy);
+  users — everything Admin+ except a user editing their own profile (never own role/status).
+  Not all controllers enforce this yet — when touching one, bring it in line rather than copying
+  its current guards.
+
 ## Backend-specific notes
 
 - **Path alias** `@/*` → `src/*` (tsconfig + jest `moduleNameMapper`). Use it in imports.
@@ -77,9 +93,8 @@ schema:sync'd dev DB. The alternative (for a prod-identical dev) is to import a 
 - **File storage** driver is chosen by `FILE_STORAGE_DRIVER` (`local | s3 | r2 | seaweed`) in
   `src/modules/files/storage/file-storage.factory.ts`. Non-local drivers require S3 creds plus one
   of `FILE_S3_PUBLIC_URL` / `FILE_CDN_BASE_URL`.
-- **Backup module** (`src/modules/backup`) zips/unzips the uploads dir with `archiver`/`unzipper`
-  for files backup & restore. One-off `scripts/migrate-uploads-to-r2*` move existing local uploads
-  to R2/S3 (physical files only). **Then** run `scripts/migrate-db-refs-to-r2.js` to rewrite the DB
+- **Uploads → R2 migration scripts**: one-off `scripts/migrate-uploads-to-r2*` move existing local
+  uploads to R2/S3 (physical files only). **Then** run `scripts/migrate-db-refs-to-r2.js` to rewrite the DB
   references so R2 is used end-to-end: it strips `/uploads/` from `files.path` (→ bare R2 key, which
   `FileEntity.updatePath()` turns into a public URL) and rewrites embedded upload URLs in
   `posts.content` (the Lexical editor stores `relativePath`, which in local mode resolves to an

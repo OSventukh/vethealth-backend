@@ -45,10 +45,12 @@ describe('PostsController', () => {
   it('should call a postsService.findOne() method with provided id', () => {
     const postId = '1';
     const queryDto = new PostQueryDto();
-    postsController.getOne(postId, queryDto);
+    const request = { user: undefined };
+    postsController.getOne(request, postId, queryDto);
     expect(postsService.findOne).toBeCalledWith(
       { id: postId },
       queryDto.include,
+      undefined,
     );
   });
 
@@ -58,8 +60,12 @@ describe('PostsController', () => {
       size: 10,
     };
 
-    postsController.getMany(queryDto);
-    expect(postsService.findManyWithPagination).toBeCalledWith(queryDto);
+    const request = { user: undefined };
+    postsController.getMany(request, queryDto);
+    expect(postsService.findManyWithPagination).toBeCalledWith(
+      queryDto,
+      undefined,
+    );
   });
 
   it('should call a postsService.update() method with provided id and payload object', () => {

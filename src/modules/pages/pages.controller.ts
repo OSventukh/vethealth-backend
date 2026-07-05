@@ -20,6 +20,7 @@ import { CreatePageDto } from './dto/create-page.dto';
 import { UpdatePageDto } from './dto/update-page.dto';
 import { PageQueryDto } from './dto/page-query.dto';
 import { PaginationType } from '@/utils/types/pagination.type';
+import { Public } from '@/roles/decorators/public.decorator';
 
 @ApiTags('Pages')
 @Controller('pages')
@@ -31,8 +32,8 @@ export class PagesController {
     return this.pagesService.create(createPageDto);
   }
 
+
   @Get(':id')
-  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   getOne(
     @Param('id') id: string,
@@ -40,7 +41,8 @@ export class PagesController {
   ): Promise<PageEntity> {
     return this.pagesService.findOne({ id }, queryDto.include);
   }
-
+  
+  @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
   getMany(
@@ -56,14 +58,12 @@ export class PagesController {
   }
 
   @Patch()
-  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   update(@Body() updatePageDto: UpdatePageDto): Promise<PageEntity> {
     return this.pagesService.update(updatePageDto);
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id') id: string): Promise<void> {
     return this.pagesService.softDelete(id);
