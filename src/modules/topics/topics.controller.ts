@@ -25,7 +25,7 @@ import { GetTopicsGuard } from './guards/get-topics.guard';
 import { Roles } from '@/roles/decorators/roles.decorator';
 import { RoleEnum } from '@/roles/roles.enum';
 import { RolesSerializerInterceptor } from '@/modules/auth/interceptors/roles-serializer.interceptor';
-import { Public } from '@/roles/decorators/public.decorator';
+import { OptionalAuth } from '@/roles/decorators/optional-auth.decorator';
 
 @ApiTags('Topics')
 @Controller('topics')
@@ -38,9 +38,10 @@ export class TopicsController {
     return this.topicsService.create(createTopicDto);
   }
   
-  @Public()
+  @OptionalAuth()
   @Get(':id')
   @UseInterceptors(RolesSerializerInterceptor)
+  @UseGuards(GetTopicsGuard)
   @HttpCode(HttpStatus.OK)
   getOne(
     @Param('id') id: string,
@@ -49,7 +50,7 @@ export class TopicsController {
     return this.topicsService.findOne({ id }, queryDto);
   }
 
-  @Public()
+  @OptionalAuth()
   @Get()
   @UseInterceptors(RolesSerializerInterceptor)
   @UseGuards(GetTopicsGuard)
