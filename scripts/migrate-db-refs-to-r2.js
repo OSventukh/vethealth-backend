@@ -179,8 +179,15 @@ function buildDbConfig() {
 // and is idempotent. The "images/(posts|topics)/" anchor is specific enough that
 // external URLs (e.g. images.unsplash.com/photo-…) and internal site links are
 // left untouched.
+// The colon in the scheme is OPTIONAL (`https?:?//`) on purpose: some rows hold
+// a mangled "https//host/images/…" (colon lost somewhere upstream). With a
+// mandatory colon the prefix would not match, the regex would fall through to
+// the leading "/" of "/images/…" and prepend the CDN base to the broken prefix —
+// producing the "https//host…https://cdn…/images/…" doubling this script is
+// supposed to repair. Allowing the colonless form makes the prefix get consumed
+// and rebuilt correctly, and keeps the doubled form repairable too.
 const IMG_KEY_RE =
-  /(?:https?:\/\/[^"'\s\\)]*?)?\/?(images\/(?:posts|topics)\/[^"'\s\\)]+)/gi;
+  /(?:https?:?\/\/[^"'\s\\)]*?)?\/?(images\/(?:posts|topics)\/[^"'\s\\)]+)/gi;
 
 function rewriteImageRefs(value, publicBase) {
   return value.replace(IMG_KEY_RE, `${publicBase}/$1`);
