@@ -55,7 +55,8 @@ function parseArgs(argv) {
       args.inspect = true;
       continue;
     }
-    if (token === '--dotenv-file' || token === '--env-file') {
+    // NB: no `--env-file` alias — Node reserves that flag for itself.
+    if (token === '--dotenv-file') {
       args.dotenvFile = path.resolve(argv[i + 1]);
       i += 1;
       continue;
@@ -86,7 +87,7 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(
-    `Usage:\n  node scripts/migrate-db-refs-to-r2.js [options]\n\nOptions:\n  --inspect                 Read-only: print row counts and the actual stored\n                            reference forms (run this first if the migration\n                            reports 0 rows to confirm the real format)\n  --execute                 Apply the UPDATEs (default is dry-run)\n  --env-file <path>         Path to env file (default: ./.env)\n  --public-url <url>        Public base for R2 objects (default: derived from\n                            FILE_CDN_BASE_URL / FILE_S3_PUBLIC_URL + bucket)\n  --sample <number>         How many before/after samples to print per table (default: 10)\n  -h, --help                Show help\n\nExamples:\n  node scripts/migrate-db-refs-to-r2.js                 # dry-run\n  node scripts/migrate-db-refs-to-r2.js --execute`,
+    `Usage:\n  node scripts/migrate-db-refs-to-r2.js [options]\n\nOptions:\n  --inspect                 Read-only: print row counts and the actual stored\n                            reference forms (run this first if the migration\n                            reports 0 rows to confirm the real format)\n  --execute                 Apply the UPDATEs (default is dry-run)\n  --dotenv-file <path>      Path to env file (default: ./.env). Do NOT use\n                            --env-file: Node reserves that flag.\n  --public-url <url>        Public base for R2 objects (default: derived from\n                            FILE_CDN_BASE_URL / FILE_S3_PUBLIC_URL + bucket)\n  --sample <number>         How many before/after samples to print per table (default: 10)\n  -h, --help                Show help\n\nExamples:\n  node scripts/migrate-db-refs-to-r2.js                 # dry-run\n  node scripts/migrate-db-refs-to-r2.js --execute`,
   );
 }
 

@@ -30,7 +30,8 @@ function parseArgs(argv) {
       i += 1;
       continue;
     }
-    if (token === '--dotenv-file' || token === '--env-file') {
+    // NB: no `--env-file` alias — Node reserves that flag for itself.
+    if (token === '--dotenv-file') {
       args.dotenvFile = path.resolve(argv[i + 1]);
       i += 1;
       continue;

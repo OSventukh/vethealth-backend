@@ -25,9 +25,16 @@
 // finds nothing to fix.
 //
 // Usage:
-//   node scripts/fix-r2-content-types.js                 # dry-run against .env
+//   node scripts/fix-r2-content-types.js                       # dry-run, reads ./.env
 //   node scripts/fix-r2-content-types.js --execute
-//   node scripts/fix-r2-content-types.js --env-file .env.staging --prefix images/
+//   node scripts/fix-r2-content-types.js --dotenv-file .env.staging --prefix images/
+//
+// Credentials are read from the environment; ./.env is loaded only if present,
+// so INSIDE A CONTAINER (Coolify) just run the script with no flags — the
+// FILE_S3_* vars are already injected and no .env file is shipped in the image.
+//
+// Do NOT pass `--env-file`: Node itself owns that flag (v20.6+) and aborts with
+// "node: <file>: not found" before this script ever runs. Use --dotenv-file.
 //
 // NOTE: extensions are intentionally NOT renamed. Renaming a key would break
 // every DB reference to it; the Content-Type is what browsers actually honor,
@@ -57,7 +64,8 @@ function parseArgs(argv) {
       args.execute = true;
       continue;
     }
-    if (token === '--dotenv-file' || token === '--env-file') {
+    // NB: no `--env-file` alias — Node reserves that flag for itself.
+    if (token === '--dotenv-file') {
       args.dotenvFile = path.resolve(argv[i + 1]);
       i += 1;
       continue;
@@ -77,10 +85,13 @@ function parseArgs(argv) {
         [
           'Usage: node scripts/fix-r2-content-types.js [options]',
           '',
-          '  --execute            Apply the fixes (default: dry-run)',
-          '  --env-file <path>    .env to read storage credentials from',
-          '  --prefix <prefix>    Only scan keys under this prefix',
-          '  --limit <n>          Stop after inspecting n objects (debugging)',
+          '  --execute             Apply the fixes (default: dry-run)',
+          '  --dotenv-file <path>  Optional .env to load (default: ./.env if present)',
+          '  --prefix <prefix>     Only scan keys under this prefix',
+          '  --limit <n>           Stop after inspecting n objects (debugging)',
+          '',
+          'In a container the FILE_S3_* vars come from the environment — run with',
+          'no flags. Never pass --env-file: Node intercepts that flag itself.',
         ].join('\n'),
       );
       process.exit(0);
