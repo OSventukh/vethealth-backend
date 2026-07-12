@@ -10,6 +10,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import slugify from 'slugify';
 import { UploadPresignedDto } from './dto/upload-presigned.dto';
+import { sniffImageType } from './utils/sniff-image-type';
 
 type FileResponse = {
   id: string;
@@ -60,23 +61,38 @@ export class FilesService {
     for (const key in files) {
       const uploadedFile = files[key][0];
       this.assertFileType(uploadedFile.originalname);
-      let filePath = `/${uploadedFile.path.replace(/\\/g, '/')}`;
+
+      // Клієнт заявляє mimetype за розширенням, тому AVIF, названий .jpeg,
+      // приїжджає як image/jpeg. Віддати таке з R2 = Firefox його заблокує
+      // (OpaqueResponseBlocking). Тому реальний тип беремо з байтів і, якщо
+      // розширення бреше, виправляємо і його — щоб і local-драйвер (де
+      // Content-Type виводиться з розширення) віддавав файл коректно.
+      // Не фатально, якщо файл не прочитався: тоді просто лишаємо заявлений
+      // клієнтом тип (нижче, для об'єктних сховищ, читання повториться вже
+      // без catch — там байти обов'язкові).
+      const sniffBuffer = await fs
+        .readFile(uploadedFile.path)
+        .catch(() => null);
+      const sniffed = sniffBuffer ? sniffImageType(sniffBuffer) : null;
+      const actualPath = await this.reconcileExtension(uploadedFile, sniffed);
+      const contentType = sniffed?.mimeType ?? uploadedFile.mimetype;
+
+      let filePath = `/${actualPath.replace(/\\/g, '/')}`;
 
       if (storageDriver !== FileStorageDriver.Local) {
-        const normalizedFilePath = uploadedFile.path.replace(/\\/g, '/');
+        const normalizedFilePath = actualPath.replace(/\\/g, '/');
         const storageKey = normalizedFilePath
           .replace(/^\/+/, '')
           .replace(/^uploads\//, '');
-        const fileBuffer = await fs.readFile(uploadedFile.path);
         await storage.upload({
           key: storageKey,
-          body: fileBuffer,
-          contentType: uploadedFile.mimetype,
+          body: sniffBuffer ?? (await fs.readFile(actualPath)),
+          contentType,
         });
         filePath = storageKey;
 
         // Avoid accumulating local temp files when object storage is enabled.
-        await fs.unlink(uploadedFile.path).catch(() => undefined);
+        await fs.unlink(actualPath).catch(() => undefined);
       }
 
       const fileRepository = await this.fileRepository.save(
@@ -160,8 +176,41 @@ export class FilesService {
     };
   }
 
+  /**
+   * Якщо розширення не відповідає реальному вмісту (AVIF з іменем .jpeg тощо),
+   * перейменовує тимчасовий файл на диску під справжнє розширення і повертає
+   * новий шлях. Інакше повертає шлях без змін.
+   */
+  private async reconcileExtension(
+    uploadedFile: Express.Multer.File,
+    sniffed: { extension: string } | null,
+  ): Promise<string> {
+    if (!sniffed) {
+      return uploadedFile.path;
+    }
+
+    const currentExtension = path.extname(uploadedFile.path).toLowerCase();
+    const jpegAliases = new Set(['.jpg', '.jpeg']);
+    const matches =
+      currentExtension === sniffed.extension ||
+      (jpegAliases.has(currentExtension) && jpegAliases.has(sniffed.extension));
+
+    if (matches) {
+      return uploadedFile.path;
+    }
+
+    const correctedPath =
+      uploadedFile.path.slice(
+        0,
+        uploadedFile.path.length - currentExtension.length,
+      ) + sniffed.extension;
+
+    await fs.rename(uploadedFile.path, correctedPath);
+    return correctedPath;
+  }
+
   private assertFileType(fileName: string): void {
-    if (!fileName.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+    if (!fileName.match(/\.(jpg|jpeg|png|gif|webp|avif|svg)$/i)) {
       throw new HttpException(
         {
           status: HttpStatus.UNPROCESSABLE_ENTITY,

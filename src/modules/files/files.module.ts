@@ -25,7 +25,9 @@ import { S3CompatibleFileStorageService } from './storage/s3-compatible-file-sto
       useFactory: (configService: ConfigService<AllConfigType>) => {
         return {
           fileFilter: (_request, file, callback) => {
-            if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+            if (
+              !file.originalname.match(/\.(jpg|jpeg|png|gif|webp|avif|svg)$/i)
+            ) {
               return callback(
                 new HttpException(
                   {
