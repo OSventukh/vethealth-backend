@@ -11,7 +11,7 @@ export class AuthChangePasswordDto {
     message: ERROR_MESSAGE.PASSWORD_IS_NOT_MATCH,
   })
   password: string;
-  
+
   @ApiProperty()
   @IsNotEmpty()
   @IsString()

@@ -95,8 +95,17 @@ describe('PostsService', () => {
 
   it('should call postsRepository.findAndCount() method with options', async () => {
     const queryDto = new PostQueryDto();
-    const { title, author, topic, category, include, page, size, orderBy, sort } =
-      queryDto;
+    const {
+      title,
+      author,
+      topic,
+      category,
+      include,
+      page,
+      size,
+      orderBy,
+      sort,
+    } = queryDto;
     jest.spyOn(postsRepository, 'findAndCount').mockResolvedValue([[], 0]);
     // no user → anonymous → status is forced to Published regardless of query
     await postsService.findManyWithPagination(queryDto);
@@ -127,7 +136,9 @@ describe('PostsService', () => {
     jest.spyOn(postsRepository, 'findOne').mockResolvedValue(existingPost);
     const payload = { id: '1', title: 'Test title' } as UpdatePostDto;
     await postsService.update(payload, adminUser);
-    expect(postsRepository.save).toBeCalledWith(postsRepository.create(payload));
+    expect(postsRepository.save).toBeCalledWith(
+      postsRepository.create(payload),
+    );
   });
 
   it('should authorize (owner/admin) then call softDelete with provided id', async () => {

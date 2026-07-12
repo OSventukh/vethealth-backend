@@ -81,7 +81,10 @@ export class AuthController {
   @ApiBearerAuth()
   @Patch('change-password')
   @HttpCode(HttpStatus.OK)
-  changePassword(@Request() request, @Body() changePasswordDto: AuthChangePasswordDto) {
+  changePassword(
+    @Request() request,
+    @Body() changePasswordDto: AuthChangePasswordDto,
+  ) {
     return this.authService.changePassword(request.user, changePasswordDto);
   }
 

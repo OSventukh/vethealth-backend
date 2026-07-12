@@ -22,7 +22,7 @@ export class SessionEntity {
 
   @Column()
   hash: string;
-  
+
   @CreateDateColumn()
   createdAt: Date;
 

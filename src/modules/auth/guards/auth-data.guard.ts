@@ -2,14 +2,14 @@ import {
   ExecutionContext,
   Injectable,
   UnauthorizedException,
-} from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import { AuthGuard } from "@nestjs/passport";
-import { IS_PUBLIC_KEY } from "@/roles/decorators/public.decorator";
-import { IS_OPTIONAL_AUTH_KEY } from "@/roles/decorators/optional-auth.decorator";
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { AuthGuard } from '@nestjs/passport';
+import { IS_PUBLIC_KEY } from '@/roles/decorators/public.decorator';
+import { IS_OPTIONAL_AUTH_KEY } from '@/roles/decorators/optional-auth.decorator';
 
 @Injectable()
-export class AuthDataGuard extends AuthGuard("jwt") {
+export class AuthDataGuard extends AuthGuard('jwt') {
   constructor(private reflector: Reflector) {
     super();
   }
@@ -23,7 +23,12 @@ export class AuthDataGuard extends AuthGuard("jwt") {
     return super.canActivate(context);
   }
 
-  handleRequest<TUser = any>(err: any, user: any, _info: any, context: ExecutionContext): TUser {
+  handleRequest<TUser = any>(
+    err: any,
+    user: any,
+    _info: any,
+    context: ExecutionContext,
+  ): TUser {
     const isOptional = this.reflector.getAllAndOverride<boolean>(
       IS_OPTIONAL_AUTH_KEY,
       [context.getHandler(), context.getClass()],

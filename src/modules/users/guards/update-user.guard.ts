@@ -17,8 +17,9 @@ export class UpdateUserGuard implements CanActivate {
     const body = request?.body;
     const targetId = body?.id;
 
-    const callerIsAdmin = caller?.role?.id === RoleEnum.SuperAdmin || caller?.role?.id === RoleEnum.Admin;
-
+    const callerIsAdmin =
+      caller?.role?.id === RoleEnum.SuperAdmin ||
+      caller?.role?.id === RoleEnum.Admin;
 
     if (!callerIsAdmin) {
       // If the caller is not an admin, they can only update their own user data and cannot change role or status
@@ -30,20 +31,26 @@ export class UpdateUserGuard implements CanActivate {
         throw new ForbiddenException();
       }
     }
-    
+
     const target = await this.usersService.findOne({ id: targetId });
     if (!target) {
       throw new NotFoundException();
     }
 
     // If the target user is a SuperAdmin, only another SuperAdmin can update them
-    if (target.role.id === RoleEnum.SuperAdmin && (body?.role || body?.status) && caller?.role?.id !== RoleEnum.SuperAdmin) {
+    if (
+      target.role.id === RoleEnum.SuperAdmin &&
+      (body?.role || body?.status) &&
+      caller?.role?.id !== RoleEnum.SuperAdmin
+    ) {
       throw new ForbiddenException();
     }
 
-
     // If the caller is not a SuperAdmin, they cannot add the role of a SuperAdmin user to the target user
-    if (body?.role?.id === RoleEnum.SuperAdmin && caller?.role?.id !== RoleEnum.SuperAdmin) {
+    if (
+      body?.role?.id === RoleEnum.SuperAdmin &&
+      caller?.role?.id !== RoleEnum.SuperAdmin
+    ) {
       throw new ForbiddenException();
     }
 

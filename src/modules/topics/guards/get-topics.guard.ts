@@ -15,8 +15,8 @@ export class GetTopicsGuard implements CanActivate {
     const { user, query } = context.switchToHttp().getRequest();
     if (
       query?.status === 'inactive' &&
-      (user?.role?.id !== RoleEnum.SuperAdmin &&
-        user?.role?.id !== RoleEnum.Admin)
+      user?.role?.id !== RoleEnum.SuperAdmin &&
+      user?.role?.id !== RoleEnum.Admin
     ) {
       throw new ForbiddenException();
     }

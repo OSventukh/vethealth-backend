@@ -1,16 +1,20 @@
-import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { FindOptionsRelations, Repository, Like } from "typeorm";
-import { RoleEnum } from "@/roles/roles.enum";
-import type { JwtPayloadType } from "@/modules/auth/strategies/types/jwt-payload.type";
-import { PostEntity } from "./entities/post.entity";
-import { PaginationType } from "src/utils/types/pagination.type";
-import { CreatePostDto } from "./dto/create-post.dto";
-import { FindOptionsWhere } from "typeorm";
-import { PostQueryDto } from "./dto/post-query.dto";
-import { postOrder } from "./utils/post-order";
-import { UpdatePostDto } from "./dto/update-post.dto";
-import { PostStatusEnum } from "@/statuses/post-status.enum";
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { FindOptionsRelations, Repository, Like } from 'typeorm';
+import { RoleEnum } from '@/roles/roles.enum';
+import type { JwtPayloadType } from '@/modules/auth/strategies/types/jwt-payload.type';
+import { PostEntity } from './entities/post.entity';
+import { PaginationType } from 'src/utils/types/pagination.type';
+import { CreatePostDto } from './dto/create-post.dto';
+import { FindOptionsWhere } from 'typeorm';
+import { PostQueryDto } from './dto/post-query.dto';
+import { postOrder } from './utils/post-order';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { PostStatusEnum } from '@/statuses/post-status.enum';
 
 @Injectable()
 export class PostsService {
@@ -36,7 +40,7 @@ export class PostsService {
     if (!post) {
       throw new NotFoundException();
     }
-    const isPublished = post.status.name === "Published";
+    const isPublished = post.status.name === 'Published';
     const isAdmin =
       user?.role?.id === RoleEnum.SuperAdmin ||
       user?.role?.id === RoleEnum.Admin;
@@ -82,17 +86,17 @@ export class PostsService {
     if (isAdmin) {
       where = {
         ...common,
-        status: status === "all" ? undefined : { name: status || "Published" },
+        status: status === 'all' ? undefined : { name: status || 'Published' },
       };
     } else if (user) {
       where = [
-        { ...common, status: { name: "Published" } },
+        { ...common, status: { name: 'Published' } },
         { ...common, author: { id: user.id } },
       ];
     } else {
       where = {
         ...common,
-        status: { name: "Published" },
+        status: { name: 'Published' },
       };
     }
     const [items, count] = await this.postsRepository.findAndCount({
@@ -111,20 +115,25 @@ export class PostsService {
     };
   }
 
-  async update(payload: UpdatePostDto, user?: JwtPayloadType): Promise<PostEntity> {
-    
+  async update(
+    payload: UpdatePostDto,
+    user?: JwtPayloadType,
+  ): Promise<PostEntity> {
     const post = await this.assertCanMutate(payload.id, user);
-    const isAdmin = user?.role?.id === RoleEnum.SuperAdmin || user?.role?.id === RoleEnum.Admin;
+    const isAdmin =
+      user?.role?.id === RoleEnum.SuperAdmin ||
+      user?.role?.id === RoleEnum.Admin;
 
-    const wantsToPublish = Number(payload.status?.id) === Number(PostStatusEnum.Published);
-    const alreadyPublished = post.status?.name === "Published";
+    const wantsToPublish =
+      Number(payload.status?.id) === Number(PostStatusEnum.Published);
+    const alreadyPublished = post.status?.name === 'Published';
     if (wantsToPublish && !alreadyPublished && !isAdmin) {
       throw new ForbiddenException();
     }
     return this.postsRepository.save(this.postsRepository.create(payload));
   }
 
-  async softDelete(id: PostEntity["id"], user?: JwtPayloadType): Promise<void> {
+  async softDelete(id: PostEntity['id'], user?: JwtPayloadType): Promise<void> {
     await this.assertCanMutate(id, user);
     await this.postsRepository.softDelete(id);
   }
