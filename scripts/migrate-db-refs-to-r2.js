@@ -198,18 +198,31 @@ function stripUploadsPrefix(value) {
   return value.replace(/^\/?uploads\//, '');
 }
 
-// "/uploads/images/x.svg" or "uploads/images/x.svg" -> "images/x.svg".
-function stripUploadsPrefix(value) {
-  return value.replace(/^\/?uploads\//, '');
+// files.path must hold a BARE R2 key ("images/posts/featured/x.png") —
+// FileEntity.updatePath() builds the public URL from it. Rows can hold any of:
+//   "/uploads/images/…", "uploads/images/…"  (pre-R2 local paths)
+//   "https://cdn/images/…"                   (an AfterLoad-mutated path that got
+//                                             saved back to the column)
+//   "https//cdn/images/…"                    (same, with the scheme's colon lost)
+// Extracting the canonical key collapses every form back to the bare key, so
+// featured images (which live in files.path, not posts.featuredImageUrl) get
+// repaired too — previously this only stripped "uploads/" and left the rest.
+const FILE_KEY_RE = /(images\/(?:posts|topics)\/[^"'\s\\)]+)/i;
+
+function normalizeFileKey(value) {
+  const match = value.match(FILE_KEY_RE);
+  return match ? match[1] : stripUploadsPrefix(value);
 }
 
 async function migrateFilesPath(conn, args) {
-  const [rows] = await conn.query(
-    `SELECT id, path AS value FROM files WHERE path REGEXP '^/?uploads/'`,
-  );
+  const [rows] = await conn.query(`SELECT id, path AS value FROM files`);
 
   const changes = rows
-    .map((row) => ({ id: row.id, before: String(row.value), after: stripUploadsPrefix(String(row.value)) }))
+    .map((row) => ({
+      id: row.id,
+      before: String(row.value),
+      after: normalizeFileKey(String(row.value)),
+    }))
     .filter((c) => c.before !== c.after);
 
   console.log(`\n[files.path] rows to update: ${changes.length}`);
@@ -355,6 +368,43 @@ async function inspect(conn) {
   }
 }
 
+/**
+ * The renderers (FileEntity.updatePath, the Lexical ImageNode, next/image) all
+ * assume a well-formed scheme and deliberately do NOT repair broken data — a
+ * tolerant renderer would just hide the corruption forever. So the migration is
+ * the single place that owns the repair, and it has to be able to prove it
+ * finished the job: this scans for any surviving "https//…" (colon lost) and
+ * makes the run exit non-zero if some slipped through.
+ */
+async function verifyNoMalformedRefs(conn, fields) {
+  let malformed = 0;
+
+  for (const { table, column } of fields) {
+    const [rows] = await conn.query(
+      `SELECT id, \`${column}\` AS value FROM \`${table}\`
+        WHERE \`${column}\` REGEXP 'https?//'`,
+    );
+
+    if (rows.length === 0) {
+      continue;
+    }
+
+    malformed += rows.length;
+    console.log(`\n[verify] ${table}.${column}: ${rows.length} malformed row(s)`);
+    for (const row of rows.slice(0, 5)) {
+      const value = String(row.value);
+      console.log(`  id=${row.id}`);
+      console.log(`    ${value.length > 160 ? `${value.slice(0, 157)}...` : value}`);
+    }
+  }
+
+  if (malformed === 0) {
+    console.log('\n[verify] no malformed "https//…" references left.');
+  }
+
+  return malformed;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const envLoaded = loadEnvFileIfExists(args.dotenvFile);
@@ -395,6 +445,7 @@ async function main() {
   const conn = await mysql.createConnection({ ...dbConfig, multipleStatements: false });
 
   let total = 0;
+  let malformed = 0;
   try {
     total += await migrateFilesPath(conn, args);
 
@@ -411,6 +462,11 @@ async function main() {
     for (const field of urlFields) {
       total += await migrateUrlField(conn, args, field);
     }
+
+    malformed = await verifyNoMalformedRefs(conn, [
+      { table: 'files', column: 'path' },
+      ...urlFields,
+    ]);
   } finally {
     await conn.end();
   }
@@ -421,6 +477,14 @@ async function main() {
     return;
   }
   console.log('Database reference migration completed.');
+
+  if (malformed > 0) {
+    process.exitCode = 2;
+    console.error(
+      `\nWARNING: ${malformed} row(s) still hold a malformed scheme ("https//…").\n` +
+        'The renderers assume clean data — investigate these before relying on them.',
+    );
+  }
 }
 
 main().catch((error) => {
