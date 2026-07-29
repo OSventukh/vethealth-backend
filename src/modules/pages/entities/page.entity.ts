@@ -24,7 +24,7 @@ export class PageEntity {
   @Column()
   title: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'mediumtext' })
   content: string;
 
   @Column()

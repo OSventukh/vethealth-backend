@@ -77,6 +77,17 @@ A security pass over auth/authz is underway; new code must follow the target mod
   Not all controllers enforce this yet — when touching one, bring it in line rather than copying
   its current guards.
 
+## Pages = block documents (2026-07)
+
+`pages.content` (MEDIUMTEXT) зберігає документ фронтендового конструктора
+`{version: 1, blocks: [{id, type, data}]}` — **не** чистий Lexical editor-state (той формат
+лишився в `posts.content` і всередині `richtext`-блоків). Міграція
+`1784413708920-PagesBuilderContent` загорнула легасі-рядки в один `richtext`-блок (down —
+розгортає лише такі одноблочні документи). Бекенд контент не валідує (як і раніше — `@IsString`),
+рендеринг/парсинг повністю на фронтенді. `PageQueryDto.include` дозволяє `metadata`; фронтендовий
+редактор шле `metadata` без id у PATCH — каскад створює новий metadata-рядок (старий осиротіє,
+це відома особливість, як у постів).
+
 ## Backend-specific notes
 
 - **Path alias** `@/*` → `src/*` (tsconfig + jest `moduleNameMapper`). Use it in imports.

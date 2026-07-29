@@ -27,7 +27,7 @@ export class PageQueryDto extends PaginationQueryDto {
 
   @ApiProperty()
   @Transform(includeStringToObjectTransform)
-  @Validate(IsValidIncludes, [], {
+  @Validate(IsValidIncludes, ['metadata'], {
     message: ERROR_MESSAGE.INCLUDE_IS_NOT_VALID,
   })
   include?: FindOptionsRelations<PageEntity>;
