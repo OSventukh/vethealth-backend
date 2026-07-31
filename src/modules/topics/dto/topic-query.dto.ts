@@ -50,7 +50,7 @@ export class TopicQueryDto extends PaginationQueryDto {
   @Transform(includeStringToObjectTransform)
   @Validate(
     IsValidIncludes,
-    ['posts', 'categories', 'page', 'parent', 'children', 'users'],
+    ['posts', 'categories', 'page', 'parent', 'children', 'users', 'metadata'],
     {
       message: ERROR_MESSAGE.INCLUDE_IS_NOT_VALID,
     },
