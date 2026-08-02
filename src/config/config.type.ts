@@ -7,6 +7,12 @@ export enum FileStorageDriver {
   Seaweed = 'seaweed',
 }
 
+export enum AiProvider {
+  Anthropic = 'anthropic',
+  OpenAI = 'openai',
+  Google = 'google',
+}
+
 export type AppConfig = {
   nodeEnv: string;
   name: string;
@@ -73,10 +79,19 @@ export type MailConfig = {
   rejectUnauthorized: boolean;
 };
 
+export type AiConfig = {
+  provider: AiProvider;
+  model?: string;
+  anthropicApiKey?: string;
+  openaiApiKey?: string;
+  googleApiKey?: string;
+};
+
 export type AllConfigType = {
   app: AppConfig;
   auth: AuthConfig;
   database: DatabaseConfig;
   file: FileConfig;
   mail: MailConfig;
+  ai: AiConfig;
 };

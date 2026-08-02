@@ -88,6 +88,23 @@ A security pass over auth/authz is underway; new code must follow the target mod
 редактор шле `metadata` без id у PATCH — каскад створює новий metadata-рядок (старий осиротіє,
 це відома особливість, як у постів).
 
+## AI: генерація SEO-мета (2026-08)
+
+`src/modules/ai` — `POST /ai/seo-metadata` (будь-який автентифікований користувач; `@Throttle`
+10 req/хв) генерує metaTitle/metaDescription/metaKeywords/ogTitle/ogDescription з тексту
+статті/сторінки через **Vercel AI SDK** (`generateObject` + json schema → гарантовано валідний
+JSON). Провайдер перемикається конфігом (namespace `ai`): `AI_PROVIDER` = `anthropic` (дефолт) |
+`openai` | `google`, модель — `AI_MODEL` (дефолти: `claude-opus-5` / `gpt-5.1` /
+`gemini-2.5-flash`), ключі — `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` /
+`GOOGLE_GENERATIVE_AI_API_KEY`. Без ключа обраного провайдера ендпоінт віддає **503**; помилка
+генерації — **502**. Нюанси:
+- `ai` і `@ai-sdk/*` — **ESM-only**; працюють у CJS-збірці через `require(esm)` (Node ≥22.12 —
+  Docker-образ `node:22` підходить). Не даунгрейдити Node нижче 22.12.
+- У jest ці пакети **мокати фабриками** (`jest.mock('ai', …)`) — див. `ai.service.spec.ts`;
+  реальний ESM-код jest не розпарсить.
+- Вхідний текст обрізається до 12k символів (вартість/латентність), промт вимагає
+  українську і довжини 40–60/120–160 символів у полях.
+
 ## Backend-specific notes
 
 - **Path alias** `@/*` → `src/*` (tsconfig + jest `moduleNameMapper`). Use it in imports.

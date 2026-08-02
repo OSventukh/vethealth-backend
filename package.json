@@ -36,6 +36,9 @@
     "test:e2e": "jest --config ./test/jest-e2e.json --maxWorkers=1"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.27",
+    "@ai-sdk/google": "^4.0.31",
+    "@ai-sdk/openai": "^4.0.27",
     "@aws-sdk/client-s3": "^3.1014.0",
     "@aws-sdk/s3-request-presigner": "^3.1014.0",
     "@nestjs/common": "^11.0.8",
@@ -48,6 +51,7 @@
     "@nestjs/swagger": "^11.0.3",
     "@nestjs/throttler": "^6.4.0",
     "@nestjs/typeorm": "^11.0.0",
+    "ai": "^7.0.47",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "handlebars": "^4.7.8",
@@ -64,7 +68,8 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "slugify": "^1.6.6",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.20",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@golevelup/ts-jest": "^0.6.2",

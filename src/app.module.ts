@@ -10,6 +10,7 @@ import { CookieResolver, HeaderResolver, I18nModule } from 'nestjs-i18n';
 import path from 'node:path';
 import { AuthModule } from './modules/auth/auth.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import aiConfig from './config/ai.config';
 import appConfig from './config/app.config';
 import authConfig from './config/auth.config';
 import { AllConfigType } from './config/config.type';
@@ -30,6 +31,7 @@ import { TopicsModule } from './modules/topics/topics.module';
 import { UsersModule } from './modules/users/users.module';
 import { SearchModule } from './modules/search/search.module';
 import { MetadataModule } from './modules/metadata/metadata.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -42,7 +44,14 @@ import { MetadataModule } from './modules/metadata/metadata.module';
     }),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, appConfig, authConfig, fileConfig, mailConfig],
+      load: [
+        databaseConfig,
+        appConfig,
+        authConfig,
+        fileConfig,
+        mailConfig,
+        aiConfig,
+      ],
       envFilePath: ['.env'],
     }),
     TypeOrmModule.forRootAsync({
@@ -87,6 +96,7 @@ import { MetadataModule } from './modules/metadata/metadata.module';
     MailModule,
     SearchModule,
     MetadataModule,
+    AiModule,
   ],
   controllers: [],
   providers: [
