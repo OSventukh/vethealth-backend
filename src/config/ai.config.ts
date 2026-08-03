@@ -1,9 +1,12 @@
 import { registerAs } from '@nestjs/config';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString, ValidateIf } from 'class-validator';
 import { AiConfig, AiProvider } from './config.type';
 import validateConfig from '@/utils/validate-config';
 
 class EnvironmentVariablesValidator {
+  // Deploy panels (Coolify) can inject vars as empty strings, which @IsOptional
+  // does NOT skip — treat '' as unset so an empty AI_PROVIDER can't crash boot.
+  @ValidateIf((_object, value) => value !== undefined && value !== '')
   @IsEnum(AiProvider)
   @IsOptional()
   AI_PROVIDER: AiProvider;
@@ -30,7 +33,7 @@ export default registerAs<AiConfig>('ai', () => {
 
   return {
     provider:
-      (process.env.AI_PROVIDER as AiProvider | undefined) ??
+      (process.env.AI_PROVIDER as AiProvider | undefined) ||
       AiProvider.Anthropic,
     model: process.env.AI_MODEL,
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
