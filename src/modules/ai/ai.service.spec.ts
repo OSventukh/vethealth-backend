@@ -8,7 +8,7 @@ import { generateObject } from 'ai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
-import { AiService } from './ai.service';
+import { AiService, validateSeoMetadata } from './ai.service';
 
 jest.mock('ai', () => ({
   generateObject: jest.fn(),
@@ -90,6 +90,8 @@ describe('AiService', () => {
     expect(callArgs.prompt).toContain('Отруєння у собак');
     expect(callArgs.prompt).toContain('Текст статті про отруєння.');
     expect(callArgs.prompt).toContain('Собаки');
+    // Захист від провайдера, що завис: генерація завжди з таймаутом
+    expect(callArgs.abortSignal).toBeInstanceOf(AbortSignal);
   });
 
   it('uses the configured provider and model override', async () => {
@@ -139,5 +141,41 @@ describe('AiService', () => {
     await expect(
       service.generateSeoMetadata({ title: 'Титул', text: 'Текст' }),
     ).rejects.toBeInstanceOf(BadGatewayException);
+  });
+});
+
+describe('validateSeoMetadata', () => {
+  it('accepts a complete result and trims the values', () => {
+    const result = validateSeoMetadata({
+      ...RESULT,
+      metaTitle: '  Тестовий meta title  ',
+    });
+
+    expect(result).toEqual({
+      success: true,
+      value: { ...RESULT, metaTitle: 'Тестовий meta title' },
+    });
+  });
+
+  it('rejects a result with a missing field', () => {
+    const { ogDescription: _ogDescription, ...incomplete } = RESULT;
+
+    const result = validateSeoMetadata(incomplete);
+
+    expect(result.success).toBe(false);
+    if (result.success === false) {
+      expect(result.error.message).toContain('ogDescription');
+    }
+  });
+
+  it('rejects empty strings and non-string values', () => {
+    expect(validateSeoMetadata({ ...RESULT, metaTitle: '   ' }).success).toBe(
+      false,
+    );
+    expect(validateSeoMetadata({ ...RESULT, metaKeywords: 42 }).success).toBe(
+      false,
+    );
+    expect(validateSeoMetadata(null).success).toBe(false);
+    expect(validateSeoMetadata('текст').success).toBe(false);
   });
 });

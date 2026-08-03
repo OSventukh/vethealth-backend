@@ -32,42 +32,84 @@ const DEFAULT_MODELS: Record<AiProvider, string> = {
 // вартість і латентність передбачуваними незалежно від довжини контенту.
 const MAX_INPUT_CHARS = 12000;
 
-const SEO_METADATA_SCHEMA = jsonSchema<SeoMetadataResult>({
-  type: 'object',
-  additionalProperties: false,
-  required: [
-    'metaTitle',
-    'metaDescription',
-    'metaKeywords',
-    'ogTitle',
-    'ogDescription',
-  ],
-  properties: {
-    metaTitle: {
-      type: 'string',
-      description:
-        'SEO-заголовок 40–60 символів українською, з головним пошуковим запитом, без назви сайту',
-    },
-    metaDescription: {
-      type: 'string',
-      description:
-        'Мета-опис 120–160 символів українською: конкретний, з ключовим запитом і користю для читача',
-    },
-    metaKeywords: {
-      type: 'string',
-      description: '4–8 ключових фраз українською через кому',
-    },
-    ogTitle: {
-      type: 'string',
-      description:
-        'Заголовок для соцмереж до 60 символів, може бути трохи емоційнішим за metaTitle',
-    },
-    ogDescription: {
-      type: 'string',
-      description: 'Опис для соцмереж до 200 символів',
+// Провайдер, що завис, не має тримати запит вічно — фронтенд чекає
+// відповідь синхронно, тож обриваємо генерацію і віддаємо 502.
+const GENERATION_TIMEOUT_MS = 30000;
+
+const SEO_FIELDS = [
+  'metaTitle',
+  'metaDescription',
+  'metaKeywords',
+  'ogTitle',
+  'ogDescription',
+] as const;
+
+// Схема лише скеровує генерацію — без validate SDK не перевіряє відповідь
+// у рантаймі. Перевіряємо форму (всі поля — непорожні рядки) і тримаємо
+// значення; довжини навмисно не валідуємо жорстко (моделі не рахують
+// символи надійно, а результат все одно ревʼюїть людина у формі).
+export function validateSeoMetadata(
+  value: unknown,
+):
+  | { success: true; value: SeoMetadataResult }
+  | { success: false; error: Error } {
+  if (typeof value !== 'object' || value === null) {
+    return { success: false, error: new Error('AI response is not an object') };
+  }
+  const record = value as Record<string, unknown>;
+  const result = {} as SeoMetadataResult;
+  for (const field of SEO_FIELDS) {
+    const fieldValue = record[field];
+    if (typeof fieldValue !== 'string' || !fieldValue.trim()) {
+      return {
+        success: false,
+        error: new Error(`AI response field "${field}" is missing or empty`),
+      };
+    }
+    result[field] = fieldValue.trim();
+  }
+  return { success: true, value: result };
+}
+
+const SEO_METADATA_SCHEMA = jsonSchema<SeoMetadataResult>(
+  {
+    type: 'object',
+    additionalProperties: false,
+    required: [
+      'metaTitle',
+      'metaDescription',
+      'metaKeywords',
+      'ogTitle',
+      'ogDescription',
+    ],
+    properties: {
+      metaTitle: {
+        type: 'string',
+        description:
+          'SEO-заголовок 40–60 символів українською, з головним пошуковим запитом, без назви сайту',
+      },
+      metaDescription: {
+        type: 'string',
+        description:
+          'Мета-опис 120–160 символів українською: конкретний, з ключовим запитом і користю для читача',
+      },
+      metaKeywords: {
+        type: 'string',
+        description: '4–8 ключових фраз українською через кому',
+      },
+      ogTitle: {
+        type: 'string',
+        description:
+          'Заголовок для соцмереж до 60 символів, може бути трохи емоційнішим за metaTitle',
+      },
+      ogDescription: {
+        type: 'string',
+        description: 'Опис для соцмереж до 200 символів',
+      },
     },
   },
-});
+  { validate: validateSeoMetadata },
+);
 
 const SYSTEM_PROMPT = `Ти — SEO-редактор українського ветеринарного сайту VetHealth (vethealth.com.ua) з довідковими статтями про здоровʼя тварин, їх лікування, догляд і ветеринарні препарати.
 На основі заголовка і тексту згенеруй SEO-мета-поля українською мовою.
@@ -106,6 +148,7 @@ export class AiService {
         system: SYSTEM_PROMPT,
         prompt: `Заголовок ${kind}: ${dto.title}${topics}\n\nТекст ${kind}:\n${text}`,
         maxOutputTokens: 2000,
+        abortSignal: AbortSignal.timeout(GENERATION_TIMEOUT_MS),
       });
       return object;
     } catch (error) {

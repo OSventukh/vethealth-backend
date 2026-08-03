@@ -84,6 +84,12 @@ services:
       - FILE_S3_PUBLIC_URL
       - FILE_S3_FORCE_PATH_STYLE
       - FILE_MAX_SIZE
+
+      - AI_PROVIDER
+      - AI_MODEL
+      - ANTHROPIC_API_KEY
+      - OPENAI_API_KEY
+      - GOOGLE_GENERATIVE_AI_API_KEY
     ports:
       - '${APP_PORT}:${APP_PORT}'
     volumes:

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ThrottlerGuard, ThrottlerModule, minutes } from '@nestjs/throttler';
+import { ThrottlerModule, minutes } from '@nestjs/throttler';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource, DataSourceOptions } from 'typeorm';
@@ -32,6 +32,7 @@ import { UsersModule } from './modules/users/users.module';
 import { SearchModule } from './modules/search/search.module';
 import { MetadataModule } from './modules/metadata/metadata.module';
 import { AiModule } from './modules/ai/ai.module';
+import { AppThrottlerGuard } from './utils/guards/app-throttler.guard';
 
 @Module({
   imports: [
@@ -102,7 +103,7 @@ import { AiModule } from './modules/ai/ai.module';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: AppThrottlerGuard,
     },
   ],
 })

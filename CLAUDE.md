@@ -104,6 +104,16 @@ JSON). Провайдер перемикається конфігом (namespace
   реальний ESM-код jest не розпарсить.
 - Вхідний текст обрізається до 12k символів (вартість/латентність), промт вимагає
   українську і довжини 40–60/120–160 символів у полях.
+- Відповідь моделі **валідовано в рантаймі** через `validate`-опцію `jsonSchema`
+  (`validateSeoMetadata`: 5 непорожніх рядків + trim; невалідно → 502). Довжини полів
+  навмисно НЕ валідуються жорстко — моделі не рахують символи надійно, жорсткий min/max
+  давав би флейкові 502; довжини тримає промт + ревʼю людиною у формі.
+- Генерація має 30-с таймаут (`abortSignal: AbortSignal.timeout`) — зависання провайдера
+  стає 502, а не вічним запитом.
+- Rate limit трекається **за sha256-хешем bearer-токена** (`AppThrottlerGuard`,
+  `src/utils/guards/`, замінює `ThrottlerGuard` в `app.module.ts`): усі запити з адмінки
+  приходять через Next server actions з однієї IP frontend-контейнера, тож IP-трекер
+  склеював би всіх редакторів в один бакет. Анонімні запити — за IP, як раніше.
 
 ## Backend-specific notes
 
@@ -132,3 +142,6 @@ JSON). Провайдер перемикається конфігом (namespace
   stale authoring domain still migrates) and leaves non-`/uploads/` external URLs alone. Dry-run by
   default (prints per-URL before→after diffs); `--execute` applies; idempotent.
 - **`.env.example`** is a generic placeholder template — keep it that way; real values go in `.env`.
+- **`docker-compose.yml` передає env у prod-контейнер явним allowlist'ом** (`app.environment`) —
+  нова env-змінна, додана лише в config namespace / `.env.example`, у прод **не потрапить**,
+  поки її не додано і в цей список (саме так AI-ключі спершу лишилися поза контейнером).

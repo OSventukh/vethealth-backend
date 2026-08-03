@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  ArrayMaxSize,
   IsArray,
   IsIn,
   IsNotEmpty,
@@ -24,7 +25,9 @@ export class GenerateSeoMetadataDto {
   @ApiProperty({ required: false, type: [String] })
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(10)
   @IsString({ each: true })
+  @MaxLength(100, { each: true })
   topics?: string[];
 
   @ApiProperty({ required: false, enum: ['post', 'page'] })
