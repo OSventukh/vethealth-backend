@@ -8,7 +8,7 @@ import { FindOptionsRelations, Repository, Like } from 'typeorm';
 import { RoleEnum } from '@/roles/roles.enum';
 import type { JwtPayloadType } from '@/modules/auth/strategies/types/jwt-payload.type';
 import { PostEntity } from './entities/post.entity';
-import { PaginationType } from 'src/utils/types/pagination.type';
+import { PaginationType } from '@/utils/types/pagination.type';
 import { CreatePostDto } from './dto/create-post.dto';
 import { FindOptionsWhere } from 'typeorm';
 import { PostQueryDto } from './dto/post-query.dto';

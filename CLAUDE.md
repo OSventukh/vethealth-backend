@@ -92,24 +92,68 @@ A security pass over auth/authz is underway; new code must follow the target mod
 
 `src/modules/ai` — `POST /ai/seo-metadata` (будь-який автентифікований користувач; `@Throttle`
 10 req/хв) генерує metaTitle/metaDescription/metaKeywords/ogTitle/ogDescription з тексту
-статті/сторінки через **Vercel AI SDK** (`generateObject` + json schema → гарантовано валідний
+статті/сторінки через **Vercel AI SDK** (`generateObject` + zod-схема → гарантовано валідний
 JSON). Провайдер перемикається конфігом (namespace `ai`): `AI_PROVIDER` = `anthropic` (дефолт) |
 `openai` | `google`, модель — `AI_MODEL` (дефолти: `claude-opus-5` / `gpt-5.1` /
 `gemini-2.5-flash`), ключі — `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` /
-`GOOGLE_GENERATIVE_AI_API_KEY`. Без ключа обраного провайдера ендпоінт віддає **503**; помилка
-генерації — **502**. Нюанси:
+`GOOGLE_GENERATIVE_AI_API_KEY`.
+
+**Структура модуля (рефакторинг 2026-08-15).** Три шари, кожен зі своєю відповідальністю:
+- `ai-model.registry.ts` — `AiModelRegistry` поверх `createProviderRegistry`: усі три провайдери
+  реєструються під префіксами, модель адресується рядком `provider:model`. Додати провайдера =
+  один рядок у `buildRegistry`. Реєстр будується один раз (лениво), ключі теж читаються один раз
+  (конфіг статичний після старту); без ключа потрібного провайдера — **503** ще до виклику SDK.
+  `languageModel()` (як і `AI_MODEL`, і `AiTask.model`) приймає **або** назву моделі поточного
+  провайдера (`claude-haiku-4-5`), **або** повну адресу `provider:model` (`openai:gpt-5.1`) — тоді
+  задача йде до іншого провайдера, ніж `AI_PROVIDER`. Невідомий префікс — одразу 503, бо інакше
+  SDK пішов би за неіснуючим id і повернув 404, що ніяк не натякає на помилку конфігурації.
+- `tasks/*.task.ts` — декларативний опис задачі (`AiTask`): zod-схема відповіді, системний промт,
+  `buildPrompt`, `maxOutputTokens`, опційний `model`. **Нова AI-фіча = новий файл тут** +
+  метод-обгортка в `AiService`; логіку виклику дублювати не треба.
+- `ai.service.ts` — єдиний `run(task, input)`: модель із реєстру, `generateObject`, таймаут,
+  ретраї та маппінг помилок SDK у HTTP-статуси.
+
+Нюанси:
 - `ai` і `@ai-sdk/*` — **ESM-only**; працюють у CJS-збірці через `require(esm)` (Node ≥22.12 —
   Docker-образ `node:22` підходить). Не даунгрейдити Node нижче 22.12.
 - У jest ці пакети **мокати фабриками** (`jest.mock('ai', …)`) — див. `ai.service.spec.ts`;
-  реальний ESM-код jest не розпарсить.
-- Вхідний текст обрізається до 12k символів (вартість/латентність), промт вимагає
-  українську і довжини 40–60/120–160 символів у полях.
-- Відповідь моделі **валідовано в рантаймі** через `validate`-опцію `jsonSchema`
-  (`validateSeoMetadata`: 5 непорожніх рядків + trim; невалідно → 502). Довжини полів
-  навмисно НЕ валідуються жорстко — моделі не рахують символи надійно, жорсткий min/max
-  давав би флейкові 502; довжини тримає промт + ревʼю людиною у формі.
-- Генерація має 30-с таймаут (`abortSignal: AbortSignal.timeout`) — зависання провайдера
-  стає 502, а не вічним запитом.
+  реальний ESM-код jest не розпарсить. Спец сервісу мокає ще й `@ai-sdk/*`: вони приїжджають
+  транзитивно разом із класом `AiModelRegistry` (DI-токеном), хоч і не викликаються.
+- Вхідний текст обрізається до 12k символів (вартість/латентність) — це робить `buildPrompt`
+  задачі, не сервіс. Промт вимагає українську і довжини 40–60/120–160 символів у полях.
+- Відповідь моделі валідує **сам SDK** zod-схемою задачі (`seoMetadataSchema`: 5 непорожніх
+  рядків, `.trim()` застосовується до значень; зайві поля відкидаються). Схема ж їде провайдеру
+  як JSON Schema — з `required`, `additionalProperties: false` і описами полів. Довжини полів
+  навмисно НЕ валідуються жорстко — моделі не рахують символи надійно, жорсткий min/max давав би
+  флейкові 502; довжини тримає промт + ревʼю людиною у формі.
+- Генерація має 30-с таймаут (`abortSignal: AbortSignal.timeout`); `maxRetries: 1`, бо ретраї
+  SDK ділять той самий бюджет таймауту (сигнал один на всі спроби).
+- **Маппінг помилок** (`AiService.toHttpException` → `classify`, через `isInstance` класів SDK;
+  `RetryError` спершу розгортається до `lastError`). Статуси розведені за тим, **що клієнт має
+  показати редактору**, а не за типом винятку:
+  - **503** — тільки проблеми конфігурації: немає ключа (кидає реєстр) або провайдер його
+    відхилив (`APICallError` 401/403). Фронтенд на 503 каже «додайте API-ключ у env бекенда»,
+    тож тимчасові збої сюди пхати **не можна** — редактор побачить неправдиву пораду.
+  - **429** — ліміт провайдера (`APICallError` 429) + заголовок `Retry-After`, узятий із
+    `responseHeaders` (`retry-after` / `retry-after-ms`). Сам заголовок дописує контролер:
+    фільтр винятків Nest пише лише статус і тіло, тож `AiProviderException` несе
+    `retryAfterSeconds` до контролера. Не плутати з нашим власним `@Throttle` (10 req/хв) —
+    статус той самий, і порада редактору («зачекайте хвилину») теж.
+  - **502** — провайдер відповів помилкою (будь-який інший `APICallError`, включно з 5xx) або
+    модель не влучила в схему (`NoObjectGeneratedError`).
+  - **504** — генерація не вклалася в 30 с (таймаут/abort).
+  `isAbortError` обходить `cause` і `AggregateError.errors` на глибину 3 — обгортка провайдера
+  не зобовʼязана бути `Error` (undici кидає `AggregateError` на таймаутах зʼєднання).
+  При 502 через схему в лог іде **вкладена причина** (`TypeValidationError` називає поле, що не
+  зійшлося) + сира відповідь моделі (перші 300 символів). `finishReason` тут **не логуємо**: SDK
+  не заповнює його на `NoObjectGeneratedError` з `generateObject` — він завжди `undefined`.
+  Оригінальна помилка їде у `cause` винятку, назовні — лише санітизоване повідомлення.
+- **Статуси — це контракт із фронтендом.** `frontend/src/app/(dashboard)/admin/actions/`
+  `generate-seo.action.ts` (гілка `main`; у `dev` цього файлу ще немає) мапить статус на
+  українське повідомлення редактору: 429 / 502 / 503, решта — загальний fallback. Міняючи
+  маппінг тут, міняй і той `STATUS_MESSAGES`. **Відкритий хвіст:** для **504** запису там ще
+  немає — редактор бачить загальне «Не вдалося згенерувати мета-поля» замість «провайдер довго
+  не відповідає».
 - Rate limit трекається **за sha256-хешем bearer-токена** (`AppThrottlerGuard`,
   `src/utils/guards/`, замінює `ThrottlerGuard` в `app.module.ts`): усі запити з адмінки
   приходять через Next server actions з однієї IP frontend-контейнера, тож IP-трекер
@@ -117,7 +161,14 @@ JSON). Провайдер перемикається конфігом (namespace
 
 ## Backend-specific notes
 
-- **Path alias** `@/*` → `src/*` (tsconfig + jest `moduleNameMapper`). Use it in imports.
+- **Path alias** `@/*` → `./src/*` (tsconfig + jest `moduleNameMapper`). Use it in imports — it is
+  now the **only** alias style; the handful of baseUrl-relative `from 'src/…'` imports were
+  converted (2026-08-16). `baseUrl` is deliberately **absent** (TS 6 deprecates it, TS 7 drops it):
+  `paths` values are therefore repo-relative (`./src/*`). All three resolvers were verified without
+  it — `tsc`, the Nest CLI's alias rewriting in `nest build` (dist ships relative `require`s, no
+  `@/` survives), and `ts-node -r tsconfig-paths/register` (migrations/seeds). Don't re-add
+  `baseUrl`, and don't drop it without also converting every non-relative import — the combination
+  `baseUrl` gone + `paths: ["src/*"]` fails with **TS5090** and breaks `nest build` outright.
 - **Bootstrap** (`src/main.ts`): CORS is locked to `app.frontendDomain` with `credentials: true`;
   port comes from `app.port` (5000). Validation stacks the standard `ValidationPipe`
   (`transform`/`whitelist`/`forbidNonWhitelisted`) **with** `nestjs-i18n`'s `I18nValidationPipe`

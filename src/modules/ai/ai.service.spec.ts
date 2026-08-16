@@ -1,31 +1,100 @@
-import {
-  BadGatewayException,
-  ServiceUnavailableException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { HttpStatus, ServiceUnavailableException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { generateObject } from 'ai';
-import { createAnthropic } from '@ai-sdk/anthropic';
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { createOpenAI } from '@ai-sdk/openai';
-import { AiService, validateSeoMetadata } from './ai.service';
+import {
+  APICallError,
+  generateObject,
+  NoObjectGeneratedError,
+  RetryError,
+} from 'ai';
+import { AiModelRegistry } from './ai-model.registry';
+import { AiProviderException, AiService } from './ai.service';
+import { seoMetadataSchema, seoMetadataTask } from './tasks/seo-metadata.task';
 
-jest.mock('ai', () => ({
-  generateObject: jest.fn(),
-  jsonSchema: (schema: unknown) => schema,
-}));
+// `ai` і `@ai-sdk/*` — ESM-only, jest їх не розпарсить: підміняємо
+// фабриками. Провайдери тут не викликаються — вони приїжджають лише
+// транзитивно, разом із класом AiModelRegistry (DI-токеном).
+// Класи помилок відтворюють контракт SDK (`isInstance` + поля), бо саме
+// на них тримається маппінг у HTTP-статуси.
+jest.mock('@ai-sdk/anthropic', () => ({ createAnthropic: jest.fn() }));
+jest.mock('@ai-sdk/openai', () => ({ createOpenAI: jest.fn() }));
+jest.mock('@ai-sdk/google', () => ({ createGoogleGenerativeAI: jest.fn() }));
 
-jest.mock('@ai-sdk/anthropic', () => ({
-  createAnthropic: jest.fn(() => jest.fn(() => 'anthropic-model')),
-}));
-jest.mock('@ai-sdk/openai', () => ({
-  createOpenAI: jest.fn(() => jest.fn(() => 'openai-model')),
-}));
-jest.mock('@ai-sdk/google', () => ({
-  createGoogleGenerativeAI: jest.fn(() => jest.fn(() => 'google-model')),
-}));
+jest.mock('ai', () => {
+  class MockAPICallError extends Error {
+    statusCode?: number;
+    responseHeaders?: Record<string, string>;
+    isRetryable: boolean;
 
-const generateObjectMock = generateObject as jest.Mock;
+    constructor({
+      message,
+      statusCode,
+      responseHeaders,
+      isRetryable,
+    }: {
+      message: string;
+      statusCode?: number;
+      responseHeaders?: Record<string, string>;
+      isRetryable?: boolean;
+    }) {
+      super(message);
+      this.statusCode = statusCode;
+      this.responseHeaders = responseHeaders;
+      this.isRetryable =
+        isRetryable ??
+        (statusCode != null &&
+          (statusCode === 408 ||
+            statusCode === 409 ||
+            statusCode === 429 ||
+            statusCode >= 500));
+    }
+
+    static isInstance(error: unknown) {
+      return error instanceof MockAPICallError;
+    }
+  }
+
+  class MockNoObjectGeneratedError extends Error {
+    text?: string;
+    // `cause` тут — вкладена TypeValidationError: у SDK саме вона пояснює,
+    // яке поле не зійшлося (`finishReason` лишається порожнім).
+    cause?: unknown;
+
+    constructor({ text, cause }: { text?: string; cause?: unknown }) {
+      super('No object generated');
+      this.text = text;
+      this.cause = cause;
+    }
+
+    static isInstance(error: unknown) {
+      return error instanceof MockNoObjectGeneratedError;
+    }
+  }
+
+  // SDK не приймає lastError ззовні — він завжди останній із `errors`.
+  class MockRetryError extends Error {
+    errors: unknown[];
+    lastError: unknown;
+
+    constructor({ message, errors }: { message: string; errors: unknown[] }) {
+      super(message);
+      this.errors = errors;
+      this.lastError = errors[errors.length - 1];
+    }
+
+    static isInstance(error: unknown) {
+      return error instanceof MockRetryError;
+    }
+  }
+
+  return {
+    generateObject: jest.fn(),
+    APICallError: MockAPICallError,
+    NoObjectGeneratedError: MockNoObjectGeneratedError,
+    RetryError: MockRetryError,
+  };
+});
+
+const generateObjectMock = generateObject as unknown as jest.Mock;
 
 const RESULT = {
   metaTitle: 'Тестовий meta title',
@@ -35,44 +104,50 @@ const RESULT = {
   ogDescription: 'OG description',
 };
 
+const apiCallError = (
+  statusCode: number,
+  responseHeaders?: Record<string, string>,
+) =>
+  new APICallError({
+    message: `provider responded ${statusCode}`,
+    url: 'https://provider.test/v1',
+    requestBodyValues: {},
+    statusCode,
+    responseHeaders,
+  });
+
 describe('AiService', () => {
   let service: AiService;
-  let aiConfig: Record<string, unknown>;
+  let languageModel: jest.Mock;
 
-  const createService = async () => {
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    languageModel = jest.fn(() => 'language-model');
+    generateObjectMock.mockResolvedValue({ object: RESULT });
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AiService,
-        {
-          provide: ConfigService,
-          useValue: {
-            get: jest.fn((key: string) =>
-              key.startsWith('ai.') ? aiConfig[key.slice(3)] : undefined,
-            ),
-            getOrThrow: jest.fn((key: string) => {
-              const value = key.startsWith('ai.') && aiConfig[key.slice(3)];
-              if (!value) {
-                throw new Error(`missing config ${key}`);
-              }
-              return value;
-            }),
-          },
-        },
+        { provide: AiModelRegistry, useValue: { languageModel } },
       ],
     }).compile();
 
-    return module.get<AiService>(AiService);
-  };
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    aiConfig = { provider: 'anthropic', anthropicApiKey: 'test-key' };
-    generateObjectMock.mockResolvedValue({ object: RESULT });
+    service = module.get<AiService>(AiService);
   });
 
-  it('generates seo metadata with the anthropic default model', async () => {
-    service = await createService();
+  // Помилки перекладені в HTTP-статуси, тож перевіряємо саме статус —
+  // це той контракт, за яким діє адмінка.
+  const expectFailure = async (): Promise<AiProviderException> => {
+    try {
+      await service.generateSeoMetadata({ title: 'Титул', text: 'Текст' });
+    } catch (error) {
+      return error as AiProviderException;
+    }
 
+    throw new Error('expected the generation to fail');
+  };
+
+  it('runs the seo task against the model from the registry', async () => {
     const result = await service.generateSeoMetadata({
       title: 'Отруєння у собак',
       text: 'Текст статті про отруєння.',
@@ -80,40 +155,28 @@ describe('AiService', () => {
     });
 
     expect(result).toEqual(RESULT);
-    expect(createAnthropic).toHaveBeenCalledWith({ apiKey: 'test-key' });
-    const anthropicFactory = (createAnthropic as jest.Mock).mock.results[0]
-      .value as jest.Mock;
-    expect(anthropicFactory).toHaveBeenCalledWith('claude-opus-5');
 
     const callArgs = generateObjectMock.mock.calls[0][0];
-    expect(callArgs.model).toBe('anthropic-model');
+    expect(callArgs.model).toBe('language-model');
+    expect(callArgs.schema).toBe(seoMetadataSchema);
+    expect(callArgs.schemaName).toBe('seo-metadata');
+    // Системний промт тримає мову і довжини полів — без нього схема все
+    // одно зійдеться, тож ловимо його втрату тут.
+    expect(callArgs.system).toBe(seoMetadataTask.system);
+    expect(callArgs.maxOutputTokens).toBe(seoMetadataTask.maxOutputTokens);
     expect(callArgs.prompt).toContain('Отруєння у собак');
     expect(callArgs.prompt).toContain('Текст статті про отруєння.');
     expect(callArgs.prompt).toContain('Собаки');
-    // Захист від провайдера, що завис: генерація завжди з таймаутом
+    // Захист від провайдера, що завис: генерація завжди з таймаутом,
+    // а ретраї SDK ділять той самий бюджет.
     expect(callArgs.abortSignal).toBeInstanceOf(AbortSignal);
+    expect(callArgs.maxRetries).toBe(1);
   });
 
-  it('uses the configured provider and model override', async () => {
-    aiConfig = {
-      provider: 'openai',
-      model: 'gpt-5.2-mini',
-      openaiApiKey: 'openai-key',
-    };
-    service = await createService();
-
-    await service.generateSeoMetadata({ title: 'Титул', text: 'Текст' });
-
-    expect(createOpenAI).toHaveBeenCalledWith({ apiKey: 'openai-key' });
-    const openaiFactory = (createOpenAI as jest.Mock).mock.results[0]
-      .value as jest.Mock;
-    expect(openaiFactory).toHaveBeenCalledWith('gpt-5.2-mini');
-    expect(createGoogleGenerativeAI).not.toHaveBeenCalled();
-  });
-
-  it('throws 503 when the configured provider has no api key', async () => {
-    aiConfig = { provider: 'google' };
-    service = await createService();
+  it('propagates the 503 raised when the provider has no api key', async () => {
+    languageModel.mockImplementation(() => {
+      throw new ServiceUnavailableException('AI provider is not configured');
+    });
 
     await expect(
       service.generateSeoMetadata({ title: 'Титул', text: 'Текст' }),
@@ -121,61 +184,105 @@ describe('AiService', () => {
     expect(generateObjectMock).not.toHaveBeenCalled();
   });
 
-  it('truncates overly long text before sending it to the model', async () => {
-    service = await createService();
+  it('maps a timed-out generation to 504', async () => {
+    const timeout = new Error('The operation was aborted due to timeout');
+    timeout.name = 'TimeoutError';
+    generateObjectMock.mockRejectedValue(timeout);
 
-    await service.generateSeoMetadata({
-      title: 'Титул',
-      text: 'а'.repeat(20000),
-    });
-
-    const callArgs = generateObjectMock.mock.calls[0][0];
-    // 12000 символів тексту + промт-обгортка, але точно не всі 20000
-    expect(callArgs.prompt.length).toBeLessThan(13000);
+    expect((await expectFailure()).getStatus()).toBe(
+      HttpStatus.GATEWAY_TIMEOUT,
+    );
   });
 
-  it('maps generation failures to 502', async () => {
+  it('detects an abort wrapped in a non-Error cause', async () => {
+    // Провайдери інколи загортають DOMException у власний обʼєкт — на
+    // ньому обхід cause не має зупинятися.
+    const abort = new Error('aborted');
+    abort.name = 'AbortError';
+    generateObjectMock.mockRejectedValue({
+      message: 'request failed',
+      cause: abort,
+    });
+
+    expect((await expectFailure()).getStatus()).toBe(
+      HttpStatus.GATEWAY_TIMEOUT,
+    );
+  });
+
+  it('detects an abort collected into an AggregateError', async () => {
+    const abort = new Error('The operation was aborted due to timeout');
+    abort.name = 'TimeoutError';
+    generateObjectMock.mockRejectedValue(
+      new AggregateError([new Error('ECONNRESET'), abort], 'connect failed'),
+    );
+
+    expect((await expectFailure()).getStatus()).toBe(
+      HttpStatus.GATEWAY_TIMEOUT,
+    );
+  });
+
+  it('maps a rejected api key to 503', async () => {
+    generateObjectMock.mockRejectedValue(apiCallError(401));
+
+    expect((await expectFailure()).getStatus()).toBe(
+      HttpStatus.SERVICE_UNAVAILABLE,
+    );
+  });
+
+  it('unwraps RetryError and maps a rate-limited provider to 429', async () => {
+    // 503 тут означав би «ШІ не налаштовано» — у фронтенді це повідомлення
+    // про відсутній API-ключ, тож ліміт провайдера має лишатися 429.
+    generateObjectMock.mockRejectedValue(
+      new RetryError({
+        message: 'Failed after 2 attempts',
+        reason: 'maxRetriesExceeded',
+        errors: [apiCallError(500), apiCallError(429, { 'retry-after': '12' })],
+      } as never),
+    );
+
+    const error = await expectFailure();
+    expect(error.getStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
+    expect(error.retryAfterSeconds).toBe(12);
+  });
+
+  it('reads the retry delay from retry-after-ms as well', async () => {
+    generateObjectMock.mockRejectedValue(
+      apiCallError(429, { 'retry-after-ms': '2500' }),
+    );
+
+    expect((await expectFailure()).retryAfterSeconds).toBe(3);
+  });
+
+  it('maps a failing provider to 502 and keeps the original error as cause', async () => {
+    const providerError = apiCallError(500);
+    generateObjectMock.mockRejectedValue(providerError);
+
+    const error = await expectFailure();
+    expect(error.getStatus()).toBe(HttpStatus.BAD_GATEWAY);
+    expect(error.retryAfterSeconds).toBeUndefined();
+    expect(error.cause).toBe(providerError);
+  });
+
+  it('maps a non-retryable provider error to 502', async () => {
+    generateObjectMock.mockRejectedValue(apiCallError(400));
+
+    expect((await expectFailure()).getStatus()).toBe(HttpStatus.BAD_GATEWAY);
+  });
+
+  it('maps a response that does not match the schema to 502', async () => {
+    generateObjectMock.mockRejectedValue(
+      new NoObjectGeneratedError({
+        text: '{"metaTitle": ',
+        cause: new Error('Type validation failed: metaTitle is required'),
+      } as never),
+    );
+
+    expect((await expectFailure()).getStatus()).toBe(HttpStatus.BAD_GATEWAY);
+  });
+
+  it('maps unknown failures to 502', async () => {
     generateObjectMock.mockRejectedValue(new Error('upstream boom'));
-    service = await createService();
 
-    await expect(
-      service.generateSeoMetadata({ title: 'Титул', text: 'Текст' }),
-    ).rejects.toBeInstanceOf(BadGatewayException);
-  });
-});
-
-describe('validateSeoMetadata', () => {
-  it('accepts a complete result and trims the values', () => {
-    const result = validateSeoMetadata({
-      ...RESULT,
-      metaTitle: '  Тестовий meta title  ',
-    });
-
-    expect(result).toEqual({
-      success: true,
-      value: { ...RESULT, metaTitle: 'Тестовий meta title' },
-    });
-  });
-
-  it('rejects a result with a missing field', () => {
-    const { ogDescription: _ogDescription, ...incomplete } = RESULT;
-
-    const result = validateSeoMetadata(incomplete);
-
-    expect(result.success).toBe(false);
-    if (result.success === false) {
-      expect(result.error.message).toContain('ogDescription');
-    }
-  });
-
-  it('rejects empty strings and non-string values', () => {
-    expect(validateSeoMetadata({ ...RESULT, metaTitle: '   ' }).success).toBe(
-      false,
-    );
-    expect(validateSeoMetadata({ ...RESULT, metaKeywords: 42 }).success).toBe(
-      false,
-    );
-    expect(validateSeoMetadata(null).success).toBe(false);
-    expect(validateSeoMetadata('текст').success).toBe(false);
+    expect((await expectFailure()).getStatus()).toBe(HttpStatus.BAD_GATEWAY);
   });
 });
