@@ -96,7 +96,14 @@ services:
       - ./src:/app/src
       - uploads:/app/uploads
     networks:
-      - coolify
+      coolify:
+        # Стабільне DNS-імʼя в спільній мережі coolify: Coolify ігнорує
+        # container_name і додає до імені контейнера timestamp, а аліас `app`
+        # однаковий у прод- і стейджинг-бекенда. Фронтенд ходить сюди через
+        # API_SERVER_INTERNAL. Стейджинг МУСИТЬ задати APP_NETWORK_ALIAS
+        # (nest-app-staging) у env Coolify, інакше повернеться колізія імен.
+        aliases:
+          - ${APP_NETWORK_ALIAS:-nest-app}
 volumes:
   uploads:
   mysql_data:
