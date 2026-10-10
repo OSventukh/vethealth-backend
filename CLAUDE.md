@@ -25,6 +25,23 @@ pnpm lint                            # oxlint --fix   (ESLint/Prettier/Biome rem
 pnpm format                          # oxfmt          (Prettier-compatible; 0.x beta — pin version)
 ```
 
+**NestJS 12 (upgraded 2026-10 via `nest upgrade`).** The `@nestjs/*` packages are **ESM-only**;
+our build stays CommonJS and loads them through `require(esm)` (Node ≥22.12 at runtime —
+`node:22-slim` is fine). Consequences:
+- **Jest needs `--experimental-vm-modules` *and* Node ≥24.9.** The `test*` scripts run
+  `node --experimental-vm-modules node_modules/jest/bin/jest.js` — Jest 30 only uses Node's
+  synchronous ESM evaluation when `vm.SourceTextModule` exists, which the flag exposes. Running bare
+  `jest` (or on Node 22) fails with "Must use import to load ES Module". ts-jest's TS151002
+  warning (hybrid `nodenext` without `isolatedModules`) is silenced in the jest configs on purpose —
+  don't "fix" it by enabling `isolatedModules`: with `emitDecoratorMetadata` that forces
+  `import type` on DI types (TS1272).
+- tsconfig: `module`/`moduleResolution: nodenext` (required to resolve the ESM packages; output is
+  still CJS since `package.json` has no `"type": "module"`), `target: ES2023`.
+  `tsconfig.build.json` sets `rootDir: ./src` (TS 6 requires it) and keeps the `tsbuildinfo` inside
+  `dist` so `deleteOutDir` invalidates it.
+- TypeScript 6 turns **`strict` on by default**; we only opt out of `strictNullChecks` and
+  `noImplicitAny` explicitly, so e.g. `catch` variables are `unknown`.
+
 **oxlint config (`.oxlintrc.json`) — NestJS rule overrides, do not remove:**
 `typescript/consistent-type-imports: off` (else DI imports become `import type` → breaks
 `emitDecoratorMetadata`), `typescript/parameter-properties: off` (allows `constructor(private x)`

@@ -53,7 +53,7 @@ describe('TopicsService', () => {
     };
 
     topicsService.create(createTopicDto);
-    expect(topicsRepository.create).toBeCalledWith(createTopicDto);
+    expect(topicsRepository.create).toHaveBeenCalledWith(createTopicDto);
   });
 
   it('should call topicsRepository.findOne() mehtod with object that have where field and passed value', () => {
@@ -61,7 +61,7 @@ describe('TopicsService', () => {
     const { include, status } = queryDto;
 
     topicsService.findOne(TopicEntity['id'], new TopicQueryDto());
-    expect(topicsRepository.findOne).toBeCalledWith({
+    expect(topicsRepository.findOne).toHaveBeenCalledWith({
       where: { ...PostEntity['id'], status: { name: status } },
       relations: include,
     });
@@ -73,7 +73,7 @@ describe('TopicsService', () => {
       queryDto;
 
     topicsService.findManyWithPagination(queryDto);
-    expect(topicsRepository.findAndCount).toBeCalledWith({
+    expect(topicsRepository.findAndCount).toHaveBeenCalledWith({
       skip: (page - 1) * size,
       take: size,
       where: {
@@ -96,7 +96,7 @@ describe('TopicsService', () => {
     } as TopicEntity;
 
     topicsService.update(topic);
-    expect(topicsRepository.save).toBeCalledWith(
+    expect(topicsRepository.save).toHaveBeenCalledWith(
       topicsRepository.create(topic),
     );
   });
@@ -104,6 +104,6 @@ describe('TopicsService', () => {
   it('should call topicsRepository.softDelete() with provided id', () => {
     const topicId = 'id';
     topicsService.softDelete(topicId);
-    expect(topicsRepository.softDelete).toBeCalledWith(topicId);
+    expect(topicsRepository.softDelete).toHaveBeenCalledWith(topicId);
   });
 });

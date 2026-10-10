@@ -38,7 +38,7 @@ describe('TopicsController', () => {
       status: new TopicStatusEntity(),
     };
     topicsController.create(createTopicDto);
-    expect(topicsService.create).toBeCalledWith(createTopicDto);
+    expect(topicsService.create).toHaveBeenCalledWith(createTopicDto);
   });
 
   it('should call a topicsService.findOne() method with provided id', () => {
@@ -46,7 +46,10 @@ describe('TopicsController', () => {
     const queryDto = new TopicQueryDto();
 
     topicsController.getOne(topicId, queryDto);
-    expect(topicsService.findOne).toBeCalledWith({ id: topicId }, queryDto);
+    expect(topicsService.findOne).toHaveBeenCalledWith(
+      { id: topicId },
+      queryDto,
+    );
   });
 
   it('should call a topicsService.findManyWithPafination() method with provided page and size', () => {
@@ -56,7 +59,7 @@ describe('TopicsController', () => {
     };
 
     topicsController.getMany(queryDto);
-    expect(topicsService.findManyWithPagination).toBeCalledWith(queryDto);
+    expect(topicsService.findManyWithPagination).toHaveBeenCalledWith(queryDto);
   });
 
   it('should call a topicsService.update() method with provided id and payload object', () => {
@@ -65,12 +68,12 @@ describe('TopicsController', () => {
       id: 'testId',
     };
     topicsController.update(payload);
-    expect(topicsService.update).toBeCalledWith(payload);
+    expect(topicsService.update).toHaveBeenCalledWith(payload);
   });
 
   it('should call a topicsService.softDelete() method with provided id', () => {
     const topicId = '1';
     topicsController.delete(topicId);
-    expect(topicsService.softDelete).toBeCalledWith(topicId);
+    expect(topicsService.softDelete).toHaveBeenCalledWith(topicId);
   });
 });
