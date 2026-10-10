@@ -14,8 +14,8 @@ const lexical = (text: string) =>
 const post = (id: number, title: string, text: string) =>
   ({ id, title, content: lexical(text) }) as unknown as PostEntity;
 
-const queryDto = (query?: string) =>
-  Object.assign(new SearchQueryDto(), { query, page: 1, size: 10 });
+const queryDto = (query?: string, page = 1, size = 10) =>
+  Object.assign(new SearchQueryDto(), { query, page, size });
 
 describe('SearchService', () => {
   let module: TestingModule;
@@ -55,7 +55,7 @@ describe('SearchService', () => {
         currentPage: 1,
         totalPages: 0,
       });
-      expect(postsRepository.findAndCount).not.toHaveBeenCalled();
+      expect(postsRepository.find).not.toHaveBeenCalled();
     },
   );
 
@@ -68,8 +68,8 @@ describe('SearchService', () => {
       content: JSON.stringify({ root: { format: 'кіт', children: [] } }),
     } as unknown as PostEntity;
     jest
-      .spyOn(postsRepository, 'findAndCount')
-      .mockResolvedValue([[byText, byTitle, jsonOnly], 3]);
+      .spyOn(postsRepository, 'find')
+      .mockResolvedValue([byText, byTitle, jsonOnly]);
 
     const result = await searchService.findManyWithPagination(
       queryDto('  Кіт '),
@@ -77,5 +77,48 @@ describe('SearchService', () => {
 
     expect(result.items).toEqual([byText, byTitle]);
     expect(result.count).toBe(2);
+  });
+
+  it('paginates after filtering and reports the real totals', async () => {
+    const hits = Array.from({ length: 5 }, (_, i) =>
+      post(i + 1, `Кіт ${i + 1}`, 'текст'),
+    );
+    const miss = post(99, 'Собаки', 'Прогулянки');
+    jest
+      .spyOn(postsRepository, 'find')
+      .mockResolvedValue([hits[0], miss, ...hits.slice(1)]);
+
+    const result = await searchService.findManyWithPagination(
+      queryDto('кіт', 2, 2),
+    );
+
+    expect(result).toEqual({
+      items: [hits[2], hits[3]],
+      count: 5,
+      currentPage: 2,
+      totalPages: 3,
+    });
+  });
+
+  it('treats non-JSON content as plain text instead of failing', async () => {
+    const legacy = {
+      ...post(1, 'Догляд', ''),
+      content: 'Старий пост: кіт любить спати',
+    } as unknown as PostEntity;
+    const empty = { ...post(2, 'Порожній', ''), content: '' } as PostEntity;
+    jest.spyOn(postsRepository, 'find').mockResolvedValue([legacy, empty]);
+
+    const result = await searchService.findManyWithPagination(queryDto('кіт'));
+
+    expect(result.items).toEqual([legacy]);
+  });
+
+  it('escapes LIKE wildcards in the query', async () => {
+    const find = jest.spyOn(postsRepository, 'find').mockResolvedValue([]);
+
+    await searchService.findManyWithPagination(queryDto('50%_a\\b'));
+
+    const [{ where }] = find.mock.calls[0] as [{ where: any[] }];
+    expect(where[0].title.value).toBe('%50\\%\\_a\\\\b%');
   });
 });

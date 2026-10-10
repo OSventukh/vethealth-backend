@@ -31,7 +31,9 @@ our build stays CommonJS and loads them through `require(esm)` (Node ≥22.12 at
 - **Jest needs `--experimental-vm-modules` *and* Node ≥24.9.** The `test*` scripts run
   `node --experimental-vm-modules node_modules/jest/bin/jest.js` — Jest 30 only uses Node's
   synchronous ESM evaluation when `vm.SourceTextModule` exists, which the flag exposes. Running bare
-  `jest` (or on Node 22) fails with "Must use import to load ES Module". ts-jest's TS151002
+  `jest` (or on Node 22) fails with "Must use import to load ES Module". `.nvmrc` pins **24**
+  for development — the husky **pre-push** hook runs `npm test`, so on Node 22 every push is
+  blocked; `engines.node` (`>=22.12.0`) describes the runtime floor only (Docker `node:22-slim`). ts-jest's TS151002
   warning (hybrid `nodenext` without `isolatedModules`) is silenced in the jest configs on purpose —
   don't "fix" it by enabling `isolatedModules`: with `emitDecoratorMetadata` that forces
   `import type` on DI types (TS1272).
