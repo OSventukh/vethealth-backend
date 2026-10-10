@@ -33,7 +33,7 @@ describe('UsersController', () => {
     const queryDto = new UserQueryDto();
 
     usersController.getOne(userId, queryDto);
-    expect(usersService.findOne).toBeCalledWith(
+    expect(usersService.findOne).toHaveBeenCalledWith(
       { id: userId },
       queryDto.include,
     );
@@ -45,7 +45,7 @@ describe('UsersController', () => {
       size: 10,
     };
     usersController.getMany(queryDto);
-    expect(usersService.findManyWithPagination).toBeCalledWith(queryDto);
+    expect(usersService.findManyWithPagination).toHaveBeenCalledWith(queryDto);
   });
 
   it('should call a usersService.update() method with provided id and payload object', () => {
@@ -54,12 +54,12 @@ describe('UsersController', () => {
       id: 'testId',
     };
     usersController.update(payload);
-    expect(usersService.update).toBeCalledWith(payload);
+    expect(usersService.update).toHaveBeenCalledWith(payload);
   });
 
   it('should call a usersService.softDelete() method with provided id', () => {
     const userId = '1';
     usersController.delete(userId);
-    expect(usersService.softDelete).toBeCalledWith(userId);
+    expect(usersService.softDelete).toHaveBeenCalledWith(userId);
   });
 });

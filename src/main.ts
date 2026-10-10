@@ -8,7 +8,14 @@ import { AllConfigType } from './config/config.type';
 import { I18nValidationExceptionFilter, I18nValidationPipe } from 'nestjs-i18n';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    routeConflictPolicy: { duplicate: 'error', shadow: 'warn' },
+  });
+  // Helmet-equivalent defaults. CORP is relaxed because the frontend lives on
+  // another origin and embeds images served from /uploads/ (local storage).
+  app.useSecurityHeaders({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  });
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const configService = app.get(ConfigService<AllConfigType>);
   app.enableCors({

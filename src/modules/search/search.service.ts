@@ -15,29 +15,60 @@ export class SearchService {
   async findManyWithPagination(
     queryDto: SearchQueryDto,
   ): Promise<PaginationType<PostEntity>> {
-    const { query, page, size } = queryDto;
-    const [items, _count] = await this.postsRepository.findAndCount({
+    const { page, size } = queryDto;
+    const query = queryDto.query?.trim();
+
+    // Без запиту умова `Like` випала б із where, і ми б перебрали всі
+    // опубліковані пости — порожній пошук просто нічого не знаходить.
+    if (!query) {
+      return { items: [], count: 0, currentPage: page, totalPages: 0 };
+    }
+
+    // Екрануємо wildcard'и LIKE: запит `%` чи `_` інакше збігався б із
+    // кожним постом. Фінальну перевірку однаково робить JS-фільтр нижче.
+    const pattern = `%${query.replace(/[\\%_]/g, '\\$&')}%`;
+
+    // Пагінуємо ПІСЛЯ фільтра по видимому тексту: SQL `skip/take` до нього
+    // давав би неповні сторінки й хибні count/totalPages. Кандидатів небагато
+    // — лише опубліковані пости, що збіглися з LIKE.
+    const candidates = await this.postsRepository.find({
       where: [
-        { title: query && Like(`%${query}%`), status: { name: 'Published' } },
-        { content: query && Like(`%${query}%`), status: { name: 'Published' } },
+        { title: Like(pattern), status: { name: 'Published' } },
+        { content: Like(pattern), status: { name: 'Published' } },
       ],
-      skip: (page - 1) * size,
-      take: size,
+      order: { createdAt: 'DESC' },
       relations: ['topics'],
     });
 
-    const filteredItems = items.filter((item) => {
-      const content = JSON.parse(item.content);
-      const textContent = this.extractTextFromJson(content);
-      return textContent.toLowerCase().includes(query.toLowerCase());
-    });
+    // SQL-`Like` по content влучає і в службові поля Lexical-JSON, тож
+    // збіги в контенті перевіряємо по видимому тексту. Збіг у заголовку
+    // зараховуємо одразу — інакше такі пости відсікалися б.
+    const needle = query.toLowerCase();
+    const matches = candidates.filter(
+      (item) =>
+        item.title?.toLowerCase().includes(needle) ||
+        this.visibleText(item.content).toLowerCase().includes(needle),
+    );
 
     return {
-      items: filteredItems,
-      count: filteredItems.length,
+      items: matches.slice((page - 1) * size, page * size),
+      count: matches.length,
       currentPage: page,
-      totalPages: Math.ceil(filteredItems.length / size),
+      totalPages: Math.ceil(matches.length / size),
     };
+  }
+
+  // Один пост із не-JSON контентом (порожній рядок, легасі-текст) не має
+  // валити весь публічний пошук — такий контент і є видимим текстом.
+  private visibleText(content: string | null): string {
+    if (!content) {
+      return '';
+    }
+    try {
+      return this.extractTextFromJson(JSON.parse(content));
+    } catch {
+      return content;
+    }
   }
 
   private extractTextFromJson(json: any): string {

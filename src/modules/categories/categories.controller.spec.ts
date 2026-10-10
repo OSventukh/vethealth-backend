@@ -35,7 +35,7 @@ describe('CategoriesController', () => {
       name: 'Title category',
     };
     categoriesController.create(createCategoryDto);
-    expect(categoriesService.create).toBeCalledWith(createCategoryDto);
+    expect(categoriesService.create).toHaveBeenCalledWith(createCategoryDto);
   });
 
   it('should call a categoriesService.findManyWithPafination() method with provided page and size', () => {
@@ -45,7 +45,9 @@ describe('CategoriesController', () => {
     };
 
     categoriesController.getMany(queryDto);
-    expect(categoriesService.findManyWithPagination).toBeCalledWith(queryDto);
+    expect(categoriesService.findManyWithPagination).toHaveBeenCalledWith(
+      queryDto,
+    );
   });
 
   it('should call a categoriesService.update() method with provided id and payload object', () => {
@@ -54,12 +56,12 @@ describe('CategoriesController', () => {
       id: 'testId',
     };
     categoriesController.update(payload);
-    expect(categoriesService.update).toBeCalledWith(payload);
+    expect(categoriesService.update).toHaveBeenCalledWith(payload);
   });
 
   it('should call a postsSerice.softDelete() method with provided id', () => {
     const categoryId = '1';
     categoriesController.delete(categoryId);
-    expect(categoriesService.softDelete).toBeCalledWith(categoryId);
+    expect(categoriesService.softDelete).toHaveBeenCalledWith(categoryId);
   });
 });

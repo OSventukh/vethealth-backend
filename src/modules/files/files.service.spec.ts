@@ -67,6 +67,8 @@ describe('FilesService', () => {
       topic: [file],
       'post-featured': [file],
     });
-    expect(filesRepositry.create).toBeCalledWith({ path: `/${file.path}` });
+    expect(filesRepositry.create).toHaveBeenCalledWith({
+      path: `/${file.path}`,
+    });
   });
 });

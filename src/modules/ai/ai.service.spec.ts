@@ -6,6 +6,7 @@ import {
   NoObjectGeneratedError,
   RetryError,
 } from 'ai';
+import { AI_ERROR_CODES } from './ai-error-codes';
 import { AiModelRegistry } from './ai-model.registry';
 import { AiProviderException, AiService } from './ai.service';
 import { seoMetadataSchema, seoMetadataTask } from './tasks/seo-metadata.task';
@@ -278,6 +279,27 @@ describe('AiService', () => {
     );
 
     expect((await expectFailure()).getStatus()).toBe(HttpStatus.BAD_GATEWAY);
+  });
+
+  // Код у тілі відповіді — контракт із фронтендом поруч зі статусом.
+  it.each([
+    [
+      AI_ERROR_CODES.TIMEOUT,
+      () => Object.assign(new Error('timeout'), { name: 'TimeoutError' }),
+    ],
+    [AI_ERROR_CODES.KEY_REJECTED, () => apiCallError(403)],
+    [AI_ERROR_CODES.RATE_LIMITED, () => apiCallError(429)],
+    [AI_ERROR_CODES.PROVIDER_ERROR, () => apiCallError(500)],
+    [
+      AI_ERROR_CODES.INVALID_OUTPUT,
+      () => new NoObjectGeneratedError({ text: '{}' } as never),
+    ],
+    [AI_ERROR_CODES.GENERATION_FAILED, () => new Error('upstream boom')],
+  ])('tags the failure with errorCode %s', async (errorCode, failure) => {
+    generateObjectMock.mockRejectedValue(failure());
+
+    // У тіло відповіді код дописує BaseExceptionFilter із `errorCode`.
+    expect((await expectFailure()).errorCode).toBe(errorCode);
   });
 
   it('maps unknown failures to 502', async () => {

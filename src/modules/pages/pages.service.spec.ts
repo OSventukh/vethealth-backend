@@ -46,12 +46,12 @@ describe('PagesService', () => {
       status: new PostStatusEntity(),
     };
     pagesService.create(createPageDto);
-    expect(pagesRepository.create).toBeCalledWith(createPageDto);
+    expect(pagesRepository.create).toHaveBeenCalledWith(createPageDto);
   });
 
   it('should call pagesRepository.findOne() mehtod with object that have where field and passed value', () => {
     pagesService.findOne(PageEntity['id']);
-    expect(pagesRepository.findOne).toBeCalledWith({
+    expect(pagesRepository.findOne).toHaveBeenCalledWith({
       where: PageEntity['id'],
     });
   });
@@ -61,7 +61,7 @@ describe('PagesService', () => {
       new PageQueryDto();
 
     pagesService.findManyWithPagination(new PageQueryDto());
-    expect(pagesRepository.findAndCount).toBeCalledWith({
+    expect(pagesRepository.findAndCount).toHaveBeenCalledWith({
       where: {
         title,
         slug,
@@ -83,12 +83,14 @@ describe('PagesService', () => {
     } as PageEntity;
 
     pagesService.update(page);
-    expect(pagesRepository.save).toBeCalledWith(pagesRepository.create(page));
+    expect(pagesRepository.save).toHaveBeenCalledWith(
+      pagesRepository.create(page),
+    );
   });
 
   it('should call pagesRepository.softDelete() with provided id', () => {
     const pageId = 'id';
     pagesService.softDelete(pageId);
-    expect(pagesRepository.softDelete).toBeCalledWith(pageId);
+    expect(pagesRepository.softDelete).toHaveBeenCalledWith(pageId);
   });
 });

@@ -50,7 +50,7 @@ describe('PostsController', () => {
       status: new PostStatusEntity(),
     };
     postsController.create(createPostDto);
-    expect(postsService.create).toBeCalledWith(createPostDto);
+    expect(postsService.create).toHaveBeenCalledWith(createPostDto);
   });
 
   it('should call a postsService.findOne() method with provided id', () => {
@@ -58,7 +58,7 @@ describe('PostsController', () => {
     const queryDto = new PostQueryDto();
     const request = { user: undefined };
     postsController.getOne(request, postId, queryDto);
-    expect(postsService.findOne).toBeCalledWith(
+    expect(postsService.findOne).toHaveBeenCalledWith(
       { id: postId },
       queryDto.include,
       undefined,
@@ -73,7 +73,7 @@ describe('PostsController', () => {
 
     const request = { user: undefined };
     postsController.getMany(request, queryDto);
-    expect(postsService.findManyWithPagination).toBeCalledWith(
+    expect(postsService.findManyWithPagination).toHaveBeenCalledWith(
       queryDto,
       undefined,
     );
@@ -86,13 +86,13 @@ describe('PostsController', () => {
     };
     const request = { user: undefined };
     postsController.update(request, payload);
-    expect(postsService.update).toBeCalledWith(payload, undefined);
+    expect(postsService.update).toHaveBeenCalledWith(payload, undefined);
   });
 
   it('should call a postsSerice.softDelete() method with provided id', () => {
     const postId = '1';
     const request = { user: undefined };
     postsController.delete(request, postId);
-    expect(postsService.softDelete).toBeCalledWith(postId, undefined);
+    expect(postsService.softDelete).toHaveBeenCalledWith(postId, undefined);
   });
 });
