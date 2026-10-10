@@ -1,4 +1,10 @@
-import { seoMetadataSchema, seoMetadataTask } from './seo-metadata.task';
+import {
+  SEO_FIELDS,
+  SeoField,
+  seoMetadataSchema,
+  seoMetadataTask,
+  seoMetadataTaskFor,
+} from './seo-metadata.task';
 
 const RESULT = {
   metaTitle: 'Тестовий meta title',
@@ -73,4 +79,50 @@ describe('seoMetadataTask.buildPrompt', () => {
     expect(prompt.length).toBeLessThan(13000);
     expect(prompt.endsWith('…')).toBe(true);
   });
+});
+
+describe('targeted regeneration', () => {
+  const input = { title: 'Бабезіоз', text: 'Текст про бабезіоз.' };
+
+  it('asks only for the requested fields, with current values and hint', () => {
+    const prompt = seoMetadataTask.buildPrompt({
+      ...input,
+      fields: ['metaTitle'],
+      current: { metaTitle: 'Старий заголовок', ogTitle: '  ' },
+      hint: 'коротше',
+    });
+
+    expect(prompt).toContain('- metaTitle: Старий заголовок');
+    expect(prompt).not.toContain('- ogTitle:');
+    expect(prompt).toContain('Згенеруй лише поля: metaTitle.');
+    expect(prompt).toContain('Побажання редактора: коротше');
+  });
+
+  it('labels topics as sections', () => {
+    expect(
+      seoMetadataTask.buildPrompt({ ...input, entityType: 'topic' }),
+    ).toContain('Заголовок розділу: Бабезіоз');
+  });
+
+  it('narrows the schema to the requested fields', () => {
+    const task = seoMetadataTaskFor(['metaTitle', 'ogTitle']);
+
+    expect(task.schema.parse({ ...RESULT })).toEqual({
+      metaTitle: RESULT.metaTitle,
+      ogTitle: RESULT.ogTitle,
+    });
+    expect(task.schema.safeParse({ metaTitle: 'Лише один' }).success).toBe(
+      false,
+    );
+  });
+
+  it.each<[SeoField[] | undefined]>([[undefined], [[]], [[...SEO_FIELDS]]])(
+    'keeps the full task for fields %p',
+    (fields) => {
+      expect(seoMetadataTaskFor(fields)).toBe(seoMetadataTask);
+      expect(seoMetadataTask.buildPrompt({ ...input, fields })).not.toContain(
+        'Згенеруй лише поля',
+      );
+    },
+  );
 });
