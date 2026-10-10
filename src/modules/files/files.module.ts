@@ -54,7 +54,7 @@ import { S3CompatibleFileStorageService } from './storage/s3-compatible-file-sto
                 const filePath = path.join(dir);
                 cb(null, filePath);
               } catch (error) {
-                cb(error, null);
+                cb(error as Error, null);
               }
             },
             filename: (_req, file, cb) => {

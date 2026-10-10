@@ -5,6 +5,7 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createProviderRegistry } from 'ai';
+import { AI_ERROR_CODES } from './ai-error-codes';
 import { AiModelRegistry, DEFAULT_MODELS } from './ai-model.registry';
 import { AiProvider } from '@/config/config.type';
 
@@ -138,6 +139,9 @@ describe('AiModelRegistry', () => {
     expect(() => registry.languageModel('mistral:large')).toThrow(
       ServiceUnavailableException,
     );
+    expect(() => registry.languageModel('mistral:large')).toThrow(
+      expect.objectContaining({ errorCode: AI_ERROR_CODES.NOT_CONFIGURED }),
+    );
   });
 
   it('throws 503 when the addressed provider has no api key', async () => {
@@ -145,6 +149,9 @@ describe('AiModelRegistry', () => {
     registry = await createRegistry();
 
     expect(() => registry.languageModel()).toThrow(ServiceUnavailableException);
+    expect(() => registry.languageModel()).toThrow(
+      expect.objectContaining({ errorCode: AI_ERROR_CODES.NOT_CONFIGURED }),
+    );
     expect(createProviderRegistry).not.toHaveBeenCalled();
   });
 

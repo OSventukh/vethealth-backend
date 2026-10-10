@@ -1,10 +1,17 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import {
+  HttpException,
+  HttpExceptionOptions,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import {
   APICallError,
   generateObject,
   NoObjectGeneratedError,
   RetryError,
 } from 'ai';
+import { AI_ERROR_CODES, AiErrorCode } from './ai-error-codes';
 import { AiModelRegistry } from './ai-model.registry';
 import { GenerateSeoMetadataDto } from './dto/generate-seo-metadata.dto';
 import { AiTask } from './tasks/ai-task';
@@ -34,7 +41,7 @@ export class AiProviderException extends HttpException {
     message: string,
     status: HttpStatus,
     readonly retryAfterSeconds?: number,
-    options?: { cause?: unknown },
+    options?: HttpExceptionOptions,
   ) {
     super(message, status, options);
   }
@@ -42,6 +49,7 @@ export class AiProviderException extends HttpException {
 
 interface AiErrorMapping {
   status: HttpStatus;
+  errorCode: AiErrorCode;
   /** Повідомлення клієнту — без внутрішніх деталей провайдера. */
   message: string;
   /** Що саме сталося — лише в лог. */
@@ -95,14 +103,18 @@ export class AiService {
   private toHttpException(task: string, error: unknown): HttpException {
     // RetryError ховає справжню причину під собою — розгортаємо до неї.
     const cause = RetryError.isInstance(error) ? error.lastError : error;
-    const { status, message, detail, retryAfterSeconds } = classify(cause);
+    const { status, errorCode, message, detail, retryAfterSeconds } =
+      classify(cause);
 
-    this.logger.error(`AI task "${task}" failed → ${status}: ${detail}`);
+    this.logger.error(
+      `AI task "${task}" failed → ${status} ${errorCode}: ${detail}`,
+    );
 
     // Оригінальна помилка їде в `cause`: сам виняток несе лише санітизоване
     // повідомлення, а стек провайдера лишається доступним фільтрам Nest.
     return new AiProviderException(message, status, retryAfterSeconds, {
       cause: error,
+      errorCode,
     });
   }
 }
@@ -117,6 +129,7 @@ function classify(cause: unknown): AiErrorMapping {
   if (isAbortError(cause)) {
     return {
       status: HttpStatus.GATEWAY_TIMEOUT,
+      errorCode: AI_ERROR_CODES.TIMEOUT,
       message: 'AI generation timed out',
       detail: `aborted after ${GENERATION_TIMEOUT_MS}ms`,
     };
@@ -130,6 +143,7 @@ function classify(cause: unknown): AiErrorMapping {
     if (cause.statusCode === 401 || cause.statusCode === 403) {
       return {
         status: HttpStatus.SERVICE_UNAVAILABLE,
+        errorCode: AI_ERROR_CODES.KEY_REJECTED,
         message: 'AI provider rejected the API key',
         detail,
       };
@@ -138,6 +152,7 @@ function classify(cause: unknown): AiErrorMapping {
     if (cause.statusCode === HttpStatus.TOO_MANY_REQUESTS) {
       return {
         status: HttpStatus.TOO_MANY_REQUESTS,
+        errorCode: AI_ERROR_CODES.RATE_LIMITED,
         message: 'AI provider rate limit reached',
         detail,
         retryAfterSeconds: retryAfterSecondsOf(cause),
@@ -146,6 +161,7 @@ function classify(cause: unknown): AiErrorMapping {
 
     return {
       status: HttpStatus.BAD_GATEWAY,
+      errorCode: AI_ERROR_CODES.PROVIDER_ERROR,
       message: 'AI provider request failed',
       detail,
     };
@@ -161,6 +177,7 @@ function classify(cause: unknown): AiErrorMapping {
 
     return {
       status: HttpStatus.BAD_GATEWAY,
+      errorCode: AI_ERROR_CODES.INVALID_OUTPUT,
       message: 'AI generation failed',
       detail:
         `model returned an invalid object (${truncate(reason)}); ` +
@@ -170,6 +187,7 @@ function classify(cause: unknown): AiErrorMapping {
 
   return {
     status: HttpStatus.BAD_GATEWAY,
+    errorCode: AI_ERROR_CODES.GENERATION_FAILED,
     message: 'AI generation failed',
     detail: cause instanceof Error ? cause.message : String(cause),
   };

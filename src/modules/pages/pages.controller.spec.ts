@@ -43,14 +43,14 @@ describe('PagesController', () => {
       status: new PostStatusEntity(),
     };
     pagesController.create(createPageDto);
-    expect(pagesService.create).toBeCalledWith(createPageDto);
+    expect(pagesService.create).toHaveBeenCalledWith(createPageDto);
   });
 
   it('should call a pagesService.findOne() method with provided id', () => {
     const pageId = '1';
     const queryDto = new PageQueryDto();
     pagesController.getOne(pageId, queryDto);
-    expect(pagesService.findOne).toBeCalledWith(
+    expect(pagesService.findOne).toHaveBeenCalledWith(
       { id: pageId },
       queryDto.include,
     );
@@ -63,7 +63,7 @@ describe('PagesController', () => {
     };
 
     pagesController.getMany(queryDto);
-    expect(pagesService.findManyWithPagination).toBeCalledWith(queryDto);
+    expect(pagesService.findManyWithPagination).toHaveBeenCalledWith(queryDto);
   });
 
   it('should call a pagesService.update() method with provided id and payload object', () => {
@@ -72,12 +72,12 @@ describe('PagesController', () => {
       id: 'testid',
     };
     pagesController.update(payload);
-    expect(pagesService.update).toBeCalledWith(payload);
+    expect(pagesService.update).toHaveBeenCalledWith(payload);
   });
 
   it('should call a pagesService.softDelete() method with provided id', () => {
     const pageId = '1';
     pagesController.delete(pageId);
-    expect(pagesService.softDelete).toBeCalledWith(pageId);
+    expect(pagesService.softDelete).toHaveBeenCalledWith(pageId);
   });
 });
