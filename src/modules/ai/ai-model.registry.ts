@@ -5,6 +5,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createProviderRegistry, LanguageModel } from 'ai';
 import { AiProvider, AllConfigType } from '@/config/config.type';
+import { AI_ERROR_CODES } from './ai-error-codes';
 
 // Провайдер обирається через AI_PROVIDER, конкретна модель — через AI_MODEL
 // (інакше — дефолт нижче). Ключі — окремі змінні на кожного провайдера.
@@ -58,6 +59,7 @@ export class AiModelRegistry {
     if (!this.apiKeys()[provider]) {
       throw new ServiceUnavailableException(
         `AI provider "${provider}" is not configured`,
+        { errorCode: AI_ERROR_CODES.NOT_CONFIGURED },
       );
     }
 
@@ -86,6 +88,7 @@ export class AiModelRegistry {
     if (!isAiProvider(prefix)) {
       throw new ServiceUnavailableException(
         `Unknown AI provider "${prefix}" in model address "${address}"`,
+        { errorCode: AI_ERROR_CODES.NOT_CONFIGURED },
       );
     }
 

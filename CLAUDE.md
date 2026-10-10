@@ -176,6 +176,12 @@ JSON). Провайдер перемикається конфігом (namespace
   маппінг тут, міняй і той `STATUS_MESSAGES`. **Відкритий хвіст:** для **504** запису там ще
   немає — редактор бачить загальне «Не вдалося згенерувати мета-поля» замість «провайдер довго
   не відповідає».
+- **`errorCode` у тілі помилки** (Nest 12 `HttpExceptionOptions.errorCode`, з 2026-10) уточнює
+  причину поверх статусу — перелік і семантика в `ai-error-codes.ts` (`AI_NOT_CONFIGURED`,
+  `AI_KEY_REJECTED`, `AI_RATE_LIMITED`, `AI_PROVIDER_ERROR`, `AI_INVALID_OUTPUT`,
+  `AI_GENERATION_FAILED`, `AI_TIMEOUT`). 429 від нашого `@Throttle` коду **не має** — так його
+  відрізняють від ліміту провайдера. Коди додаються, не перейменовуються (фронтенд на них
+  розгалужується); фронтенд їх поки не читає — це наступний крок для `generate-seo.action.ts`.
 - Rate limit трекається **за sha256-хешем bearer-токена** (`AppThrottlerGuard`,
   `src/utils/guards/`, замінює `ThrottlerGuard` в `app.module.ts`): усі запити з адмінки
   приходять через Next server actions з однієї IP frontend-контейнера, тож IP-трекер
