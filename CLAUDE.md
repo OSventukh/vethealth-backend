@@ -37,6 +37,11 @@ our build stays CommonJS and loads them through `require(esm)` (Node ≥22.12 at
   `import type` on DI types (TS1272).
 - tsconfig: `module`/`moduleResolution: nodenext` (required to resolve the ESM packages; output is
   still CJS since `package.json` has no `"type": "module"`), `target: ES2023`.
+  **`useDefineForClassFields: false` is load-bearing** — ES2022+ targets default it to `true`,
+  which emits every DTO/entity property as an own field set to `undefined`. The second global pipe
+  (`I18nValidationPipe`) then re-runs `plainToInstance` on the already-built DTO, sees
+  `include: undefined`, and `includeStringToObjectTransform` crashes → every list endpoint
+  without `?include=` returned 500. Unit tests don't catch this; smoke-test a built `dist`.
   `tsconfig.build.json` sets `rootDir: ./src` (TS 6 requires it) and keeps the `tsbuildinfo` inside
   `dist` so `deleteOutDir` invalidates it.
 - TypeScript 6 turns **`strict` on by default**; we only opt out of `strictNullChecks` and
