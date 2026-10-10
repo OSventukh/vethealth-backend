@@ -15,21 +15,36 @@ export class SearchService {
   async findManyWithPagination(
     queryDto: SearchQueryDto,
   ): Promise<PaginationType<PostEntity>> {
-    const { query, page, size } = queryDto;
+    const { page, size } = queryDto;
+    const query = queryDto.query?.trim();
+
+    // Без запиту умова `Like` випала б із where, і ми б перебрали всі
+    // опубліковані пости — порожній пошук просто нічого не знаходить.
+    if (!query) {
+      return { items: [], count: 0, currentPage: page, totalPages: 0 };
+    }
+
     const [items, _count] = await this.postsRepository.findAndCount({
       where: [
-        { title: query && Like(`%${query}%`), status: { name: 'Published' } },
-        { content: query && Like(`%${query}%`), status: { name: 'Published' } },
+        { title: Like(`%${query}%`), status: { name: 'Published' } },
+        { content: Like(`%${query}%`), status: { name: 'Published' } },
       ],
       skip: (page - 1) * size,
       take: size,
       relations: ['topics'],
     });
 
+    // SQL-`Like` по content влучає і в службові поля Lexical-JSON, тож
+    // збіги в контенті перевіряємо по видимому тексту. Збіг у заголовку
+    // зараховуємо одразу — інакше такі пости відсікалися б.
+    const needle = query.toLowerCase();
     const filteredItems = items.filter((item) => {
+      if (item.title?.toLowerCase().includes(needle)) {
+        return true;
+      }
       const content = JSON.parse(item.content);
       const textContent = this.extractTextFromJson(content);
-      return textContent.toLowerCase().includes(query.toLowerCase());
+      return textContent.toLowerCase().includes(needle);
     });
 
     return {
