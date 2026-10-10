@@ -25,6 +25,30 @@ pnpm lint                            # oxlint --fix   (ESLint/Prettier/Biome rem
 pnpm format                          # oxfmt          (Prettier-compatible; 0.x beta — pin version)
 ```
 
+**NestJS 12 (upgraded 2026-10 via `nest upgrade`).** The `@nestjs/*` packages are **ESM-only**;
+our build stays CommonJS and loads them through `require(esm)` (Node ≥22.12 at runtime —
+`node:22-slim` is fine). Consequences:
+- **Jest needs `--experimental-vm-modules` *and* Node ≥24.9.** The `test*` scripts run
+  `node --experimental-vm-modules node_modules/jest/bin/jest.js` — Jest 30 only uses Node's
+  synchronous ESM evaluation when `vm.SourceTextModule` exists, which the flag exposes. Running bare
+  `jest` (or on Node 22) fails with "Must use import to load ES Module". `.nvmrc` pins **24**
+  for development — the husky **pre-push** hook runs `npm test`, so on Node 22 every push is
+  blocked; `engines.node` (`>=22.12.0`) describes the runtime floor only (Docker `node:22-slim`). ts-jest's TS151002
+  warning (hybrid `nodenext` without `isolatedModules`) is silenced in the jest configs on purpose —
+  don't "fix" it by enabling `isolatedModules`: with `emitDecoratorMetadata` that forces
+  `import type` on DI types (TS1272).
+- tsconfig: `module`/`moduleResolution: nodenext` (required to resolve the ESM packages; output is
+  still CJS since `package.json` has no `"type": "module"`), `target: ES2023`.
+  **`useDefineForClassFields: false` is load-bearing** — ES2022+ targets default it to `true`,
+  which emits every DTO/entity property as an own field set to `undefined`. The second global pipe
+  (`I18nValidationPipe`) then re-runs `plainToInstance` on the already-built DTO, sees
+  `include: undefined`, and `includeStringToObjectTransform` crashes → every list endpoint
+  without `?include=` returned 500. Unit tests don't catch this; smoke-test a built `dist`.
+  `tsconfig.build.json` sets `rootDir: ./src` (TS 6 requires it) and keeps the `tsbuildinfo` inside
+  `dist` so `deleteOutDir` invalidates it.
+- TypeScript 6 turns **`strict` on by default**; we only opt out of `strictNullChecks` and
+  `noImplicitAny` explicitly, so e.g. `catch` variables are `unknown`.
+
 **oxlint config (`.oxlintrc.json`) — NestJS rule overrides, do not remove:**
 `typescript/consistent-type-imports: off` (else DI imports become `import type` → breaks
 `emitDecoratorMetadata`), `typescript/parameter-properties: off` (allows `constructor(private x)`
@@ -148,12 +172,15 @@ JSON). Провайдер перемикається конфігом (namespace
   зійшлося) + сира відповідь моделі (перші 300 символів). `finishReason` тут **не логуємо**: SDK
   не заповнює його на `NoObjectGeneratedError` з `generateObject` — він завжди `undefined`.
   Оригінальна помилка їде у `cause` винятку, назовні — лише санітизоване повідомлення.
-- **Статуси — це контракт із фронтендом.** `frontend/src/app/(dashboard)/admin/actions/`
-  `generate-seo.action.ts` (гілка `main`; у `dev` цього файлу ще немає) мапить статус на
-  українське повідомлення редактору: 429 / 502 / 503, решта — загальний fallback. Міняючи
-  маппінг тут, міняй і той `STATUS_MESSAGES`. **Відкритий хвіст:** для **504** запису там ще
-  немає — редактор бачить загальне «Не вдалося згенерувати мета-поля» замість «провайдер довго
-  не відповідає».
+- **Статуси + `errorCode` — це контракт із фронтендом.** Бекенд кладе в тіло помилки
+  стабільний `errorCode` (Nest 12 `HttpExceptionOptions.errorCode`, з 2026-10) — перелік і
+  семантика в `ai-error-codes.ts` (`AI_NOT_CONFIGURED`, `AI_KEY_REJECTED`, `AI_RATE_LIMITED`,
+  `AI_PROVIDER_ERROR`, `AI_INVALID_OUTPUT`, `AI_GENERATION_FAILED`, `AI_TIMEOUT`). 429 від
+  нашого `@Throttle` коду **не має** — так його відрізняють від ліміту провайдера.
+  Фронтенд: `frontend/src/app/(dashboard)/admin/actions/seo-error-message.ts` мапить спершу
+  код, потім статус (429/502/503/504), потім загальний fallback; для `AI_RATE_LIMITED` бере
+  секунди з `Retry-After`. Коди лише додаються, не перейменовуються; новий код чи статус —
+  додай і туди (`ERROR_CODE_MESSAGES` / `STATUS_MESSAGES`).
 - Rate limit трекається **за sha256-хешем bearer-токена** (`AppThrottlerGuard`,
   `src/utils/guards/`, замінює `ThrottlerGuard` в `app.module.ts`): усі запити з адмінки
   приходять через Next server actions з однієї IP frontend-контейнера, тож IP-трекер

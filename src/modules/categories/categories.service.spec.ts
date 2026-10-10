@@ -38,14 +38,14 @@ describe('CategoriesService', () => {
       name: 'Test name',
     };
     categoriesService.create(createCategoryDto);
-    expect(categoriesRepository.create).toBeCalledWith(createCategoryDto);
+    expect(categoriesRepository.create).toHaveBeenCalledWith(createCategoryDto);
   });
 
   it('should call categoriesRepository.findOne() method with object that have where field and passed value', () => {
     const queryDto = new CategoryQueryDto();
 
     categoriesService.findOne(CategoryEntity['id'], queryDto);
-    expect(categoriesRepository.findOne).toBeCalledWith({
+    expect(categoriesRepository.findOne).toHaveBeenCalledWith({
       where: { ...CategoryEntity['id'], topics: { slug: queryDto.topic } },
       relations: queryDto.include,
     });
@@ -54,7 +54,7 @@ describe('CategoriesService', () => {
   it('should call categoriesRepository.findAndCount() method with options', () => {
     const { name, include, page, size, orderBy, sort } = new CategoryQueryDto();
     categoriesService.findManyWithPagination(new CategoryQueryDto());
-    expect(categoriesRepository.findAndCount).toBeCalledWith({
+    expect(categoriesRepository.findAndCount).toHaveBeenCalledWith({
       skip: (page - 1) * size,
       take: size,
       where: {
@@ -75,7 +75,7 @@ describe('CategoriesService', () => {
       name: 'Test name',
     } as CategoryEntity;
     categoriesService.update(post);
-    expect(categoriesRepository.save).toBeCalledWith(
+    expect(categoriesRepository.save).toHaveBeenCalledWith(
       categoriesRepository.create(post),
     );
   });
@@ -83,6 +83,6 @@ describe('CategoriesService', () => {
   it('should call categoriesRepository.softDelete() with provided id', () => {
     const categoryId = 'id';
     categoriesService.softDelete(categoryId);
-    expect(categoriesRepository.softDelete).toBeCalledWith(categoryId);
+    expect(categoriesRepository.softDelete).toHaveBeenCalledWith(categoryId);
   });
 });

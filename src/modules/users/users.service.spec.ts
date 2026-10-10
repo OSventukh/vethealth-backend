@@ -39,12 +39,14 @@ describe('UsersService', () => {
     usersService.create({
       ...createUserDto,
     });
-    expect(usersRepository.create).toBeCalledWith(createUserDto);
+    expect(usersRepository.create).toHaveBeenCalledWith(createUserDto);
   });
 
   it('should call usersRepository.findOne() method with object that have where field and passed value', () => {
     usersService.findOne(UserEntity['id']);
-    expect(usersRepository.findOne).toBeCalledWith({ where: UserEntity['id'] });
+    expect(usersRepository.findOne).toHaveBeenCalledWith({
+      where: UserEntity['id'],
+    });
   });
 
   it('should call usersRepository.findAndCount() method with options', () => {
@@ -61,7 +63,7 @@ describe('UsersService', () => {
       sort,
     } = queryDto;
     usersService.findManyWithPagination(queryDto);
-    expect(usersRepository.findAndCount).toBeCalledWith({
+    expect(usersRepository.findAndCount).toHaveBeenCalledWith({
       where: {
         firstname,
         lastname,
@@ -87,12 +89,14 @@ describe('UsersService', () => {
 
     usersService.update(user);
 
-    expect(usersRepository.save).toBeCalledWith(usersRepository.create(user));
+    expect(usersRepository.save).toHaveBeenCalledWith(
+      usersRepository.create(user),
+    );
   });
 
   it('should call usersRepository.softDelete() with provided id', () => {
     const userId = 'id';
     usersService.softDelete(userId);
-    expect(usersRepository.softDelete).toBeCalledWith(userId);
+    expect(usersRepository.softDelete).toHaveBeenCalledWith(userId);
   });
 });

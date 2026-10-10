@@ -56,13 +56,13 @@ describe('PostsService', () => {
       status: new PostStatusEntity(),
     };
     postsService.create(createPostDto);
-    expect(postsRepository.create).toBeCalledWith(createPostDto);
+    expect(postsRepository.create).toHaveBeenCalledWith(createPostDto);
   });
 
   it('should call postsRepository.findOne() with author relation and return a published post', async () => {
     jest.spyOn(postsRepository, 'findOne').mockResolvedValue(existingPost);
     await expect(postsService.findOne({ id: '1' })).resolves.toBe(existingPost);
-    expect(postsRepository.findOne).toBeCalledWith({
+    expect(postsRepository.findOne).toHaveBeenCalledWith({
       where: { id: '1' },
       relations: { author: true },
     });
@@ -109,7 +109,7 @@ describe('PostsService', () => {
     jest.spyOn(postsRepository, 'findAndCount').mockResolvedValue([[], 0]);
     // no user → anonymous → status is forced to Published regardless of query
     await postsService.findManyWithPagination(queryDto);
-    expect(postsRepository.findAndCount).toBeCalledWith({
+    expect(postsRepository.findAndCount).toHaveBeenCalledWith({
       where: {
         title,
         status: {
@@ -136,7 +136,7 @@ describe('PostsService', () => {
     jest.spyOn(postsRepository, 'findOne').mockResolvedValue(existingPost);
     const payload = { id: '1', title: 'Test title' } as UpdatePostDto;
     await postsService.update(payload, adminUser);
-    expect(postsRepository.save).toBeCalledWith(
+    expect(postsRepository.save).toHaveBeenCalledWith(
       postsRepository.create(payload),
     );
   });
@@ -144,6 +144,6 @@ describe('PostsService', () => {
   it('should authorize (owner/admin) then call softDelete with provided id', async () => {
     jest.spyOn(postsRepository, 'findOne').mockResolvedValue(existingPost);
     await postsService.softDelete('1', adminUser);
-    expect(postsRepository.softDelete).toBeCalledWith('1');
+    expect(postsRepository.softDelete).toHaveBeenCalledWith('1');
   });
 });
