@@ -170,18 +170,15 @@ JSON). Провайдер перемикається конфігом (namespace
   зійшлося) + сира відповідь моделі (перші 300 символів). `finishReason` тут **не логуємо**: SDK
   не заповнює його на `NoObjectGeneratedError` з `generateObject` — він завжди `undefined`.
   Оригінальна помилка їде у `cause` винятку, назовні — лише санітизоване повідомлення.
-- **Статуси — це контракт із фронтендом.** `frontend/src/app/(dashboard)/admin/actions/`
-  `generate-seo.action.ts` (гілка `main`; у `dev` цього файлу ще немає) мапить статус на
-  українське повідомлення редактору: 429 / 502 / 503, решта — загальний fallback. Міняючи
-  маппінг тут, міняй і той `STATUS_MESSAGES`. **Відкритий хвіст:** для **504** запису там ще
-  немає — редактор бачить загальне «Не вдалося згенерувати мета-поля» замість «провайдер довго
-  не відповідає».
-- **`errorCode` у тілі помилки** (Nest 12 `HttpExceptionOptions.errorCode`, з 2026-10) уточнює
-  причину поверх статусу — перелік і семантика в `ai-error-codes.ts` (`AI_NOT_CONFIGURED`,
-  `AI_KEY_REJECTED`, `AI_RATE_LIMITED`, `AI_PROVIDER_ERROR`, `AI_INVALID_OUTPUT`,
-  `AI_GENERATION_FAILED`, `AI_TIMEOUT`). 429 від нашого `@Throttle` коду **не має** — так його
-  відрізняють від ліміту провайдера. Коди додаються, не перейменовуються (фронтенд на них
-  розгалужується); фронтенд їх поки не читає — це наступний крок для `generate-seo.action.ts`.
+- **Статуси + `errorCode` — це контракт із фронтендом.** Бекенд кладе в тіло помилки
+  стабільний `errorCode` (Nest 12 `HttpExceptionOptions.errorCode`, з 2026-10) — перелік і
+  семантика в `ai-error-codes.ts` (`AI_NOT_CONFIGURED`, `AI_KEY_REJECTED`, `AI_RATE_LIMITED`,
+  `AI_PROVIDER_ERROR`, `AI_INVALID_OUTPUT`, `AI_GENERATION_FAILED`, `AI_TIMEOUT`). 429 від
+  нашого `@Throttle` коду **не має** — так його відрізняють від ліміту провайдера.
+  Фронтенд: `frontend/src/app/(dashboard)/admin/actions/seo-error-message.ts` мапить спершу
+  код, потім статус (429/502/503/504), потім загальний fallback; для `AI_RATE_LIMITED` бере
+  секунди з `Retry-After`. Коди лише додаються, не перейменовуються; новий код чи статус —
+  додай і туди (`ERROR_CODE_MESSAGES` / `STATUS_MESSAGES`).
 - Rate limit трекається **за sha256-хешем bearer-токена** (`AppThrottlerGuard`,
   `src/utils/guards/`, замінює `ThrottlerGuard` в `app.module.ts`): усі запити з адмінки
   приходять через Next server actions з однієї IP frontend-контейнера, тож IP-трекер
