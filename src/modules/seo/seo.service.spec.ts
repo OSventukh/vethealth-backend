@@ -221,11 +221,13 @@ describe('SeoService', () => {
             }),
           },
           children: [{ title: 'Ізоксазоліни' }],
-          posts: [
-            { title: 'Амідини', status: { name: 'Published' } },
-            { title: 'Чернетка', status: { name: 'Draft' } },
-          ],
         }),
+      );
+      posts.find.mockResolvedValue(
+        as([
+          { title: 'Амідини', status: { name: 'Published' } },
+          { title: 'Чернетка', status: { name: 'Draft' } },
+        ]),
       );
 
       await service.generate('topic', POST_ID, {});

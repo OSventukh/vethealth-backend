@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsSelect, Repository } from 'typeorm';
 import { AiService } from '@/modules/ai/ai.service';
 import { SeoGenerationOptionsDto } from '@/modules/ai/dto/seo-generation-options.dto';
 import { SeoMetadataFieldsDto } from '@/modules/ai/dto/seo-metadata-fields.dto';
@@ -22,6 +22,13 @@ import { lexicalContentText, pageBlocksText } from '@/utils/content-text';
 import { SeoEntry, SeoFieldValues } from './seo.types';
 
 const PUBLISHED = 'Published';
+
+const STATUS_SELECT = { id: true, name: true } as const;
+
+const METADATA_SELECT = {
+  id: true,
+  ...Object.fromEntries(SEO_FIELDS.map((field) => [field, true])),
+} as FindOptionsSelect<MetadataEntity>;
 
 /** Спільне для поста, сторінки й теми — те, з чим працює цей сервіс. */
 interface SeoTarget {
@@ -48,17 +55,47 @@ export class SeoService {
    * теми, пропускаємо: на сайті їх URL — це URL теми, і мета береться з неї.
    */
   async findEntries(): Promise<SeoEntry[]> {
+    // Лише колонки для списку: без `select` тягнулись би повні тексти постів
+    // і сторінок (MEDIUMTEXT) та eager-звʼязки — на кожен візит і збереження.
     const [posts, pages, topics] = await Promise.all([
       this.postsRepository.find({
-        relations: { metadata: true, topics: true },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          createdAt: true,
+          status: STATUS_SELECT,
+          metadata: METADATA_SELECT,
+          topics: { id: true, slug: true },
+        },
+        relations: { status: true, metadata: true, topics: true },
+        loadEagerRelations: false,
         order: { createdAt: 'DESC' },
       }),
       this.pagesRepository.find({
-        relations: { metadata: true },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          status: STATUS_SELECT,
+          metadata: METADATA_SELECT,
+        },
+        relations: { status: true, metadata: true },
+        loadEagerRelations: false,
         order: { title: 'ASC' },
       }),
       this.topicsRepository.find({
-        relations: { metadata: true, parent: true, page: true },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          status: STATUS_SELECT,
+          metadata: METADATA_SELECT,
+          parent: { id: true, slug: true },
+          page: { id: true },
+        },
+        relations: { status: true, metadata: true, parent: true, page: true },
+        loadEagerRelations: false,
         order: { title: 'ASC' },
       }),
     ]);
@@ -195,20 +232,22 @@ export class SeoService {
 
     const topic = await this.topicsRepository.findOne({
       where: { id },
-      relations: {
-        parent: true,
-        page: true,
-        children: true,
-        posts: { status: true },
-      },
+      relations: { parent: true, page: true, children: true },
     });
     if (!topic) {
       throw new NotFoundException();
     }
+    // Зі статей потрібні лише назви — повні тексти розділу не вантажимо.
+    const topicPosts = await this.postsRepository.find({
+      select: { id: true, title: true, status: STATUS_SELECT },
+      where: { topics: { id } },
+      relations: { status: true },
+      loadEagerRelations: false,
+    });
     // У теми власного тексту мало: опис, сторінка (якщо привʼязана) і
     // перелік того, що в розділі є — з цього модель і зрозуміє тему.
     // Чернетки в промт не йдуть: їхні назви не мають потрапити в мета.
-    const posts = (topic.posts ?? [])
+    const posts = topicPosts
       .filter((post) => post.status?.name === PUBLISHED)
       .map((post) => post.title);
     const children = (topic.children ?? []).map((child) => child.title);
