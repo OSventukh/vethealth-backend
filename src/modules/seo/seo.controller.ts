@@ -19,7 +19,7 @@ import { SeoMetadataFieldsDto } from '@/modules/ai/dto/seo-metadata-fields.dto';
 import { forwardRetryAfter } from '@/modules/ai/forward-retry-after';
 import {
   SeoEntityType,
-  SeoMetadataResult,
+  SeoGenerationResult,
 } from '@/modules/ai/tasks/seo-metadata.task';
 import { Roles } from '@/roles/decorators/roles.decorator';
 import { RoleEnum } from '@/roles/roles.enum';
@@ -55,7 +55,7 @@ export class SeoController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() options: SeoGenerationOptionsDto,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<Partial<SeoMetadataResult>> {
+  ): Promise<SeoGenerationResult> {
     return forwardRetryAfter(response, () =>
       this.seoService.generate(type, id, options),
     );

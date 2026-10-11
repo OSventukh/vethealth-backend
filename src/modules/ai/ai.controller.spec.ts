@@ -1,4 +1,4 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { AiController } from './ai.controller';
@@ -45,6 +45,13 @@ describe('AiController', () => {
     }).compile();
 
     app = module.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
     await app.init();
   });
 
@@ -60,6 +67,35 @@ describe('AiController', () => {
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.body).toEqual(RESULT);
     expect(response.headers['retry-after']).toBeUndefined();
+  });
+
+  it('accepts selected fields, source truncation and a preferred query', async () => {
+    const options = {
+      ...body,
+      fields: ['metaDescription'],
+      current: { metaTitle: 'Профілактика' },
+      sourceTruncated: true,
+      primaryKeyword: 'догляд за тваринами',
+    };
+    const response = await request(app.getHttpServer())
+      .post('/ai/seo-metadata')
+      .send(options);
+    expect(response.status).toBe(200);
+    expect(generateSeoMetadata).toHaveBeenCalledWith(
+      expect.objectContaining(options),
+    );
+  });
+
+  it.each([
+    { sourceTruncated: 'yes' },
+    { primaryKeyword: 'а'.repeat(151) },
+    { fields: ['unknown'] },
+  ])('rejects invalid generation options %p', async (options) => {
+    const response = await request(app.getHttpServer())
+      .post('/ai/seo-metadata')
+      .send({ ...body, ...options });
+    expect(response.status).toBe(400);
+    expect(generateSeoMetadata).not.toHaveBeenCalled();
   });
 
   it('forwards the provider backoff as Retry-After on 429', async () => {

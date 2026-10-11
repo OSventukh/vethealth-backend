@@ -12,7 +12,7 @@ import {
   SEO_FIELDS,
   SeoEntityType,
   SeoMetadataInput,
-  SeoMetadataResult,
+  SeoGenerationResult,
 } from '@/modules/ai/tasks/seo-metadata.task';
 import { MetadataEntity } from '@/modules/metadata/entities/metadata.entity';
 import { PageEntity } from '@/modules/pages/entities/page.entity';
@@ -129,7 +129,8 @@ export class SeoService {
     type: SeoEntityType,
     id: string,
     options: SeoGenerationOptionsDto,
-  ): Promise<Partial<SeoMetadataResult>> {
+  ): Promise<SeoGenerationResult> {
+    if (options.fields?.length === 0) return {};
     const source = await this.buildSource(type, id);
     if (!source.text.trim()) {
       throw new BadRequestException('There is no text to generate SEO from', {
@@ -213,7 +214,7 @@ export class SeoService {
       return {
         entityType: 'post',
         title: post.title,
-        text: lexicalContentText(post.content),
+        text: lexicalContentText(post.content, true),
         topics: post.topics?.map((topic) => topic.title),
       };
     }
@@ -226,35 +227,45 @@ export class SeoService {
       return {
         entityType: 'page',
         title: page.title,
-        text: pageBlocksText(page.content),
+        text: pageBlocksText(page.content, true),
       };
     }
 
     const topic = await this.topicsRepository.findOne({
       where: { id },
-      relations: { parent: true, page: true, children: true },
+      relations: {
+        parent: true,
+        page: { status: true },
+        children: true,
+      },
     });
     if (!topic) {
       throw new NotFoundException();
     }
-    // Зі статей потрібні лише назви — повні тексти розділу не вантажимо.
-    const topicPosts = await this.postsRepository.find({
-      select: { id: true, title: true, status: STATUS_SELECT },
-      where: { topics: { id } },
-      relations: { status: true },
-      loadEagerRelations: false,
-    });
-    // У теми власного тексту мало: опис, сторінка (якщо привʼязана) і
-    // перелік того, що в розділі є — з цього модель і зрозуміє тему.
-    // Чернетки в промт не йдуть: їхні назви не мають потрапити в мета.
-    const posts = topicPosts
-      .filter((post) => post.status?.name === PUBLISHED)
-      .map((post) => post.title);
-    const children = (topic.children ?? []).map((child) => child.title);
+    // Mirrors the public topic page, which lists every child regardless of status.
+    const children = topic.children ?? [];
+    // Root topics render children first; nested page routes render the page directly.
+    const showsChildren = !topic.parent && children.length > 0;
+    const showsPage = !showsChildren && topic.contentType === 'page';
+    const showsPosts = !showsChildren && topic.contentType === 'post';
+    const posts = showsPosts
+      ? (
+          await this.postsRepository.find({
+            select: { id: true, title: true },
+            where: { topics: { id }, status: { name: PUBLISHED } },
+            loadEagerRelations: false,
+            order: { createdAt: 'DESC', id: 'ASC' },
+          })
+        ).map((post) => post.title)
+      : [];
     const text = [
       topic.description,
-      topic.page ? pageBlocksText(topic.page.content) : '',
-      children.length ? `Підрозділи: ${children.join('; ')}` : '',
+      showsPage && topic.page?.status?.name === PUBLISHED
+        ? pageBlocksText(topic.page.content, true)
+        : '',
+      showsChildren
+        ? `Підрозділи: ${children.map((child) => child.title).join('; ')}`
+        : '',
       posts.length ? `Статті розділу: ${posts.join('; ')}` : '',
     ]
       .filter((part) => part?.trim())
