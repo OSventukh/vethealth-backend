@@ -13,9 +13,12 @@ import {
 } from 'ai';
 import { AI_ERROR_CODES, AiErrorCode } from './ai-error-codes';
 import { AiModelRegistry } from './ai-model.registry';
-import { GenerateSeoMetadataDto } from './dto/generate-seo-metadata.dto';
 import { AiTask } from './tasks/ai-task';
-import { SeoMetadataResult, seoMetadataTask } from './tasks/seo-metadata.task';
+import {
+  SeoMetadataInput,
+  SeoMetadataResult,
+  seoMetadataTaskFor,
+} from './tasks/seo-metadata.task';
 
 // Провайдер, що завис, не має тримати запит вічно — фронтенд чекає
 // відповідь синхронно, тож обриваємо генерацію і віддаємо 504.
@@ -63,8 +66,11 @@ export class AiService {
 
   constructor(private readonly models: AiModelRegistry) {}
 
-  generateSeoMetadata(dto: GenerateSeoMetadataDto): Promise<SeoMetadataResult> {
-    return this.run(seoMetadataTask, dto);
+  /** Усі мета-поля або лише `input.fields` (точкова перегенерація). */
+  generateSeoMetadata(
+    input: SeoMetadataInput,
+  ): Promise<Partial<SeoMetadataResult>> {
+    return this.run(seoMetadataTaskFor(input.fields), input);
   }
 
   /**

@@ -1,11 +1,29 @@
 import { z } from 'zod';
 import { AiTask } from './ai-task';
 
+export const SEO_FIELDS = [
+  'metaTitle',
+  'metaDescription',
+  'metaKeywords',
+  'ogTitle',
+  'ogDescription',
+] as const;
+
+export type SeoField = (typeof SEO_FIELDS)[number];
+
+export type SeoEntityType = 'post' | 'page' | 'topic';
+
 export interface SeoMetadataInput {
   title: string;
   text: string;
   topics?: string[];
-  entityType?: 'post' | 'page';
+  entityType?: SeoEntityType;
+  /** Згенерувати лише ці поля (точкова перегенерація). Без — усі. */
+  fields?: SeoField[];
+  /** Поточні значення полів — контекст, щоб нові з ними узгоджувалися. */
+  current?: Partial<Record<SeoField, string>>;
+  /** Побажання редактора до результату («коротше», «згадай кліщів»). */
+  hint?: string;
 }
 
 const MAX_INPUT_CHARS = 12000;
@@ -56,19 +74,67 @@ const SYSTEM_PROMPT = `Ти — SEO-редактор українського в
 - ogDescription: до 200 символів, для соцмереж.
 Пиши природною українською, без канцеляризмів і без вигаданих фактів — спирайся лише на наданий текст.`;
 
-export const seoMetadataTask: AiTask<SeoMetadataInput, SeoMetadataResult> = {
+const ENTITY_LABELS: Record<SeoEntityType, string> = {
+  post: 'статті',
+  page: 'сторінки',
+  topic: 'розділу',
+};
+
+export const seoMetadataTask: AiTask<
+  SeoMetadataInput,
+  Partial<SeoMetadataResult>
+> = {
   name: 'seo-metadata',
   schema: seoMetadataSchema,
   system: SYSTEM_PROMPT,
   maxOutputTokens: 2000,
-  buildPrompt: ({ title, text, topics, entityType }) => {
-    const kind = entityType === 'page' ? 'сторінки' : 'статті';
+  buildPrompt: ({ title, text, topics, entityType, fields, current, hint }) => {
+    const kind = ENTITY_LABELS[entityType ?? 'post'];
     const body =
       text.length > MAX_INPUT_CHARS
         ? `${text.slice(0, MAX_INPUT_CHARS)}…`
         : text;
     const topicsLine = topics?.length ? `\nРозділи: ${topics.join(', ')}` : '';
+    const parts = [
+      `Заголовок ${kind}: ${title}${topicsLine}\n\nТекст ${kind}:\n${body}`,
+    ];
 
-    return `Заголовок ${kind}: ${title}${topicsLine}\n\nТекст ${kind}:\n${body}`;
+    const currentLines = SEO_FIELDS.filter((field) =>
+      current?.[field]?.trim(),
+    ).map((field) => `- ${field}: ${current[field].trim()}`);
+    if (currentLines.length) {
+      parts.push(
+        `Поточні SEO-поля (узгодь нові з ними; поля, які генеруєш, напиши заново і краще, ніж зараз):\n${currentLines.join('\n')}`,
+      );
+    }
+    if (isSubset(fields)) {
+      parts.push(`Згенеруй лише поля: ${fields.join(', ')}.`);
+    }
+    if (hint?.trim()) {
+      parts.push(`Побажання редактора: ${hint.trim()}`);
+    }
+
+    return parts.join('\n\n');
   },
 };
+
+function isSubset(fields: SeoField[] | undefined): boolean {
+  return Boolean(fields?.length) && fields.length < SEO_FIELDS.length;
+}
+
+/**
+ * Задача під точкову перегенерацію: схема звужується до запитаних полів,
+ * тож модель не витрачає токени на решту, а SDK не вимагає їх у відповіді.
+ */
+export function seoMetadataTaskFor(
+  fields?: SeoField[],
+): AiTask<SeoMetadataInput, Partial<SeoMetadataResult>> {
+  if (!isSubset(fields)) {
+    return seoMetadataTask;
+  }
+  const mask = Object.fromEntries(fields.map((field) => [field, true])) as {
+    [K in SeoField]?: true;
+  };
+
+  return { ...seoMetadataTask, schema: seoMetadataSchema.pick(mask) };
+}

@@ -32,6 +32,7 @@ import { UsersModule } from './modules/users/users.module';
 import { SearchModule } from './modules/search/search.module';
 import { MetadataModule } from './modules/metadata/metadata.module';
 import { AiModule } from './modules/ai/ai.module';
+import { SeoModule } from './modules/seo/seo.module';
 import { AppThrottlerGuard } from './utils/guards/app-throttler.guard';
 
 @Module({
@@ -98,6 +99,7 @@ import { AppThrottlerGuard } from './utils/guards/app-throttler.guard';
     SearchModule,
     MetadataModule,
     AiModule,
+    SeoModule,
   ],
   controllers: [],
   providers: [
