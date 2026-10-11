@@ -1,4 +1,5 @@
 import { PostEntity } from '@/modules/posts/entities/post.entity';
+import { extractLexicalText } from '@/utils/content-text';
 import { PaginationType } from '@/utils/types/pagination.type';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -65,31 +66,9 @@ export class SearchService {
       return '';
     }
     try {
-      return this.extractTextFromJson(JSON.parse(content));
+      return extractLexicalText(JSON.parse(content));
     } catch {
       return content;
     }
-  }
-
-  private extractTextFromJson(json: any): string {
-    let text = '';
-
-    const traverse = (node: any) => {
-      if (Array.isArray(node)) {
-        node.forEach((child) => {
-          traverse(child);
-        });
-      } else if (typeof node === 'object' && node !== null) {
-        if (node.type === 'text' && node.text) {
-          text += `${node.text} `;
-        }
-        Object.values(node).forEach((value) => {
-          traverse(value);
-        });
-      }
-    };
-
-    traverse(json);
-    return text.trim();
   }
 }

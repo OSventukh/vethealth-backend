@@ -8,8 +8,10 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
+import { SeoEntityType } from '../tasks/seo-metadata.task';
+import { SeoGenerationOptionsDto } from './seo-generation-options.dto';
 
-export class GenerateSeoMetadataDto {
+export class GenerateSeoMetadataDto extends SeoGenerationOptionsDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
@@ -30,8 +32,8 @@ export class GenerateSeoMetadataDto {
   @MaxLength(100, { each: true })
   topics?: string[];
 
-  @ApiProperty({ required: false, enum: ['post', 'page'] })
+  @ApiProperty({ required: false, enum: ['post', 'page', 'topic'] })
   @IsOptional()
-  @IsIn(['post', 'page'])
-  entityType?: 'post' | 'page';
+  @IsIn(['post', 'page', 'topic'])
+  entityType?: SeoEntityType;
 }

@@ -186,6 +186,27 @@ JSON). Провайдер перемикається конфігом (namespace
   приходять через Next server actions з однієї IP frontend-контейнера, тож IP-трекер
   склеював би всіх редакторів в один бакет. Анонімні запити — за IP, як раніше.
 
+## Масове SEO — модуль `seo` (2026-10)
+
+`src/modules/seo` обслуговує фронтендовий екран `/admin/seo`. **Увесь контролер — Admin+**
+(`@Roles` на класі): це правки чужих матеріалів.
+- `GET /seo/entries` — теми, пости й окремі сторінки з 5 SEO-полями (`SeoEntry`). Сторінки,
+  привʼязані до теми (`topic.page`), пропущені: на сайті їх URL — це URL теми, мета з теми.
+- `POST /seo/:type/:id/generate` (`type` = post|page|topic) — промт будується **з БД**:
+  пост — Lexical-текст + назви тем; сторінка — текст блоків конструктора; тема — опис, текст
+  привʼязаної сторінки, підтеми й назви **лише опублікованих** постів. Порожній текст → 400
+  `SEO_NO_CONTENT` ще до ШІ. Власний `@Throttle` 30/хв (масовий прогін), а не 10/хв як у
+  `/ai/seo-metadata`. Нічого не зберігає.
+- `PATCH /seo/:type/:id` — оновлює рядок `metadata` **на місці** (без осиротілих рядків, як у
+  каскаду з форм редакторів); передані поля перезаписуються, `""` → `null`, несеошні колонки
+  (ogImage, canonicalUrl…) не чіпаються. Новий рядок привʼязується `repository.update`, а не
+  `save`, щоб не запускати хуки сутності.
+- Точкова перегенерація — в AI-модулі: `SeoGenerationOptionsDto` (`fields`, `current`, `hint`)
+  приймають і `/ai/seo-metadata`, і `/seo/.../generate`; `seoMetadataTaskFor(fields)` звужує
+  zod-схему до запитаних полів. `forwardRetryAfter` — спільний проброс `Retry-After`.
+- Текст із контенту — `src/utils/content-text.ts` (Lexical + документи конструктора), дзеркало
+  фронтендового `src/lib/content-text.ts`; ним же користується пошук.
+
 ## Backend-specific notes
 
 - **Path alias** `@/*` → `./src/*` (tsconfig + jest `moduleNameMapper`). Use it in imports — it is
