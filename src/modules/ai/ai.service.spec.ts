@@ -9,7 +9,7 @@ import {
 import { AI_ERROR_CODES } from './ai-error-codes';
 import { AiModelRegistry } from './ai-model.registry';
 import { AiProviderException, AiService } from './ai.service';
-import { seoMetadataSchema, seoMetadataTask } from './tasks/seo-metadata.task';
+import { seoMetadataTask } from './tasks/seo-metadata.task';
 
 // `ai` і `@ai-sdk/*` — ESM-only, jest їх не розпарсить: підміняємо
 // фабриками. Провайдери тут не викликаються — вони приїжджають лише
@@ -98,11 +98,11 @@ jest.mock('ai', () => {
 const generateObjectMock = generateObject as unknown as jest.Mock;
 
 const RESULT = {
-  metaTitle: 'Тестовий meta title',
-  metaDescription: 'Тестовий meta description',
-  metaKeywords: 'котики, песики',
+  metaTitle: 'Бабезіоз у собак: симптоми та профілактика хвороби',
+  metaDescription:
+    'Дізнайтеся про ознаки бабезіозу у собак, шляхи зараження через кліщів, методи діагностики та роль профілактики у захисті здоровʼя тварини.',
   ogTitle: 'OG title',
-  ogDescription: 'OG description',
+  ogDescription: 'Ознаки хвороби та профілактика для собак.',
 };
 
 const apiCallError = (
@@ -159,7 +159,7 @@ describe('AiService', () => {
 
     const callArgs = generateObjectMock.mock.calls[0][0];
     expect(callArgs.model).toBe('language-model');
-    expect(callArgs.schema).toBe(seoMetadataSchema);
+    expect(callArgs.schema).toBe(seoMetadataTask.schema);
     expect(callArgs.schemaName).toBe('seo-metadata');
     // Системний промт тримає мову і довжини полів — без нього схема все
     // одно зійдеться, тож ловимо його втрату тут.
@@ -172,6 +172,82 @@ describe('AiService', () => {
     // а ретраї SDK ділять той самий бюджет.
     expect(callArgs.abortSignal).toBeInstanceOf(AbortSignal);
     expect(callArgs.maxRetries).toBe(1);
+  });
+
+  it('skips the provider for an empty field selection', async () => {
+    expect(
+      await service.generateSeoMetadata({
+        title: 'Тест',
+        text: 'Текст',
+        fields: [],
+      }),
+    ).toEqual({});
+    expect(generateObjectMock).not.toHaveBeenCalled();
+  });
+
+  const LONG_TITLE = 'Кліщі у собак: '.padEnd(70, 'а');
+
+  it('corrects a defective draft once using the same timeout budget', async () => {
+    generateObjectMock
+      .mockResolvedValueOnce({ object: { ...RESULT, metaTitle: LONG_TITLE } })
+      .mockResolvedValueOnce({ object: RESULT });
+    expect(
+      await service.generateSeoMetadata({ title: 'Тест', text: 'Текст' }),
+    ).toEqual(RESULT);
+    expect(generateObjectMock).toHaveBeenCalledTimes(2);
+    const [first, second] = generateObjectMock.mock.calls.map(([args]) => args);
+    expect(second.abortSignal).toBe(first.abortSignal);
+    expect(second.prompt).toContain('metaTitle: 70 символів');
+  });
+
+  it('returns purely advisory warnings without a second call', async () => {
+    generateObjectMock.mockResolvedValue({
+      object: { ...RESULT, metaTitle: 'Коти' },
+    });
+    const result = await service.generateSeoMetadata({
+      title: 'Тест',
+      text: 'Текст',
+    });
+    expect(result.metaTitle).toBe('Коти');
+    expect(result.warnings?.join(' ')).toContain('4 символів');
+    expect(generateObjectMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns outstanding warnings instead of looping', async () => {
+    generateObjectMock.mockResolvedValue({
+      object: { ...RESULT, metaTitle: LONG_TITLE },
+    });
+    const result = await service.generateSeoMetadata({
+      title: 'Тест',
+      text: 'Текст',
+    });
+    expect(result.metaTitle).toBe(LONG_TITLE);
+    expect(result.warnings?.join(' ')).toContain('70 символів');
+    expect(generateObjectMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the valid draft if the correction fails', async () => {
+    generateObjectMock
+      .mockResolvedValueOnce({ object: { ...RESULT, metaTitle: LONG_TITLE } })
+      .mockRejectedValueOnce(apiCallError(429));
+    const result = await service.generateSeoMetadata({
+      title: 'Тест',
+      text: 'Текст',
+    });
+    expect(result.metaTitle).toBe(LONG_TITLE);
+    expect(result.warnings).toHaveLength(1);
+  });
+
+  it('repairs a schema-invalid response once', async () => {
+    generateObjectMock
+      .mockRejectedValueOnce(
+        new NoObjectGeneratedError({ text: '{}' } as never),
+      )
+      .mockResolvedValueOnce({ object: RESULT });
+    expect(
+      await service.generateSeoMetadata({ title: 'Тест', text: 'Текст' }),
+    ).toEqual(RESULT);
+    expect(generateObjectMock).toHaveBeenCalledTimes(2);
   });
 
   it('propagates the 503 raised when the provider has no api key', async () => {

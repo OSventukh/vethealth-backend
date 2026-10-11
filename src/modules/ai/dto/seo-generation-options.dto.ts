@@ -18,7 +18,8 @@ export class SeoGenerationOptionsDto {
     required: false,
     enum: SEO_FIELDS,
     isArray: true,
-    description: 'Generate only these fields; omit for all',
+    description:
+      'Generate only these fields; omit for main fields (keywords are opt-in)',
   })
   @IsOptional()
   @IsArray()
@@ -41,4 +42,13 @@ export class SeoGenerationOptionsDto {
   @IsString()
   @MaxLength(300)
   hint?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Preferred search query, only if supported by the content',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(150)
+  primaryKeyword?: string;
 }

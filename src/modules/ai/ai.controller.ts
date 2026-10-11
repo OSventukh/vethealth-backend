@@ -12,7 +12,7 @@ import { Response } from 'express';
 import { AiService } from './ai.service';
 import { GenerateSeoMetadataDto } from './dto/generate-seo-metadata.dto';
 import { forwardRetryAfter } from './forward-retry-after';
-import { SeoMetadataResult } from './tasks/seo-metadata.task';
+import { SeoGenerationResult } from './tasks/seo-metadata.task';
 
 /** Ліміт генерацій на користувача; масове SEO (`/seo`) має свій. */
 const AI_THROTTLE = { api: { limit: 10, ttl: minutes(1) } };
@@ -31,7 +31,7 @@ export class AiController {
   generateSeoMetadata(
     @Body() dto: GenerateSeoMetadataDto,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<Partial<SeoMetadataResult>> {
+  ): Promise<SeoGenerationResult> {
     return forwardRetryAfter(response, () =>
       this.aiService.generateSeoMetadata(dto),
     );

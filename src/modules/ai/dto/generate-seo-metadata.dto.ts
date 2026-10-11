@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsIn,
   IsNotEmpty,
   IsOptional,
@@ -36,4 +37,9 @@ export class GenerateSeoMetadataDto extends SeoGenerationOptionsDto {
   @IsOptional()
   @IsIn(['post', 'page', 'topic'])
   entityType?: SeoEntityType;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  sourceTruncated?: boolean;
 }

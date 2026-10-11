@@ -16,6 +16,10 @@ export interface AiTask<INPUT, OUTPUT> {
   /** Промт користувача з конкретного входу. */
   buildPrompt: (input: INPUT) => string;
   maxOutputTokens: number;
+  /** Advisory checks; remaining warnings are exposed to the client. */
+  review?: (output: OUTPUT) => string[];
+  /** Whether review warnings justify one correction call (default: no retry). */
+  needsCorrection?: (output: OUTPUT) => boolean;
   /** Модель, відмінна від сконфігурованої за замовчуванням (опційно). */
   model?: string;
 }
