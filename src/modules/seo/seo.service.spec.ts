@@ -208,41 +208,110 @@ describe('SeoService', () => {
       });
     });
 
-    it('describes a topic by its page and published posts only', async () => {
+    it('lists every child of a root section, like the public page', async () => {
       topics.findOne.mockResolvedValue(
         as({
           id: POST_ID,
-          title: 'Протипаразитарні',
+          title: 'Препарати',
           description: 'Опис розділу',
-          parent: { title: 'Препарати' },
+          contentType: 'page',
           page: {
+            status: { name: 'Published' },
             content: JSON.stringify({
-              blocks: [{ data: { title: 'Вступ сторінки' } }],
+              blocks: [{ data: { title: 'Прихована сторінка' } }],
             }),
           },
-          children: [{ title: 'Ізоксазоліни' }],
+          children: [
+            { title: 'Ізоксазоліни', status: { name: 'Active' } },
+            { title: 'Неактивний розділ', status: { name: 'Inactive' } },
+          ],
         }),
       );
-      posts.find.mockResolvedValue(
-        as([
-          { title: 'Амідини', status: { name: 'Published' } },
-          { title: 'Чернетка', status: { name: 'Draft' } },
-        ]),
-      );
-
       await service.generate('topic', POST_ID, {});
-
       const input = generateSeoMetadata.mock.calls[0][0];
-      expect(input).toMatchObject({
-        entityType: 'topic',
-        topics: ['Препарати'],
-      });
-      expect(input.text).toContain('Опис розділу');
-      expect(input.text).toContain('Вступ сторінки');
-      expect(input.text).toContain('Підрозділи: Ізоксазоліни');
-      expect(input.text).toContain('Статті розділу: Амідини');
-      expect(input.text).not.toContain('Чернетка');
+      expect(input.text).toContain(
+        'Підрозділи: Ізоксазоліни; Неактивний розділ',
+      );
+      expect(input.text).not.toContain('Прихована сторінка');
+      expect(posts.find).not.toHaveBeenCalled();
     });
+
+    it('does not use a hidden attached page when the section has only inactive children', async () => {
+      topics.findOne.mockResolvedValue(
+        as({
+          id: POST_ID,
+          title: 'Розділ',
+          description: 'Опис розділу',
+          contentType: 'page',
+          page: {
+            status: { name: 'Published' },
+            content: lexical('Прихована сторінка'),
+          },
+          children: [
+            { title: 'Неактивний підрозділ', status: { name: 'Inactive' } },
+          ],
+        }),
+      );
+      await service.generate('topic', POST_ID, {});
+      expect(generateSeoMetadata.mock.calls[0][0].text).toBe(
+        'Опис розділу\n\nПідрозділи: Неактивний підрозділ',
+      );
+    });
+
+    it('uses only published posts for a post listing and ignores an attached page', async () => {
+      topics.findOne.mockResolvedValue(
+        as({
+          id: POST_ID,
+          title: 'Препарати',
+          contentType: 'post',
+          children: [],
+          page: {
+            status: { name: 'Published' },
+            content: lexical('Прихований текст'),
+          },
+        }),
+      );
+      posts.find.mockResolvedValue(as([{ title: 'Амідини' }]));
+      await service.generate('topic', POST_ID, {});
+      const input = generateSeoMetadata.mock.calls[0][0];
+      expect(posts.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { topics: { id: POST_ID }, status: { name: 'Published' } },
+        }),
+      );
+      expect(input.text).toContain('Амідини');
+      expect(input.text).not.toContain('Прихований');
+    });
+
+    it.each(['Draft', 'Published'])(
+      'uses an attached page only if published (%s)',
+      async (status) => {
+        topics.findOne.mockResolvedValue(
+          as({
+            id: POST_ID,
+            title: 'Препарати',
+            description: 'Опис',
+            contentType: 'page',
+            parent: { title: 'Довідник' },
+            children: [],
+            page: {
+              status: { name: status },
+              content: lexical('Текст сторінки'),
+            },
+          }),
+        );
+        await service.generate('topic', POST_ID, {
+          primaryKeyword: 'препарати',
+        });
+        const input = generateSeoMetadata.mock.calls[0][0];
+        expect(input.text.includes('Текст сторінки')).toBe(
+          status === 'Published',
+        );
+        expect(input.primaryKeyword).toBe('препарати');
+        expect(input.topics).toEqual(['Довідник']);
+        expect(posts.find).not.toHaveBeenCalled();
+      },
+    );
 
     it('rejects an entity without text before calling the AI', async () => {
       pages.findOneBy.mockResolvedValue(

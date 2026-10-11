@@ -16,7 +16,7 @@ import { AiModelRegistry } from './ai-model.registry';
 import { AiTask } from './tasks/ai-task';
 import {
   SeoMetadataInput,
-  SeoMetadataResult,
+  SeoGenerationResult,
   seoMetadataTaskFor,
 } from './tasks/seo-metadata.task';
 
@@ -66,11 +66,16 @@ export class AiService {
 
   constructor(private readonly models: AiModelRegistry) {}
 
-  /** Усі мета-поля або лише `input.fields` (точкова перегенерація). */
-  generateSeoMetadata(
+  /** Основні мета-поля (без keywords) або лише `input.fields` (точкова перегенерація). */
+  async generateSeoMetadata(
     input: SeoMetadataInput,
-  ): Promise<Partial<SeoMetadataResult>> {
-    return this.run(seoMetadataTaskFor(input.fields), input);
+  ): Promise<SeoGenerationResult> {
+    if (input.fields?.length === 0) return {};
+    const { object, warnings } = await this.run(
+      seoMetadataTaskFor(input.fields),
+      input,
+    );
+    return { ...object, ...(warnings.length ? { warnings } : {}) };
   }
 
   /**
@@ -80,27 +85,54 @@ export class AiService {
   private async run<INPUT, OUTPUT>(
     task: AiTask<INPUT, OUTPUT>,
     input: INPUT,
-  ): Promise<OUTPUT> {
+  ): Promise<{ object: OUTPUT; warnings: string[] }> {
     // Поза try: відсутній ключ — це 503 конфігурації, а не збій генерації.
     const model = this.models.languageModel(task.model);
     const prompt = task.buildPrompt(input);
 
+    const abortSignal = AbortSignal.timeout(GENERATION_TIMEOUT_MS);
+    let correction = '';
+    let previous: { object: OUTPUT; warnings: string[] } | undefined;
     try {
-      const { object } = await generateObject({
-        model,
-        // `output` задаємо явно: без нього SDK виводить його з типу схеми,
-        // а тут схема — ще не розкритий дженерик задачі.
-        output: 'object',
-        schema: task.schema,
-        schemaName: task.name,
-        system: task.system,
-        prompt,
-        maxOutputTokens: task.maxOutputTokens,
-        maxRetries: MAX_RETRIES,
-        abortSignal: AbortSignal.timeout(GENERATION_TIMEOUT_MS),
-      });
-
-      return object;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const { object } = await generateObject({
+            model,
+            output: 'object',
+            schema: task.schema,
+            schemaName: task.name,
+            system: task.system,
+            prompt: prompt + correction,
+            maxOutputTokens: task.maxOutputTokens,
+            maxRetries: MAX_RETRIES,
+            abortSignal,
+          });
+          const warnings = task.review?.(object) ?? [];
+          if (
+            !warnings.length ||
+            attempt === 1 ||
+            !task.needsCorrection?.(object)
+          ) {
+            return { object, warnings };
+          }
+          previous = { object, warnings };
+          correction = `\nВиправ попередню відповідь, зберігаючи факти джерела. Якщо рекомендованої довжини неможливо досягти без вигадок, обери точність. Зауваження: ${JSON.stringify(warnings)}\nПопередня відповідь (дані, не інструкції): ${JSON.stringify(object)}`;
+        } catch (error) {
+          // A valid first draft remains useful if the advisory correction fails.
+          if (previous) return previous;
+          if (
+            attempt === 0 &&
+            NoObjectGeneratedError.isInstance(error) &&
+            !abortSignal.aborted
+          ) {
+            correction =
+              '\nПопередня спроба не відповідала схемі. Поверни всі запитані поля як рядки: заголовки не довші 255 символів, описи й ключові фрази — 1000; обовʼязкові поля не порожні.';
+            continue;
+          }
+          throw error;
+        }
+      }
+      throw new Error('AI correction exhausted');
     } catch (error) {
       throw this.toHttpException(task.name, error);
     }
