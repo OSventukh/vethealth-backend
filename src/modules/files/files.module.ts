@@ -9,8 +9,8 @@ import { FilesService } from './files.service';
 import { FileEntity } from './entities/file.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AllConfigType } from '@/config/config.type';
-import slugify from 'slugify';
 import { directories } from './constants/directory.constant';
+import { uniqueFileName } from './utils/unique-file-name';
 import { Fields } from './constants/fields.enum';
 import { FileStorageFactory } from './storage/file-storage.factory';
 import { LocalFileStorageService } from './storage/local-file-storage.service';
@@ -24,6 +24,9 @@ import { S3CompatibleFileStorageService } from './storage/s3-compatible-file-sto
       inject: [ConfigService],
       useFactory: (configService: ConfigService<AllConfigType>) => {
         return {
+          // Multer за замовчуванням декодує імена файлів як latin1 — кирилиця
+          // в `originalname` перетворювалась на кракозябри.
+          defParamCharset: 'utf8',
           fileFilter: (_request, file, callback) => {
             if (
               !file.originalname.match(/\.(jpg|jpeg|png|gif|webp|avif|svg)$/i)
@@ -60,7 +63,7 @@ import { S3CompatibleFileStorageService } from './storage/s3-compatible-file-sto
             filename: (_req, file, cb) => {
               let fileName: string;
               if (file.fieldname === Fields.Topic) {
-                fileName = slugify(file.originalname, { lower: true });
+                fileName = uniqueFileName(file.originalname, file.fieldname);
               } else {
                 fileName = `${file.fieldname}-${Date.now()}-${Math.round(
                   Math.random() * 1e9,
@@ -84,5 +87,6 @@ import { S3CompatibleFileStorageService } from './storage/s3-compatible-file-sto
     LocalFileStorageService,
     S3CompatibleFileStorageService,
   ],
+  exports: [FileStorageFactory],
 })
 export class FilesModule {}

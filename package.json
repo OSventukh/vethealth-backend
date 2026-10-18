@@ -21,6 +21,8 @@
     "seed:create": "hygen seeds create",
     "seed:run": "ts-node -r tsconfig-paths/register ./src/database/seeds/run-seed.ts",
     "seed:run:prod": "node dist/database/seeds/run-seed.js",
+    "media:backfill": "env-cmd ts-node -r tsconfig-paths/register ./src/modules/media/scripts/backfill-media-metadata.ts",
+    "media:backfill:prod": "node dist/modules/media/scripts/backfill-media-metadata.js",
     "migrate:r2": "node scripts/migrate-uploads-to-r2-node.js",
     "migrate:r2:prod": "node scripts/migrate-uploads-to-r2-node.js",
     "build": "nest build",
@@ -70,6 +72,7 @@
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "sharp": "^0.34.5",
     "slugify": "^1.6.6",
     "typeorm": "^0.3.20",
     "zod": "^4.4.3"

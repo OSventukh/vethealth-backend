@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   DeepPartial,
@@ -21,7 +25,8 @@ export class TopicsService {
     private topicsRepository: Repository<TopicEntity>,
   ) {}
 
-  create(createTopicDto: CreateTopicDto): Promise<TopicEntity> {
+  async create(createTopicDto: CreateTopicDto): Promise<TopicEntity> {
+    await this.assertImageFree(createTopicDto.image?.id);
     const topic = this.topicsRepository.create(createTopicDto);
     return this.topicsRepository.save(topic);
   }
@@ -68,8 +73,35 @@ export class TopicsService {
     };
   }
 
-  update(payload: DeepPartial<TopicEntity>): Promise<TopicEntity> {
+  async update(payload: DeepPartial<TopicEntity>): Promise<TopicEntity> {
+    await this.assertImageFree(payload.image?.id, payload.id);
     return this.topicsRepository.save(this.topicsRepository.create(payload));
+  }
+
+  /**
+   * `topics.imageId` має UNIQUE-індекс (OneToOne), тож картинка іншої теми,
+   * обрана з медіатеки, валила б збереження з 500 (ER_DUP_ENTRY). Індекс
+   * охоплює й м'яко видалені теми — тому `withDeleted`.
+   */
+  private async assertImageFree(
+    imageId: string | undefined,
+    topicId?: string,
+  ): Promise<void> {
+    if (!imageId) return;
+    const owner = await this.topicsRepository.findOne({
+      where: { image: { id: imageId } },
+      select: { id: true, title: true },
+      withDeleted: true,
+      loadEagerRelations: false,
+    });
+    if (owner && owner.id !== topicId) {
+      throw new ConflictException({
+        statusCode: 409,
+        message: `Image is already used by topic "${owner.title}"`,
+        errorCode: 'TOPIC_IMAGE_TAKEN',
+        topic: { id: owner.id, title: owner.title },
+      });
+    }
   }
 
   async softDelete(id: TopicEntity['id']): Promise<void> {
