@@ -46,6 +46,12 @@ our build stays CommonJS and loads them through `require(esm)` (Node ≥22.12 at
   without `?include=` returned 500. Unit tests don't catch this; smoke-test a built `dist`.
   `tsconfig.build.json` sets `rootDir: ./src` (TS 6 requires it) and keeps the `tsbuildinfo` inside
   `dist` so `deleteOutDir` invalidates it.
+  **`tsconfig.json` має секцію `"ts-node"`** (`rootDir: "."`, `types: ["node"]`) — без неї
+  `pnpm migration:*` / `seed:run` падали на TS 6: дефолт `types` став `[]` (ts-node, стартуючи з
+  `data-source.ts`, не бачив `@types/node` → «Cannot find name 'process'») і `rootDir` обовʼязковий
+  при `outDir` (TS5011). На `tsc`/`nest build`/jest секція не впливає. Нативний TS у Node
+  (type stripping) чи `tsx` ts-node **не замінять**: декоратори + `emitDecoratorMetadata`
+  (TypeORM виводить типи колонок) + аліаси `@/`; альтернатива лише SWC.
 - TypeScript 6 turns **`strict` on by default**; we only opt out of `strictNullChecks` and
   `noImplicitAny` explicitly, so e.g. `catch` variables are `unknown`.
 
@@ -206,6 +212,70 @@ JSON). Провайдер перемикається конфігом (namespace
   zod-схему до запитаних полів. `forwardRetryAfter` — спільний проброс `Retry-After`.
 - Текст із контенту — `src/utils/content-text.ts` (Lexical + документи конструктора), дзеркало
   фронтендового `src/lib/content-text.ts`; ним же користується пошук.
+
+## Медіатека — модуль `media` (2026-10)
+
+`src/modules/media` обслуговує екран `/admin/media` і пікер «З медіатеки» у формах. Окремої
+сутності немає — це рядки `files`, яким міграція `MediaLibrary` додала `alt`, `originalName`,
+`mimeType`, `size`, `createdAt` (наявні рядки отримали час міграції, мета-полів у них немає).
+`FilesService.uploadFile` заповнює їх при завантаженні; нове поле multipart `media` кладе
+файли в `images/media/<дата>/`. Кирилиця в `originalname` правильна завдяки
+`defParamCharset: 'utf8'` у `MulterModule` (дефолт multer — latin1 → кракозябри); не
+повертати евристичне перекодування в сервісі — воно ламало вже правильні UTF-8 імена.
+- `GET /media` (`page`, `size` ≤100, `search` по originalName/alt/path, `missingAlt`) і
+  `GET /media/:id` (+ `usages`) — **будь-який автентифікований** (автори вставляють картинки
+  у свої пости). `PATCH /media/:id` (`{alt}`; `""` → null), `POST /media/:id/alt/generate`
+  (платний ШІ), `DELETE /media/:id[?force=true]` і `bulk-delete` — **Admin+**: alt публічно
+  видно на обкладинках і картинках тем, тож це правка чужих матеріалів (рішення 2026-10-18;
+  стереже `media.controller.spec.ts`).
+- **Пошук використань** (`findUsages`): FK (`posts.featuredImageFileId`, `topics.imageId`) +
+  `LIKE` по ключу сховища в `posts.featuredImageUrl/content`, `pages.content`,
+  `metadata.ogImage/twitterImage`. Ключ — сирий `files.path` без провідного `/` (є підрядком будь-
+  якого публічного URL файлу незалежно від домену); сирий шлях читається `getRawOne`, бо
+  `@AfterLoad` сутності вже переписав `path` у URL. М'яко видалені пости в список не потрапляють.
+- **Видалення**: з використаннями без `force` → **409 `MEDIA_IN_USE`** + `usages` у тілі. З
+  `force` FK обнуляються сирим `UPDATE` (не QueryBuilder — той зачепив би `updatedAt` і
+  lastmod у sitemap; м'яко видалені пости теж тримають FK), посилання в тексті лишаються битими
+  (про це попереджає UI). Обʼєкт у сховищі видаляється **після** коміту і best-effort; його
+  **не** чіпаємо, якщо інший рядок `files` має той самий `path` (картинки тем іменуються slug-ом
+  без суфікса — у dev-БД реально є дублікати `images/topics/dog.svg`) або якщо файл живе не в
+  поточному драйвері (легасі `/uploads/…` при R2). `LocalFileStorageService` тепер уміє
+  `read`/`delete` (лише всередині `uploads/`), S3-драйвер — `read` (GetObject).
+- **ШІ alt** — задача `ai/tasks/image-alt.task.ts`; `AiTask.buildImages` (новий) робить запит
+  vision-повідомленням (`messages` з **`file`**-part; `image`-part у SDK v7 deprecated) замість
+  `prompt`. Байти беруться **зі сховища драйвером**, а не fetch-ем публічного URL (Cloudflare
+  Bot Fight Mode ріже серверні запити). Перед відправкою **`sharp`** (`media/utils/
+  prepare-ai-image.ts`) конвертує все в JPEG ≤1568px: більшість картинок сайту — **AVIF**
+  (часто під `.jpeg`), а AVIF/SVG не бере жоден провайдер; заодно знімає ліміт 5 МБ Anthropic.
+  `sharp` ставиться з готовими бінарниками (`@img/sharp-*`, build-скрипт не потрібен; у
+  `node:22-slim` працює). Не декодується — 400 `MEDIA_UNSUPPORTED_FOR_AI`; файл недоступний —
+  422 `MEDIA_NOT_READABLE`. Контекст — назви матеріалів із `usages`. Нічого не зберігає;
+  `@Throttle` 30/хв.
+- **Оптимізація при завантаженні** (`files/utils/optimize-image.ts`, викликається з
+  `FilesService.uploadFile`): EXIF-поворот, зменшення до 2400px по довшій стороні і WebP q82 —
+  але **лише якщо результат менший** (AVIF зазвичай лишається оригіналом). SVG/GIF і
+  **анімовані** WebP/APNG не перекодовуються (sharp прочитав би лише перший кадр; APNG
+  libvips як анімацію не бачить — впізнаємо за chunk-ом `acTL`). Заодно пишуться `width`/`height` (міграція `MediaDimensions`). Presigned-
+  завантаження (браузер → R2 напряму) повз це йде — фронтенд його не використовує.
+- **Імена файлів тем унікальні** (`files/utils/unique-file-name.ts`: slug + час + суфікс) —
+  раніше тема зберігалась під голим slug і картинка іншої теми з тим самим іменем файлу
+  перезаписувала її у сховищі.
+- **`topics.imageId` — UNIQUE** (OneToOne): одна картинка — одна тема. `TopicsService`
+  перевіряє це до збереження (`withDeleted` — індекс охоплює й м'яко видалені) і віддає
+  **409 `TOPIC_IMAGE_TAKEN`** замість 500 від MySQL; пікер на фронтенді попереджає раніше.
+- Фільтри списку: `unused` (ніде не використовується) і `narrowerThan` (px). `unused`
+  рахується **одним проходом** (`findUsedIds`): тексти всіх матеріалів вантажаться раз, з них
+  регекспом вибираються ключі `(uploads/)images/…` — а не LIKE на кожен файл, як у
+  `findUsages`. Ключі, які регексп не впізнає цілком (легасі-імена з `(`, `'`…), і зовнішні
+  URL перевіряються запасним шляхом — регістронезалежним підрядком по всьому тексту, як LIKE.
+  Результат кешується на 30 с для довантаження сторінок; видалення кеш скидає і не
+  використовує. Список підтримує `offset` (довантаження після локальних змін).
+- `POST /media/bulk-delete` (`{ids, force?}`, Admin+) — використання рахуються **одним
+  проходом на партію** (`findUsedIds`), детальний `findUsages` — лише для підозрілих; такі без
+  `force` повертаються в `inUse` з `usages`. З `force` перевірок немає взагалі.
+- Старі файли без розмірів/типу дозаповнює `pnpm media:backfill` (прод:
+  `pnpm media:backfill:prod` у контейнері після `migration:run:prod`) — ідемпотентно: бере
+  лише рядки з `size IS NULL` (size пишеться завжди) і не затирає відомий `mimeType`.
 
 ## Backend-specific notes
 

@@ -8,9 +8,10 @@ import { AllConfigType, FileStorageDriver } from '@/config/config.type';
 import { FileStorageFactory } from './storage/file-storage.factory';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import slugify from 'slugify';
 import { UploadPresignedDto } from './dto/upload-presigned.dto';
 import { sniffImageType } from './utils/sniff-image-type';
+import { optimizeImage, ProcessedImage } from './utils/optimize-image';
+import { uniqueFileName } from './utils/unique-file-name';
 
 type FileResponse = {
   id: string;
@@ -38,9 +39,10 @@ export class FilesService {
     private readonly fileStorageFactory: FileStorageFactory,
   ) {}
 
-  async uploadFile(files: {
-    [key in Fields]: Express.Multer.File[];
-  }): Promise<ImageResponse> {
+  // Multer кладе лише ті поля, що прийшли в запиті — решти ключів немає.
+  async uploadFile(
+    files: Partial<Record<Fields, Express.Multer.File[]>>,
+  ): Promise<ImageResponse> {
     if (!files) {
       throw new HttpException(
         {
@@ -67,15 +69,17 @@ export class FilesService {
       // (OpaqueResponseBlocking). Тому реальний тип беремо з байтів і, якщо
       // розширення бреше, виправляємо і його — щоб і local-драйвер (де
       // Content-Type виводиться з розширення) віддавав файл коректно.
+      // Растр заодно оптимізується (WebP, ≤2400px) і отримує розміри.
       // Не фатально, якщо файл не прочитався: тоді просто лишаємо заявлений
       // клієнтом тип (нижче, для об'єктних сховищ, читання повториться вже
       // без catch — там байти обов'язкові).
-      const sniffBuffer = await fs
-        .readFile(uploadedFile.path)
-        .catch(() => null);
-      const sniffed = sniffBuffer ? sniffImageType(sniffBuffer) : null;
-      const actualPath = await this.reconcileExtension(uploadedFile, sniffed);
-      const contentType = sniffed?.mimeType ?? uploadedFile.mimetype;
+      const original = await fs.readFile(uploadedFile.path).catch(() => null);
+      const sniffed = original ? sniffImageType(original) : null;
+      const image =
+        original && sniffed ? await optimizeImage(original, sniffed) : null;
+      const actualPath = await this.finalizeFile(uploadedFile, image);
+      const contentType = image?.mimeType ?? uploadedFile.mimetype;
+      const body = image?.buffer ?? original;
 
       let filePath = `/${actualPath.replace(/\\/g, '/')}`;
 
@@ -86,7 +90,7 @@ export class FilesService {
           .replace(/^uploads\//, '');
         await storage.upload({
           key: storageKey,
-          body: sniffBuffer ?? (await fs.readFile(actualPath)),
+          body: body ?? (await fs.readFile(actualPath)),
           contentType,
         });
         filePath = storageKey;
@@ -98,6 +102,11 @@ export class FilesService {
       const fileRepository = await this.fileRepository.save(
         this.fileRepository.create({
           path: filePath,
+          originalName: uploadedFile.originalname.slice(0, 255),
+          mimeType: contentType,
+          size: body?.length ?? uploadedFile.size,
+          width: image?.width ?? null,
+          height: image?.height ?? null,
         }),
       );
 
@@ -167,6 +176,9 @@ export class FilesService {
     const fileRepository = await this.fileRepository.save(
       this.fileRepository.create({
         path: storageKey,
+        originalName: input.fileName.slice(0, 255),
+        mimeType: input.contentType ?? null,
+        size: input.fileSize,
       }),
     );
 
@@ -177,36 +189,39 @@ export class FilesService {
   }
 
   /**
-   * Якщо розширення не відповідає реальному вмісту (AVIF з іменем .jpeg тощо),
-   * перейменовує тимчасовий файл на диску під справжнє розширення і повертає
-   * новий шлях. Інакше повертає шлях без змін.
+   * Доводить тимчасовий файл на диску до фінального вигляду: перекодовані
+   * байти записуються, а розширення виправляється під реальний вміст (AVIF з
+   * іменем .jpeg, результат WebP-оптимізації). Повертає фінальний шлях.
    */
-  private async reconcileExtension(
+  private async finalizeFile(
     uploadedFile: Express.Multer.File,
-    sniffed: { extension: string } | null,
+    image: ProcessedImage | null,
   ): Promise<string> {
-    if (!sniffed) {
+    if (!image) {
       return uploadedFile.path;
     }
 
     const currentExtension = path.extname(uploadedFile.path).toLowerCase();
     const jpegAliases = new Set(['.jpg', '.jpeg']);
     const matches =
-      currentExtension === sniffed.extension ||
-      (jpegAliases.has(currentExtension) && jpegAliases.has(sniffed.extension));
+      currentExtension === image.extension ||
+      (jpegAliases.has(currentExtension) && jpegAliases.has(image.extension));
+    const finalPath = matches
+      ? uploadedFile.path
+      : uploadedFile.path.slice(
+          0,
+          uploadedFile.path.length - currentExtension.length,
+        ) + image.extension;
 
-    if (matches) {
-      return uploadedFile.path;
+    if (image.changed) {
+      await fs.writeFile(finalPath, image.buffer);
+      if (finalPath !== uploadedFile.path) {
+        await fs.unlink(uploadedFile.path).catch(() => undefined);
+      }
+    } else if (finalPath !== uploadedFile.path) {
+      await fs.rename(uploadedFile.path, finalPath);
     }
-
-    const correctedPath =
-      uploadedFile.path.slice(
-        0,
-        uploadedFile.path.length - currentExtension.length,
-      ) + sniffed.extension;
-
-    await fs.rename(uploadedFile.path, correctedPath);
-    return correctedPath;
+    return finalPath;
   }
 
   private assertFileType(fileName: string): void {
@@ -225,15 +240,14 @@ export class FilesService {
 
   private createStorageKey(field: Fields, fileName: string): string {
     const extension = path.extname(fileName).toLowerCase();
-    const fileNameWithoutExtension = path.basename(fileName, extension);
     const randomSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
 
     if (field === Fields.Topic) {
-      const topicFileName = slugify(fileNameWithoutExtension, {
-        lower: true,
-        strict: true,
-      });
-      return `images/topics/${topicFileName}${extension}`;
+      return `images/topics/${uniqueFileName(fileName, field)}`;
+    }
+
+    if (field === Fields.Media) {
+      return `images/media/${new Date().toISOString().slice(0, 10)}/${field}-${randomSuffix}${extension}`;
     }
 
     if (field === Fields.PostFeatured) {

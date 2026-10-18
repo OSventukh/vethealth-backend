@@ -174,6 +174,31 @@ describe('AiService', () => {
     expect(callArgs.maxRetries).toBe(1);
   });
 
+  it('sends vision tasks as a user message with the image part', async () => {
+    generateObjectMock.mockResolvedValue({ object: { alt: 'Рудий кіт' } });
+    const image = new Uint8Array([1, 2, 3]);
+
+    const result = await service.generateImageAlt({
+      image,
+      mediaType: 'image/png',
+      context: ['Кліщі у котів'],
+    });
+
+    expect(result).toEqual({ alt: 'Рудий кіт' });
+    const callArgs = generateObjectMock.mock.calls[0][0];
+    expect(callArgs.prompt).toBeUndefined();
+    expect(callArgs.schemaName).toBe('image_alt');
+    const [message] = callArgs.messages;
+    expect(message.role).toBe('user');
+    expect(message.content[0]).toEqual({
+      type: 'file',
+      data: image,
+      mediaType: 'image/png',
+    });
+    expect(message.content[1].type).toBe('text');
+    expect(message.content[1].text).toContain('Кліщі у котів');
+  });
+
   it('skips the provider for an empty field selection', async () => {
     expect(
       await service.generateSeoMetadata({

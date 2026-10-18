@@ -23,6 +23,8 @@ export interface FileStorage {
   createPresignedUpload(
     input: FileStoragePresignedInput,
   ): Promise<FileStoragePresignedResult>;
+  /** Байти обʼєкта (для AI-аналізу зображення). */
+  read(key: string): Promise<Buffer>;
   delete(key: string): Promise<void>;
   getPublicUrl(key: string): string;
 }
