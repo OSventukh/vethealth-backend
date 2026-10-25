@@ -1,4 +1,10 @@
 allowBuilds:
-  '@nestjs/core': true
-  '@scarf/scarf': true
+  # postinstall шле телеметрію завантажень (приходить через swagger-ui-dist)
+  '@scarf/scarf': false
+  # нативний драйвер для e2e (test/utils/test-module.ts читає .env.test)
   sqlite3: true
+  # мають готові бінарники в optional-залежностях — install-скрипти не потрібні
+  # (так само ігнорувалися й до переходу на allowBuilds)
+  '@parcel/watcher': false
+  sharp: false
+  unrs-resolver: false
