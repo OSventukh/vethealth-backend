@@ -279,6 +279,11 @@ JSON). Провайдер перемикається конфігом (namespace
 
 ## Backend-specific notes
 
+- **pnpm 11** (`packageManager`, з 2026-10-25). Дозволи install-скриптів залежностей — лише
+  `allowBuilds` у `pnpm-workspace.yaml` (поле `pnpm` у `package.json` pnpm 11 не читає;
+  Dockerfile копіює цей файл). Нова залежність зі скриптом, не внесена туди як `true`/`false`,
+  валить `pnpm install` з `ERR_PNPM_IGNORED_BUILDS` — і в Docker-збірці Coolify теж.
+
 - **Path alias** `@/*` → `./src/*` (tsconfig + jest `moduleNameMapper`). Use it in imports — it is
   now the **only** alias style; the handful of baseUrl-relative `from 'src/…'` imports were
   converted (2026-08-16). `baseUrl` is deliberately **absent** (TS 6 deprecates it, TS 7 drops it):
