@@ -90,8 +90,10 @@ services:
       - ANTHROPIC_API_KEY
       - OPENAI_API_KEY
       - GOOGLE_GENERATIVE_AI_API_KEY
-    ports:
-      - '${APP_PORT}:${APP_PORT}'
+    # Traefik and the frontend reach the app over the `coolify` network (alias below),
+    # so the port is not published on the host.
+    expose:
+      - '${APP_PORT}'
     volumes:
       - ./src:/app/src
       - uploads:/app/uploads
