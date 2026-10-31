@@ -70,6 +70,17 @@ If you see `Error: no service selected` during deploy, this variable is missing 
 `docker compose up` with no active profile, so Compose matched zero services. Add
 `COMPOSE_PROFILES=prod` to the resource's environment variables and redeploy.
 
+### Database migrations
+
+The container runs pending TypeORM migrations on every start (`docker-entrypoint.sh` →
+`npm run migration:run:prod`, each migration in its own transaction) and only then starts the app.
+If a migration fails, the app does **not** start — check the container logs, fix, redeploy.
+Set `MIGRATIONS_RUN=false` in Coolify to skip this and run `npm run migration:run:prod` by hand.
+
+MySQL commits DDL implicitly, so a failed migration can leave the schema half-changed — take a DB
+backup before deploying a release with migrations. While the new container starts, the old code
+may already see the new schema: keep migrations additive (drop/rename columns in a later release).
+
 ## Migrating file storage to R2 / S3
 
 Two one-off scripts in `scripts/` move an environment that was using **local** `uploads/`

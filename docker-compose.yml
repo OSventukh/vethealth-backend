@@ -33,6 +33,7 @@ services:
     container_name: nest-app
     environment:
       - NODE_ENV
+      - MIGRATIONS_RUN
       - APP_NAME
       - APP_PORT
       - APP_FALLBACK_LANGUAGE

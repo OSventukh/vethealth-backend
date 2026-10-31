@@ -23,5 +23,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
 # one-off ops scripts (R2 upload migration) — plain JS, run via `npm run migrate:r2:prod`
 COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/docker-entrypoint.sh ./
 
-CMD ["node", "dist/main"]
+# Міграції БД, потім `node dist/main` (див. docker-entrypoint.sh, MIGRATIONS_RUN).
+CMD ["sh", "./docker-entrypoint.sh"]

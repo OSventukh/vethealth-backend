@@ -304,6 +304,16 @@ JSON). Провайдер перемикається конфігом (namespace
 
 ## Backend-specific notes
 
+- **Міграції на деплої запускаються автоматично (з 2026-10-31).** `CMD` контейнера —
+  `docker-entrypoint.sh`: `npm run migration:run:prod` (`--transaction each`), і лише потім
+  `exec node dist/main`. Міграція впала → застосунок не стартує (exit 1, помилка в логах Coolify).
+  `MIGRATIONS_RUN=false` вимикає автозапуск. Наслідки для нових міграцій: вони мають бути
+  **сумісні зі старим кодом** (лише додавати; видалення/перейменування колонок — наступним
+  релізом) і **не мають падати на вже наявних обʼєктах** — prod і staging обидва на
+  `synchronize=false` з правильною таблицею `migrations`. Перевірено docker-образом на dev-БД:
+  «No migrations are pending» → старт; `MIGRATIONS_RUN=false` → пропуск; невірний пароль БД →
+  exit 1 без старту Nest.
+
 - **pnpm 11** (`packageManager`, з 2026-10-25). Дозволи install-скриптів залежностей — лише
   `allowBuilds` у `pnpm-workspace.yaml` (поле `pnpm` у `package.json` pnpm 11 не читає;
   Dockerfile копіює цей файл). Нова залежність зі скриптом, не внесена туди як `true`/`false`,
