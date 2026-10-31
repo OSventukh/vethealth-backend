@@ -7,6 +7,9 @@ import { IsExist } from '@/utils/validators/is-exist.validator';
 import { IsNotExist } from '@/utils/validators/is-not-exist.validator';
 import { CreatePostGuard } from './guards/create-post.guard';
 import { PostEntity } from './entities/post.entity';
+import { PostRevisionEntity } from './entities/post-revision.entity';
+import { PostRevisionsService } from './post-revisions.service';
+import { PostRevisionsController } from './post-revisions.controller';
 import { CategoryEntity } from '@/modules/categories/entities/category.entity';
 import { TopicEntity } from '@/modules/topics/entities/topic.entity';
 import { UserEntity } from '@/modules/users/entities/user.entity';
@@ -17,15 +20,17 @@ import { MetadataModule } from '../metadata/metadata.module';
   imports: [
     TypeOrmModule.forFeature([
       PostEntity,
+      PostRevisionEntity,
       CategoryEntity,
       TopicEntity,
       UserEntity,
     ]),
     MetadataModule,
   ],
-  controllers: [PostsController],
+  controllers: [PostsController, PostRevisionsController],
   providers: [
     PostsService,
+    PostRevisionsService,
     CreatePostGuard,
     UsersService,
     IsValidColumn,

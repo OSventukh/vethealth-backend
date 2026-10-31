@@ -49,8 +49,9 @@ describe('PostsController', () => {
       author: new UserEntity(),
       status: new PostStatusEntity(),
     };
-    postsController.create(createPostDto);
-    expect(postsService.create).toHaveBeenCalledWith(createPostDto);
+    const user = { id: 'author-id' };
+    postsController.create({ user }, createPostDto);
+    expect(postsService.create).toHaveBeenCalledWith(createPostDto, user);
   });
 
   it('should call a postsService.findOne() method with provided id', () => {

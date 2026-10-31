@@ -277,6 +277,31 @@ JSON). Провайдер перемикається конфігом (namespace
   `pnpm media:backfill:prod` у контейнері після `migration:run:prod`) — ідемпотентно: бере
   лише рядки з `size IS NULL` (size пишеться завжди) і не затирає відомий `mimeType`.
 
+## Історія змін постів (2026-10)
+
+Таблиця `post_revisions` (міграція `PostRevisions`) — повний знімок поста **після** кожного
+збереження: title/slug/content (MEDIUMTEXT), SEO-поля metadata (JSON, без id/дат), обкладинка
+(`featuredImageFileId` **без FK** — файл можуть видалити з медіатеки) і назва статусу.
+Категорії/топіки не версіонуються. `PostRevisionsService` — запис без перевірок доступу, через
+`EntityManager` транзакції; `PostsService` робить `create`/`update`/`restoreRevision` в одній
+транзакції з ревізією.
+- `reason`: `create` | `update` | `restore` (+`restoredFromId`) | `baseline`. Пост, створений до
+  появи історії, при першій правці спершу отримує `baseline` — знімок старого стану, датований
+  `post.updatedAt`, без редактора.
+- Збереження без змін ревізію не пише (порівняння з останньою через `isDeepStrictEqual` —
+  MySQL JSON пересортовує ключі). Зміна лише статусу — це ревізія.
+- Ліміт 50 на пост (`POST_REVISIONS_LIMIT`), старші видаляються при записі. **Не використовувати
+  `skip` без `take`** у `find` — MySQL-драйвер TypeORM кидає `OffsetWithoutLimitNotSupportedError`
+  (мок у юніт-тесті це не ловить, впало лише на живій БД).
+- Ендпоінти `posts/:id/revisions` (`GET` список без `content`, `GET :revisionId`,
+  `POST :revisionId/restore`) — доступ як до редагування: автор або Admin+. `editor` віддається
+  лише як `{id, firstname, lastname}`.
+- Відновлення: статус **не** чіпається, metadata оновлюється на місці (той самий рядок), зниклий
+  файл обкладинки → `null`; title/slug, зайнятий іншим постом (включно з м'яко видаленими) →
+  **409 `POST_REVISION_CONFLICT`** + `post` у тілі. Відкат — теж нова ревізія.
+- Медіатека (`findUsages`/`unused`) ревізії **не** сканує: файл, що лишився лише в старій ревізії,
+  вважається невикористаним.
+
 ## Backend-specific notes
 
 - **pnpm 11** (`packageManager`, з 2026-10-25). Дозволи install-скриптів залежностей — лише
