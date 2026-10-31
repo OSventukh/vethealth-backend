@@ -5,6 +5,7 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {
@@ -84,6 +85,20 @@ export class S3CompatibleFileStorageService implements FileStorage {
     return {
       uploadSignedUrl,
     };
+  }
+
+  async read(key: string): Promise<Buffer> {
+    const bucket = this.configService.getOrThrow('file.s3Bucket', {
+      infer: true,
+    });
+
+    const response = await this.s3Client.send(
+      new GetObjectCommand({ Bucket: bucket, Key: key }),
+    );
+    if (!response.Body) {
+      throw new Error(`Empty body for storage object "${key}"`);
+    }
+    return Buffer.from(await response.Body.transformToByteArray());
   }
 
   async delete(key: string): Promise<void> {

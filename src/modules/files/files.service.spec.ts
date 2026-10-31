@@ -69,6 +69,11 @@ describe('FilesService', () => {
     });
     expect(filesRepositry.create).toHaveBeenCalledWith({
       path: `/${file.path}`,
+      originalName: 'test.jpg',
+      mimeType: 'image/jpeg',
+      size: 100,
+      width: null,
+      height: null,
     });
   });
 });

@@ -1,3 +1,4 @@
+import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IsNull, Like, Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -15,7 +16,7 @@ import { topicOrder } from './utils/topic-order';
 describe('TopicsService', () => {
   let module: TestingModule;
   let topicsService: TopicsService;
-  let topicsRepository: Repository<TopicEntity>;
+  let topicsRepository: jest.Mocked<Repository<TopicEntity>>;
   const TOPIC_REPOSITORY_TOKEN = getRepositoryToken(TopicEntity);
 
   beforeEach(async () => {
@@ -30,9 +31,7 @@ describe('TopicsService', () => {
     }).compile();
 
     topicsService = module.get<TopicsService>(TopicsService);
-    topicsRepository = module.get<Repository<TopicEntity>>(
-      TOPIC_REPOSITORY_TOKEN,
-    );
+    topicsRepository = module.get(TOPIC_REPOSITORY_TOKEN);
   });
 
   afterEach(async () => {
@@ -43,7 +42,7 @@ describe('TopicsService', () => {
     expect(topicsService).toBeDefined();
   });
 
-  it('should call topicsRepository.create() method with createTopicDto object', () => {
+  it('should call topicsRepository.create() method with createTopicDto object', async () => {
     const createTopicDto: CreateTopicDto = {
       title: 'Test topics',
       contentType: TopicContentTypeEnum.Page,
@@ -52,7 +51,7 @@ describe('TopicsService', () => {
       status: new TopicStatusEntity(),
     };
 
-    topicsService.create(createTopicDto);
+    await topicsService.create(createTopicDto);
     expect(topicsRepository.create).toHaveBeenCalledWith(createTopicDto);
   });
 
@@ -89,16 +88,51 @@ describe('TopicsService', () => {
     });
   });
 
-  it('should call topicsRepository.save() and postsRepository.create() mehtods', () => {
+  it('should call topicsRepository.save() and postsRepository.create() mehtods', async () => {
     const topic: TopicEntity = {
       id: '1',
       title: 'Test topic',
     } as TopicEntity;
 
-    topicsService.update(topic);
+    await topicsService.update(topic);
     expect(topicsRepository.save).toHaveBeenCalledWith(
       topicsRepository.create(topic),
     );
+  });
+
+  it('refuses with 409 an image that already belongs to another topic', async () => {
+    topicsRepository.findOne.mockResolvedValue({
+      id: 'other',
+      title: 'Коти',
+    } as TopicEntity);
+
+    const error = await topicsService
+      .update({ id: '1', image: { id: 'img' } } as TopicEntity)
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ConflictException);
+    expect((error as ConflictException).getResponse()).toMatchObject({
+      errorCode: 'TOPIC_IMAGE_TAKEN',
+      topic: { title: 'Коти' },
+    });
+    expect(topicsRepository.findOne).toHaveBeenCalledWith(
+      expect.objectContaining({ withDeleted: true }),
+    );
+    expect(topicsRepository.save).not.toHaveBeenCalled();
+  });
+
+  it("keeps the topic's own image", async () => {
+    topicsRepository.findOne.mockResolvedValue({
+      id: '1',
+      title: 'Собаки',
+    } as TopicEntity);
+
+    await topicsService.update({
+      id: '1',
+      image: { id: 'img' },
+    } as TopicEntity);
+
+    expect(topicsRepository.save).toHaveBeenCalled();
   });
 
   it('should call topicsRepository.softDelete() with provided id', () => {

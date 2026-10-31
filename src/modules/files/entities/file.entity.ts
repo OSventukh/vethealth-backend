@@ -4,6 +4,7 @@ import {
   Column,
   AfterInsert,
   AfterLoad,
+  CreateDateColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Allow } from 'class-validator';
@@ -24,6 +25,32 @@ export class FileEntity {
 
   @Expose()
   relativePath: string;
+
+  /** Alt-текст із медіатеки — підставляється, коли зображення обирають у формі. */
+  @ApiProperty({ required: false, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  alt?: string | null;
+
+  /** Назва файлу, як її надіслав клієнт (для пошуку в медіатеці). */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  originalName?: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  mimeType?: string | null;
+
+  /** Розмір у байтах. */
+  @Column({ type: 'int', unsigned: true, nullable: true })
+  size?: number | null;
+
+  /** Розміри в пікселях (з урахуванням EXIF-орієнтації); у SVG — з атрибутів. */
+  @Column({ type: 'int', unsigned: true, nullable: true })
+  width?: number | null;
+
+  @Column({ type: 'int', unsigned: true, nullable: true })
+  height?: number | null;
+
+  @CreateDateColumn()
+  createdAt: Date;
 
   @AfterInsert()
   @AfterLoad()

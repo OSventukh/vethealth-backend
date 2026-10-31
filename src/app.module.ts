@@ -33,6 +33,7 @@ import { SearchModule } from './modules/search/search.module';
 import { MetadataModule } from './modules/metadata/metadata.module';
 import { AiModule } from './modules/ai/ai.module';
 import { SeoModule } from './modules/seo/seo.module';
+import { MediaModule } from './modules/media/media.module';
 import { AppThrottlerGuard } from './utils/guards/app-throttler.guard';
 
 @Module({
@@ -100,6 +101,7 @@ import { AppThrottlerGuard } from './utils/guards/app-throttler.guard';
     MetadataModule,
     AiModule,
     SeoModule,
+    MediaModule,
   ],
   controllers: [],
   providers: [

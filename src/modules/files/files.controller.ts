@@ -43,15 +43,12 @@ export class FilesController {
       { name: Fields.Post },
       { name: Fields.Topic },
       { name: Fields.PostFeatured },
+      { name: Fields.Media },
     ]),
   )
   async uploadFile(
     @UploadedFiles()
-    files: {
-      [Fields.Post]: Express.Multer.File[];
-      [Fields.Topic]: Express.Multer.File[];
-      [Fields.PostFeatured]: Express.Multer.File[];
-    },
+    files: Partial<Record<Fields, Express.Multer.File[]>>,
   ) {
     return this.filesService.uploadFile(files);
   }

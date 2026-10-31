@@ -39,8 +39,11 @@ export class PostsController {
   @Post()
   @UseGuards(AuthGuard('jwt'), CreatePostGuard)
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createPostDto: CreatePostDto): Promise<PostEntity> {
-    return this.postsService.create(createPostDto);
+  create(
+    @Request() request,
+    @Body() createPostDto: CreatePostDto,
+  ): Promise<PostEntity> {
+    return this.postsService.create(createPostDto, request.user);
   }
 
   @OptionalAuth()

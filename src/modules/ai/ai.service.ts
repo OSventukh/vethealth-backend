@@ -15,6 +15,11 @@ import { AI_ERROR_CODES, AiErrorCode } from './ai-error-codes';
 import { AiModelRegistry } from './ai-model.registry';
 import { AiTask } from './tasks/ai-task';
 import {
+  ImageAltInput,
+  ImageAltResult,
+  imageAltTask,
+} from './tasks/image-alt.task';
+import {
   SeoMetadataInput,
   SeoGenerationResult,
   seoMetadataTaskFor,
@@ -78,6 +83,12 @@ export class AiService {
     return { ...object, ...(warnings.length ? { warnings } : {}) };
   }
 
+  /** Alt-текст для зображення (vision-модель бачить саме зображення). */
+  async generateImageAlt(input: ImageAltInput): Promise<ImageAltResult> {
+    const { object } = await this.run(imageAltTask, input);
+    return object;
+  }
+
   /**
    * Єдина точка виконання AI-задач: модель, таймаут, ретраї та маппінг
    * помилок SDK у HTTP-статуси. Задачі описані декларативно в `tasks/`.
@@ -89,6 +100,7 @@ export class AiService {
     // Поза try: відсутній ключ — це 503 конфігурації, а не збій генерації.
     const model = this.models.languageModel(task.model);
     const prompt = task.buildPrompt(input);
+    const images = task.buildImages?.(input) ?? [];
 
     const abortSignal = AbortSignal.timeout(GENERATION_TIMEOUT_MS);
     let correction = '';
@@ -102,7 +114,24 @@ export class AiService {
             schema: task.schema,
             schemaName: task.name,
             system: task.system,
-            prompt: prompt + correction,
+            ...(images.length
+              ? {
+                  messages: [
+                    {
+                      role: 'user' as const,
+                      content: [
+                        // `file`, а не `image`-part: той у SDK v7 застарілий.
+                        ...images.map((image) => ({
+                          type: 'file' as const,
+                          data: image.data,
+                          mediaType: image.mediaType,
+                        })),
+                        { type: 'text' as const, text: prompt + correction },
+                      ],
+                    },
+                  ],
+                }
+              : { prompt: prompt + correction }),
             maxOutputTokens: task.maxOutputTokens,
             maxRetries: MAX_RETRIES,
             abortSignal,

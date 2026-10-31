@@ -23,5 +23,11 @@
     "paths": {
       "@/*": ["./src/*"]
     }
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "rootDir": ".",
+      "types": ["node"]
+    }
   }
 }

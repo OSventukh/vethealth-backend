@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+/** Зображення, яке задача показує моделі разом із текстовим промтом. */
+export interface AiTaskImage {
+  data: Uint8Array;
+  /** IANA-тип (`image/jpeg`…) — провайдери вимагають його для сирих байтів. */
+  mediaType: string;
+}
+
 /**
  * Опис однієї AI-задачі: схема відповіді, промти та ліміти.
  *
@@ -15,6 +22,8 @@ export interface AiTask<INPUT, OUTPUT> {
   system: string;
   /** Промт користувача з конкретного входу. */
   buildPrompt: (input: INPUT) => string;
+  /** Зображення до промту (vision-задачі); без нього промт іде чистим текстом. */
+  buildImages?: (input: INPUT) => AiTaskImage[];
   maxOutputTokens: number;
   /** Advisory checks; remaining warnings are exposed to the client. */
   review?: (output: OUTPUT) => string[];
