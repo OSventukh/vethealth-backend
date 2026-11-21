@@ -8,3 +8,10 @@ allowBuilds:
   '@parcel/watcher': false
   sharp: false
   unrs-resolver: false
+
+minimumReleaseAgeExclude:
+  - nodemailer@10.6.1
+
+# Security pins for transitive deps whose parents haven't released a fix yet.
+overrides:
+  'brace-expansion@<1.1.22': 1.1.22

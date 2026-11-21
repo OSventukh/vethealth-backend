@@ -1,14 +1,14 @@
 import fs from 'node:fs/promises';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import nodemailer from 'nodemailer';
+import nodemailer, { type SendMailOptions, type Transporter } from 'nodemailer';
 import Handlebars from 'handlebars';
 
 import { AllConfigType } from '@/config/config.type';
 
 @Injectable()
 export class MailerService {
-  private readonly transporter: nodemailer.Transporter;
+  private readonly transporter: Transporter;
   constructor(private readonly configService: ConfigService<AllConfigType>) {
     const user = configService.get('mail.user', { infer: true });
     const pass = configService.get('mail.password', { infer: true });
@@ -35,7 +35,7 @@ export class MailerService {
     templatePath,
     context,
     ...mailOptions
-  }: nodemailer.SendMailOptions & {
+  }: SendMailOptions & {
     templatePath: string;
     context: Record<string, unknown>;
   }): Promise<void> {
